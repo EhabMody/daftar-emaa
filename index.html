@@ -245,7 +245,6 @@
                 document.getElementById('authScreen').style.display = 'none';
                 document.getElementById('appScreen').style.display = 'block';
                 
-                // عرض بيانات المستخدم
                 document.getElementById('storeNameDisplay').innerText = "محل " + (currentUser.displayName || "جديد");
                 document.getElementById('userEmailDisplay').innerText = currentUser.email;
                 
@@ -365,10 +364,8 @@
                 const newQty = p.qty - qty;
                 const saleAmount = p.price * qty;
 
-                // تحديث المخزون
                 productsRef.child(id).update({ qty: newQty });
                 
-                // تسجيل الفاتورة
                 salesRef.push({
                     productName: p.name,
                     qty: qty,
