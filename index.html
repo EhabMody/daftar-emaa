@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EMAA.Tech - Cloud SaaS</title>
+    <title>EMAA.Tech - Enterprise SaaS</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- ملاحظة: لتفعيل التحكم عن بعد، يجب إضافة سكريبت Firebase هنا -->
+    <!-- <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script> -->
+    
     <style>
         :root {
             --primary: #111111; --secondary: #00d2ff; --bg: #f0f2f5; --text: #333;
@@ -20,18 +24,19 @@
         #authScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a0a0a; display: flex; justify-content: center; align-items: center; z-index: 9999; padding: 20px; flex-direction: column;}
         .auth-box { background: var(--white); padding: 40px; border-radius: 15px; text-align: center; width: 100%; max-width: 450px; box-shadow: 0 15px 40px rgba(0,0,0,0.5); border-top: 5px solid var(--secondary); }
         .auth-box h1 { color: var(--primary); font-size: 30px; font-weight: 900; margin-bottom: 15px; }
-        .google-btn { width: 100%; padding: 15px; background: #db4437; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 10px;}
-        .google-btn:hover { background: #c53929; }
-        .btn-main { background: var(--primary); color: var(--secondary); border: 1px solid var(--secondary); padding: 12px 20px; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; gap: 8px; transition: 0.3s; }
-        .btn-main:hover { background: var(--secondary); color: var(--primary); }
+        .auth-box input { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid var(--border); border-radius: 8px; text-align: center; font-size: 16px; background: var(--bg); color: var(--text); }
+        .auth-box button { width: 100%; padding: 15px; background: var(--primary); color: var(--secondary); border: 1px solid var(--secondary); border-radius: 8px; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 10px; transition: 0.3s;}
+        .auth-box button:hover { background: var(--secondary); color: var(--primary); }
+        .link-btn { background: transparent; color: var(--blue); border: none; cursor: pointer; font-size: 14px; margin-top: 15px; text-decoration: underline; }
 
         /* App Header */
         header { background: var(--primary); padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.2); flex-wrap: wrap; gap: 10px;}
         .logo { display: flex; align-items: center; gap: 8px; color: var(--secondary); font-size: 24px; font-weight: 900; }
         .logo span { color: #fff; }
         .header-info { color: white; font-size: 14px; display: flex; flex-direction: column; align-items: flex-end; margin-right: 15px;}
+        .header-info small { color: var(--gray); }
         .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap;}
-        .btn-outline { background: transparent; border: 1px solid var(--secondary); color: var(--secondary); padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; display: flex; align-items: center; gap: 5px; font-size: 14px;}
+        .btn-outline { background: transparent; border: 1px solid var(--secondary); color: var(--secondary); padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; display: flex; align-items: center; gap: 5px; font-family: 'Cairo'; font-size: 14px;}
         .btn-outline:hover { background: var(--secondary); color: var(--primary); }
 
         .container { max-width: 1400px; margin: 20px auto; padding: 0 15px; }
@@ -42,8 +47,10 @@
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         .form-group { display: flex; flex-direction: column; }
         .form-group label { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
-        .form-group input, .form-group select { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--bg); color: var(--text); }
-        
+        .form-group input, .form-group select { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--bg); color: var(--text); font-family: 'Cairo'; }
+        .btn-main { background: var(--primary); color: var(--secondary); border: 1px solid var(--secondary); padding: 12px 20px; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; gap: 8px; transition: 0.3s; font-family: 'Cairo'; }
+        .btn-main:hover { background: var(--secondary); color: var(--primary); }
+
         /* Tabs */
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
         .tab-btn { padding: 12px 20px; background: var(--white); border: 1px solid var(--border); border-radius: 30px; cursor: pointer; font-weight: bold; font-size: 14px; color: var(--text); display: flex; align-items: center; gap: 8px;}
@@ -58,7 +65,7 @@
         th { background: var(--bg); font-weight: 700; }
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-block; }
         .b-green { background: #d4edda; color: #155724; }
-        .b-yellow { background: #fff3cd; color: #856404; }
+        .b-red { background: #f8d7da; color: #721c24; }
         .btn-icon { border: 1px solid var(--border); background: transparent; padding: 6px 10px; border-radius: 5px; cursor: pointer; color: var(--text); font-size: 13px; }
 
         /* Dashboard Cards */
@@ -77,44 +84,53 @@
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: var(--white); padding: 30px; border-radius: 12px; width: 90%; max-width: 650px; max-height: 90vh; overflow-y: auto; position: relative; }
         .close-modal { position: absolute; top: 15px; left: 15px; font-size: 24px; cursor: pointer; color: var(--gray); }
-        
-        /* Loading */
-        #loadingOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:99999; flex-direction:column;}
-        .spinner { border: 5px solid #f3f3f3; border-top: 5px solid var(--secondary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media print {
+            body * { visibility: hidden; }
+            .modal-content, .modal-content * { visibility: visible; }
+            .modal-content { position: absolute; left: 0; top: 0; width: 100mm; box-shadow: none; padding: 10px; }
+            .close-modal, .print-btn { display: none !important; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay">
-        <div class="spinner"></div>
-        <p style="margin-top: 15px; font-weight: bold; color: var(--primary);">جاري التحميل...</p>
-    </div>
-
     <!-- Auth Screen -->
     <div id="authScreen">
         <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: var(--secondary); font-size: 40px; font-weight: 900;"><i class="fas fa-shield-alt"></i> EMAA.Tech</h1>
-            <p style="color: #aaa;">Cloud Solutions & Security System</p>
+            <h1 style="color: var(--secondary); font-size: 40px; font-weight: 900; text-shadow: 0 0 15px rgba(0,210,255,0.4);"><i class="fas fa-shield-alt"></i> EMAA.Tech</h1>
+            <p style="color: #aaa;">Integrated Solutions & Security System</p>
         </div>
 
-        <div class="auth-box">
-            <h1>تسجيل الدخول للمحل</h1>
-            <p style="color: var(--gray); margin-bottom: 20px; font-size: 14px;">استخدم حساب جوجل الخاص بك للدخول أو التسجيل</p>
-            <button class="google-btn" onclick="signInWithGoogle()">
-                <i class="fab fa-google"></i> الدخول باستخدام Google
-            </button>
-            <p style="margin-top: 20px; font-size: 12px; color: var(--gray);">بمجرد تسجيل الدخول، سيتم إنشاء حساب لمحلك تلقائياً.</p>
+        <div class="auth-box" id="loginBox">
+            <h1>تسجيل الدخول</h1>
+            <input type="tel" id="loginPhone" placeholder="رقم الموبايل">
+            <input type="password" id="loginPassword" placeholder="كلمة المرور">
+            <button onclick="doLogin()">دخول</button>
+            <button class="link-btn" onclick="showRegister()">إنشاء حساب محل جديد</button>
+            <button class="link-btn" onclick="showDevLogin()" style="color: var(--red); font-weight: bold; margin-top: 10px;">دخول المطور (Super Admin)</button>
+        </div>
+
+        <div class="auth-box" id="registerBox" style="display:none;">
+            <h1>إنشاء حساب</h1>
+            <input type="text" id="regStoreName" placeholder="اسم المحل">
+            <input type="text" id="regOwnerName" placeholder="اسم صاحب المحل">
+            <input type="tel" id="regPhone" placeholder="رقم الموبايل">
+            <input type="password" id="regPassword" placeholder="كلمة المرور">
+            <button onclick="doRegister()">تسجيل</button>
+            <button class="link-btn" onclick="showLogin()">لديك حساب؟ سجل الدخول</button>
         </div>
     </div>
 
-    <!-- Pending Activation Screen -->
-    <div id="pendingScreen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a0a0a; z-index: 9998; justify-content: center; align-items: center; flex-direction: column; padding: 20px; text-align: center;">
-        <i class="fas fa-clock" style="font-size: 60px; color: var(--yellow); margin-bottom: 20px;"></i>
-        <h2 style="color: white; margin-bottom: 10px;">حسابك قيد المراجعة</h2>
-        <p style="color: #aaa; max-width: 400px; margin-bottom: 30px;">شكراً لتسجيلك في EMAA.Tech. يرجى التواصل مع المطور (EMAA.Tech) لتفعيل حسابك ودفع الاشتراك.</p>
-        <button class="btn-outline" onclick="logout()" style="border-color: var(--red); color: var(--red);">تسجيل الخروج</button>
+    <!-- Developer Admin Login -->
+    <div id="developerLogin" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#0a0a0a; z-index:10000; justify-content:center; align-items:center;">
+        <div class="auth-box" style="border-top-color: var(--red);">
+            <h1 style="color:var(--red);">EMAA.Tech Admin</h1>
+            <p>لوحة التحكم عن بُعد</p>
+            <input type="password" id="devAdminPass" placeholder="كلمة مرور المطور">
+            <button onclick="doDevAdminLogin()" style="background:var(--red); color:white; border:none;">دخول</button>
+            <button class="link-btn" onclick="document.getElementById('developerLogin').style.display='none'">إغلاق</button>
+        </div>
     </div>
 
     <!-- Main App -->
@@ -123,11 +139,10 @@
             <div class="logo"><i class="fas fa-shield-alt"></i> <span>EMAA.Tech</span></div>
             <div class="header-info">
                 <span id="storeNameDisplay">اسم المحل</span>
-                <small id="userEmailDisplay">إيميل المستخدم</small>
+                <small id="phoneDisplay">رقم الموبايل</small>
             </div>
             <div class="header-actions">
-                <!-- Dev Panel Button (Only visible to Developer) -->
-                <button class="btn-outline" id="devPanelBtn" onclick="switchTab('dev-panel', document.querySelectorAll('.tab-btn')[4])" style="border-color: #fce500; color: #fce500; display: none;"><i class="fas fa-crown"></i> لوحة المطور</button>
+                <button class="btn-outline" onclick="openDevLogin()" style="border-color: var(--yellow); color: var(--yellow); display:none;" id="devQuickAccessBtn"><i class="fas fa-crown"></i> Admin</button>
                 <button class="btn-outline" onclick="logout()" style="border-color: var(--red); color: var(--red);"><i class="fas fa-sign-out-alt"></i> خروج</button>
             </div>
         </header>
@@ -138,8 +153,6 @@
                 <button class="tab-btn" onclick="switchTab('inventory', this)"><i class="fas fa-box"></i> المخزون</button>
                 <button class="tab-btn" onclick="switchTab('pos', this)"><i class="fas fa-cash-register"></i> نقطة البيع</button>
                 <button class="tab-btn" onclick="switchTab('clients', this)"><i class="fas fa-users"></i> العملاء</button>
-                <!-- Developer Tab -->
-                <button class="tab-btn" id="devTabBtn" onclick="switchTab('dev-panel', this)" style="display: none; background: #fce500; color: #111;"><i class="fas fa-cogs"></i> إدارة النظام (المطور)</button>
             </div>
 
             <!-- Dashboard Tab -->
@@ -159,8 +172,8 @@
                         <div class="form-grid">
                             <div class="form-group"><label>اسم المنتج</label><input type="text" id="invName" required placeholder="iPhone 15"></div>
                             <div class="form-group"><label>الكمية</label><input type="number" id="invQty" required min="1" value="1"></div>
-                            <div class="form-group"><label>سعر الشراء</label><input type="number" id="invCost" required min="1"></div>
-                            <div class="form-group"><label>سعر البيع</label><input type="number" id="invPrice" required min="1"></div>
+                            <div class="form-group"><label>سعر الشراء</label><input type="number" id="invCost" required min="1" placeholder="سعر التكلفة"></div>
+                            <div class="form-group"><label>سعر البيع</label><input type="number" id="invPrice" required min="1" placeholder="سعر البيع"></div>
                         </div>
                         <button type="submit" class="btn-main" style="margin-top: 15px;"><i class="fas fa-plus-circle"></i> إضافة للمخزون</button>
                     </form>
@@ -182,7 +195,7 @@
                         </div>
                         <div class="form-group">
                             <label>الكمية المباعة</label>
-                            <input type="number" id="posQty" required min="1" value="1" oninput="calculateTotal()">
+                            <input type="number" id="posQty" required min="1" value="1">
                         </div>
                         <div class="form-group">
                             <label>السعر الإجمالي</label>
@@ -198,7 +211,7 @@
                 <div class="card">
                     <div class="section-title">
                         <span><i class="fas fa-users"></i> سجل العملاء</span>
-                        <button class="btn-main" onclick="openAddClientModal()" style="padding: 8px 15px; font-size: 14px;"><i class="fas fa-user-plus"></i> إضافة عميل</button>
+                        <button class="btn-main" onclick="openAddClientModal()" style="padding: 8px 15px; font-size: 14px;"><i class="fas fa-user-plus"></i> إضافة عميل جديد</button>
                     </div>
                     <div class="table-wrapper">
                         <table>
@@ -210,25 +223,10 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Developer Panel Tab -->
-            <div id="tab-dev-panel" class="tab-content">
-                <div class="card" style="border: 2px solid #fce500;">
-                    <h3 class="section-title" style="color: #111;"><i class="fas fa-crown" style="color: #fce500;"></i> إدارة المحلات المشتركة</h3>
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr><th>اسم المحل</th><th>إيميل المالك</th><th>الحالة</th><th>تاريخ التسجيل</th><th>إجراءات</th></tr>
-                            </thead>
-                            <tbody id="devStoresTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
-    <!-- Modal for Clients -->
+    <!-- Modal for Clients & Invoices -->
     <div class="modal-overlay" id="mainModal">
         <div class="modal-content" id="modalContent">
             <i class="fas fa-times close-modal" onclick="closeModal()"></i>
@@ -236,187 +234,95 @@
         </div>
     </div>
 
-    <!-- Firebase SDK v9 (Compat mode for easy use) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-
     <script>
-        // ==================== 1. إعدادات Firebase ====================
+        // ==================== الإعدادات العامة ====================
+        // في النسخة السحابية، يتم استبدال هذا بـ Firebase Config
         const firebaseConfig = {
-            apiKey: "AIzaSyChgRxNBPBlb41TGSZmdsE03tGkGVFl7GI",
-            authDomain: "emaa-core.firebaseapp.com",
-            projectId: "emaa-core",
-            storageBucket: "emaa-core.firebasestorage.app",
-            messagingSenderId: "737196522441",
-            appId: "1:737196522441:web:6bbcb456017e8484f7c618",
-            measurementId: "G-MMGLP0E3EM"
+            // apiKey: "YOUR_API_KEY",
+            // authDomain: "YOUR_PROJECT.firebaseapp.com",
+            // projectId: "YOUR_PROJECT_ID",
+            // ...
         };
+        const isCloudConnected = false; // اجعلها true عند ربط Firebase
 
-        // تهيئة Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-        const provider = new firebase.auth.GoogleAuthProvider();
+        const DEV_PASS = "admin123";
+        let currentUser = null;
+        
+        // قواعد البيانات المحلية (مؤقتاً حتى يتم الربط السحابي)
+        let db_Accounts = JSON.parse(localStorage.getItem('emaa_accounts')) || [];
+        let db_Data = JSON.parse(localStorage.getItem('emaa_data')) || {}; 
 
-        // ==================== 2. إعدادات المطور ====================
-        // ضع إيميلك هنا (نفس الإيميل اللي هتدخل بيه جوجل عشان تفتح لوحة المطور)
-        const DEVELOPER_EMAIL = "YOUR_EMAIL@gmail.com"; // <--- غير ده لإيميلك الحقيقي
+        // ==================== الدوال الأساسية (Auth) ====================
+        function showLogin() { document.getElementById('loginBox').style.display = 'block'; document.getElementById('registerBox').style.display = 'none'; }
+        function showRegister() { document.getElementById('loginBox').style.display = 'none'; document.getElementById('registerBox').style.display = 'block'; }
+        function showDevLogin() { document.getElementById('developerLogin').style.display = 'flex'; }
 
-        let currentUser = null; // سيحمل بيانات المستخدم الحالي
-        let isDeveloper = false;
-        let currentStoreId = null;
+        function doRegister() {
+            const storeName = document.getElementById('regStoreName').value;
+            const ownerName = document.getElementById('regOwnerName').value;
+            const phone = document.getElementById('regPhone').value;
+            const pass = document.getElementById('regPassword').value;
 
-        // ==================== 3. دوال المصادقة (Auth) ====================
-        function signInWithGoogle() {
-            showLoading(true);
-            auth.signInWithPopup(provider).then((result) => {
-                const user = result.user;
-                checkUserInDatabase(user);
-            }).catch((error) => {
-                showLoading(false);
-                alert("خطأ في الدخول: " + error.message);
-            });
+            if(!storeName || !phone || !pass) return alert('يرجى ملء الحقول');
+
+            db_Accounts.push({ phone, pass, storeName, ownerName, status: 'pending' });
+            localStorage.setItem('emaa_accounts', JSON.stringify(db_Accounts));
+            
+            db_Data[phone] = { products: [], clients: [], sales: [] };
+            localStorage.setItem('emaa_data', JSON.stringify(db_Data));
+
+            alert('تم التسجيل! يرجى انتظار موافقة المطور.');
+            showLogin();
+        }
+
+        function doLogin() {
+            const phone = document.getElementById('loginPhone').value;
+            const pass = document.getElementById('loginPassword').value;
+            const account = db_Accounts.find(a => a.phone === phone && a.pass === pass);
+
+            if(account) {
+                if(account.status !== 'active') return alert('الحساب قيد المراجعة. يرجى التواصل مع المطور.');
+                currentUser = account.phone;
+                document.getElementById('authScreen').style.display = 'none';
+                document.getElementById('appScreen').style.display = 'block';
+                document.getElementById('storeNameDisplay').innerText = account.storeName;
+                document.getElementById('phoneDisplay').innerText = account.phone;
+                initApp();
+            } else {
+                alert('بيانات الدخول خاطئة');
+            }
         }
 
         function logout() {
-            auth.signOut().then(() => {
-                window.location.reload();
-            });
+            currentUser = null;
+            document.getElementById('appScreen').style.display = 'none';
+            document.getElementById('authScreen').style.display = 'flex';
         }
 
-        // مراقبة حالة الدخول
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                currentUser = user;
-                checkUserInDatabase(user);
+        // ==================== دوال المطور (التحكم عن بعد) ====================
+        function doDevAdminLogin() {
+            if(document.getElementById('devAdminPass').value === DEV_PASS) {
+                document.getElementById('developerLogin').style.display = 'none';
+                // هنا يتم توجيه المطور للوحة تحكم سحابية حقيقية
+                alert('مرحباً بك أيها المطور.\nفي النسخة السحابية، سيتم توجيهك هنا إلى لوحة تحكم Firebase الخاصة بك لرؤية جميع المحلات.');
+                
+                // محاكاة لوحة المطور: عرض جميع الحسابات
+                let msg = "الحسابات المسجلة:\n";
+                db_Accounts.forEach((acc, i) => {
+                    msg += `${i+1}. ${acc.storeName} - ${acc.phone} (${acc.status})\n`;
+                });
+                alert(msg);
             } else {
-                document.getElementById('authScreen').style.display = 'flex';
-                document.getElementById('appScreen').style.display = 'none';
-                document.getElementById('pendingScreen').style.display = 'none';
-                showLoading(false);
-            }
-        });
-
-        // ==================== 4. التحقق من المستخدم وإنشاء الحساب ====================
-        function checkUserInDatabase(user) {
-            // التحقق هل المستخدم هو المطور؟
-            if (user.email === DEVELOPER_EMAIL) {
-                isDeveloper = true;
-                loginSuccess("EMAA.Tech (المطور)");
-                return;
-            }
-
-            // التحقق هل المحل مسجل مسبقاً في قاعدة البيانات؟
-            db.collection("stores").doc(user.uid).get().then((doc) => {
-                if (doc.exists) {
-                    const storeData = doc.data();
-                    if (storeData.status === 'active') {
-                        currentStoreId = user.uid;
-                        loginSuccess(storeData.storeName);
-                    } else {
-                        // الحساب موجود لكنه غير نشط (بانتظار الموافقة)
-                        document.getElementById('authScreen').style.display = 'none';
-                        document.getElementById('pendingScreen').style.display = 'flex';
-                        showLoading(false);
-                    }
-                } else {
-                    // محل جديد -> تسجيله في قاعدة البيانات
-                    db.collection("stores").doc(user.uid).set({
-                        storeName: user.displayName || "محل جديد",
-                        email: user.email,
-                        ownerName: user.displayName,
-                        status: "pending", // بانتظار موافقة المطور
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    }).then(() => {
-                        document.getElementById('authScreen').style.display = 'none';
-                        document.getElementById('pendingScreen').style.display = 'flex';
-                        showLoading(false);
-                    });
-                }
-            }).catch((error) => {
-                showLoading(false);
-                alert("خطأ في الاتصال بقاعدة البيانات: " + error.message);
-            });
-        }
-
-        function loginSuccess(storeName) {
-            document.getElementById('authScreen').style.display = 'none';
-            document.getElementById('pendingScreen').style.display = 'none';
-            document.getElementById('appScreen').style.display = 'block';
-            
-            document.getElementById('storeNameDisplay').innerText = storeName;
-            document.getElementById('userEmailDisplay').innerText = currentUser.email;
-
-            if (isDeveloper) {
-                document.getElementById('devPanelBtn').style.display = 'flex';
-                document.getElementById('devTabBtn').style.display = 'flex';
-                loadDeveloperPanel();
-            } else {
-                initApp();
-            }
-            showLoading(false);
-        }
-
-        // ==================== 5. دوال المطور (إدارة عن بعد) ====================
-        function loadDeveloperPanel() {
-            const tbody = document.getElementById('devStoresTableBody');
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">جاري تحميل المحلات...</td></tr>';
-
-            db.collection("stores").onSnapshot((snapshot) => {
-                tbody.innerHTML = '';
-                if (snapshot.empty) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لا توجد محلات مسجلة بعد.</td></tr>';
-                    return;
-                }
-
-                snapshot.forEach((doc) => {
-                    const store = doc.data();
-                    const id = doc.id;
-                    const statusBadge = store.status === 'active' 
-                        ? '<span class="badge b-green">نشط</span>' 
-                        : '<span class="badge b-yellow">قيد المراجعة</span>';
-                        
-                    const actionBtn = store.status === 'active'
-                        ? `<button class="btn-icon" style="color:var(--red); border-color:var(--red);" onclick="deleteStore('${id}')">حذف</button>`
-                        : `<button class="btn-icon" style="color:var(--green); border-color:var(--green);" onclick="approveStore('${id}')">موافقة</button>`;
-
-                    const date = store.createdAt ? store.createdAt.toDate().toLocaleDateString('ar-EG') : '-';
-
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${store.storeName}</td>
-                            <td>${store.email}</td>
-                            <td>${statusBadge}</td>
-                            <td>${date}</td>
-                            <td>${actionBtn}</td>
-                        </tr>
-                    `;
-                });
-            });
-        }
-
-        function approveStore(storeId) {
-            if(confirm('هل أنت متأكد من تفعيل هذا المحل؟')) {
-                db.collection("stores").doc(storeId).update({ status: 'active' }).then(() => {
-                    alert('تم تفعيل المحل بنجاح!');
-                });
+                alert('كلمة المرور خاطئة');
             }
         }
 
-        function deleteStore(storeId) {
-            if(confirm('هل أنت متأكد من حذف هذا المحل نهائياً بكل بياناته؟')) {
-                db.collection("stores").doc(storeId).delete().then(() => {
-                    alert('تم حذف المحل.');
-                });
-            }
-        }
-
-        // ==================== 6. دوال التطبيق الأساسية (للمحل) ====================
+        // ==================== دوال التطبيق الأساسية ====================
         function initApp() {
-            loadInventory();
-            loadClients();
-            loadDashboard();
+            renderDashboard();
+            renderProducts();
+            renderClients();
+            populateSelects();
         }
 
         function switchTab(tabId, btn) {
@@ -426,7 +332,7 @@
             if(btn) btn.classList.add('active');
         }
 
-        // --- إدارة المخزون ---
+        // ==================== إدارة المخزون (المعدلة) ====================
         document.getElementById('inventoryForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const name = document.getElementById('invName').value;
@@ -434,117 +340,94 @@
             const cost = parseFloat(document.getElementById('invCost').value);
             const price = parseFloat(document.getElementById('invPrice').value);
 
-            db.collection("stores").doc(currentUser.uid).collection("products").add({
-                name, qty, cost, price, createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
-                this.reset();
-                alert('تم إضافة المنتج!');
-            });
+            const newProduct = { id: Date.now(), name, qty, cost, price };
+            db_Data[currentUser].products.push(newProduct);
+            saveData();
+            
+            this.reset();
+            renderProducts();
+            renderDashboard();
+            populateSelects();
+            alert('تم إضافة المنتج بنجاح!');
         });
 
-        function loadInventory() {
+        function renderProducts() {
             const grid = document.getElementById('productsGrid');
-            grid.innerHTML = '<p>جاري التحميل...</p>';
-
-            db.collection("stores").doc(currentUser.uid).collection("products").onSnapshot((snapshot) => {
-                grid.innerHTML = '';
-                const select = document.getElementById('posProduct');
-                select.innerHTML = '<option value="">-- اختر منتج --</option>';
-
-                if (snapshot.empty) {
-                    grid.innerHTML = '<p style="text-align:center; color:gray; grid-column:1/-1;">لا توجد منتجات. أضف منتجاً.</p>';
-                    return;
-                }
-
-                snapshot.forEach((doc) => {
-                    const p = doc.data();
-                    p.id = doc.id; // حفظ الـ ID
-                    
-                    // عرض في الكروت
-                    grid.innerHTML += `
-                        <div class="product-card">
-                            <div class="product-name">${p.name}</div>
-                            <div class="product-price">${p.price} ج.م</div>
-                            <div style="font-size: 13px; color: var(--gray); margin-bottom: 10px;">المتاح: <strong>${p.qty}</strong></div>
-                            <button class="btn-icon" onclick="deleteProduct('${p.id}')" style="color: var(--red); border-color: var(--red);"><i class="fas fa-trash"></i></button>
-                        </div>
-                    `;
-
-                    // إضافة للـ POS
-                    if(p.qty > 0) {
-                        select.innerHTML += `<option value="${p.id}">${p.name} (متاح: ${p.qty}) - ${p.price} ج.م</option>`;
-                    }
-                });
+            grid.innerHTML = '';
+            db_Data[currentUser].products.forEach(p => {
+                grid.innerHTML += `
+                    <div class="product-card">
+                        <div class="product-name">${p.name}</div>
+                        <div class="product-price">${p.price} ج.م</div>
+                        <div style="font-size: 13px; color: var(--gray);">الكمية المتاحة: <strong>${p.qty}</strong></div>
+                        <button class="btn-icon" onclick="deleteProduct(${p.id})" style="margin-top: 10px; color: var(--red); border-color: var(--red);"><i class="fas fa-trash"></i> حذف</button>
+                    </div>
+                `;
             });
         }
 
         function deleteProduct(id) {
-            if(confirm('حذف المنتج؟')) {
-                db.collection("stores").doc(currentUser.uid).collection("products").doc(id).delete();
+            if(confirm('حذف هذا المنتج؟')) {
+                db_Data[currentUser].products = db_Data[currentUser].products.filter(p => p.id !== id);
+                saveData();
+                renderProducts();
+                renderDashboard();
+                populateSelects();
             }
         }
 
-        // --- نقطة البيع (POS) ---
-        function updatePosPrice() {
-            const id = document.getElementById('posProduct').value;
-            if(!id) return;
-            db.collection("stores").doc(currentUser.uid).collection("products").doc(id).get().then(doc => {
-                if(doc.exists) {
-                    document.getElementById('posQty').value = 1;
-                    calculateTotal();
+        // ==================== نقطة البيع (POS) ====================
+        function populateSelects() {
+            const select = document.getElementById('posProduct');
+            select.innerHTML = '<option value="">-- اختر منتج --</option>';
+            db_Data[currentUser].products.forEach(p => {
+                if(p.qty > 0) {
+                    select.innerHTML += `<option value="${p.id}">${p.name} (متاح: ${p.qty}) - ${p.price} ج.م</option>`;
                 }
             });
         }
 
-        function calculateTotal() {
-            const id = document.getElementById('posProduct').value;
-            const qty = parseInt(document.getElementById('posQty').value) || 0;
-            if(!id) return;
-            db.collection("stores").doc(currentUser.uid).collection("products").doc(id).get().then(doc => {
-                if(doc.exists) {
-                    const price = doc.data().price;
-                    document.getElementById('posTotal').value = price * qty;
-                }
-            });
+        function updatePosPrice() {
+            const id = parseInt(document.getElementById('posProduct').value);
+            const product = db_Data[currentUser].products.find(p => p.id === id);
+            if(product) {
+                document.getElementById('posQty').value = 1;
+                document.getElementById('posTotal').value = product.price;
+            }
         }
 
         function processSale() {
-            const id = document.getElementById('posProduct').value;
+            const id = parseInt(document.getElementById('posProduct').value);
             const qty = parseInt(document.getElementById('posQty').value);
-            if(!id || qty < 1) return alert('اختر منتجاً وكمية صحيحة');
+            const product = db_Data[currentUser].products.find(p => p.id === id);
 
-            const productRef = db.collection("stores").doc(currentUser.uid).collection("products").doc(id);
+            if(!product) return alert('اختر منتجاً');
+            if(product.qty < qty) return alert('الكمية المتاحة لا تكفي!');
+
+            // خصم الكمية
+            product.qty -= qty;
             
-            // استخدام Transaction لضمان خصم الكمية بشكل آمن (لا يمكن بيع كمية غير متوفرة)
-            db.runTransaction((transaction) => {
-                return transaction.get(productRef).then((doc) => {
-                    if (!doc.exists) throw "المنتج غير موجود";
-                    const currentQty = doc.data().qty;
-                    if (currentQty < qty) throw "الكمية المتاحة لا تكفي!";
-
-                    const newQty = currentQty - qty;
-                    transaction.update(productRef, { qty: newQty });
-
-                    // تسجيل الفاتورة
-                    const saleAmount = doc.data().price * qty;
-                    const saleRef = db.collection("stores").doc(currentUser.uid).collection("sales").doc();
-                    transaction.set(saleRef, {
-                        productName: doc.data().name,
-                        qty: qty,
-                        total: saleAmount,
-                        date: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                });
-            }).then(() => {
-                alert('تم البيع بنجاح!');
-                document.getElementById('posProduct').value = '';
-                document.getElementById('posTotal').value = '';
-            }).catch((error) => {
-                alert("فشل البيع: " + error);
+            // تسجيل البيع
+            const saleAmount = product.price * qty;
+            db_Data[currentUser].sales.push({
+                id: Date.now(),
+                productName: product.name,
+                qty: qty,
+                total: saleAmount,
+                date: new Date().toLocaleDateString('ar-EG')
             });
+
+            saveData();
+            renderProducts();
+            renderDashboard();
+            populateSelects();
+            
+            alert(`تم البيع بنجاح!\nالإجمالي: ${saleAmount} ج.م`);
+            document.getElementById('posProduct').value = '';
+            document.getElementById('posTotal').value = '';
         }
 
-        // --- إدارة العملاء ---
+        // ==================== إدارة العملاء (المعدلة) ====================
         function openAddClientModal() {
             document.getElementById('modalBody').innerHTML = `
                 <h3 class="section-title"><i class="fas fa-user-plus"></i> إضافة عميل جديد</h3>
@@ -567,71 +450,72 @@
                 const address = document.getElementById('newClientAddress').value;
                 const nid = document.getElementById('newClientNid').value;
 
-                db.collection("stores").doc(currentUser.uid).collection("clients").add({
-                    name, phone, address, nid, createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                }).then(() => {
-                    closeModal();
-                    alert('تم إضافة العميل!');
-                });
+                db_Data[currentUser].clients.push({ id: Date.now(), name, phone, address, nid });
+                saveData();
+                closeModal();
+                renderClients();
+                renderDashboard();
+                alert('تم إضافة العميل بنجاح!');
             };
         }
 
-        function loadClients() {
+        function renderClients() {
             const tbody = document.getElementById('clientsTableBody');
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">جاري التحميل...</td></tr>';
+            tbody.innerHTML = '';
+            const clients = db_Data[currentUser].clients;
+            
+            if(clients.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:gray;">لا يوجد عملاء. اضغط على "إضافة عميل جديد".</td></tr>';
+                return;
+            }
 
-            db.collection("stores").doc(currentUser.uid).collection("clients").onSnapshot((snapshot) => {
-                tbody.innerHTML = '';
-                if(snapshot.empty) {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:gray;">لا يوجد عملاء.</td></tr>';
-                    return;
-                }
-                snapshot.forEach((doc) => {
-                    const c = doc.data();
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${c.name}</td>
-                            <td>${c.phone}</td>
-                            <td>${c.address || '-'}</td>
-                            <td><button class="btn-icon" onclick="deleteClient('${doc.id}')" style="color:var(--red); border-color:var(--red);"><i class="fas fa-trash"></i></button></td>
-                        </tr>
-                    `;
-                });
+            clients.forEach(c => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${c.name}</td>
+                        <td>${c.phone}</td>
+                        <td>${c.address || '-'}</td>
+                        <td>
+                            <button class="btn-icon" onclick="deleteClient(${c.id})" style="color: var(--red); border-color: var(--red);"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
             });
         }
 
         function deleteClient(id) {
-            if(confirm('حذف العميل؟')) {
-                db.collection("stores").doc(currentUser.uid).collection("clients").doc(id).delete();
+            if(confirm('حذف هذا العميل؟')) {
+                db_Data[currentUser].clients = db_Data[currentUser].clients.filter(c => c.id !== id);
+                saveData();
+                renderClients();
+                renderDashboard();
             }
         }
 
-        // --- لوحة التحكم ---
-        function loadDashboard() {
-            db.collection("stores").doc(currentUser.uid).collection("products").onSnapshot(snap => {
-                let total = 0;
-                snap.forEach(doc => total += doc.data().qty);
-                document.getElementById('statInventory').innerText = total;
-            });
+        // ==================== لوحة التحكم ====================
+        function renderDashboard() {
+            const products = db_Data[currentUser].products;
+            const clients = db_Data[currentUser].clients;
+            const sales = db_Data[currentUser].sales;
 
-            db.collection("stores").doc(currentUser.uid).collection("clients").onSnapshot(snap => {
-                document.getElementById('statClients').innerText = snap.size;
-            });
+            const totalSales = sales.reduce((sum, s) => sum + s.total, 0);
+            const totalInventory = products.reduce((sum, p) => sum + p.qty, 0);
 
-            db.collection("stores").doc(currentUser.uid).collection("sales").onSnapshot(snap => {
-                let total = 0;
-                snap.forEach(doc => total += doc.data().total);
-                document.getElementById('statSales').innerText = total + ' ج.م';
-            });
+            document.getElementById('statSales').innerText = totalSales + ' ج.م';
+            document.getElementById('statInventory').innerText = totalInventory + ' قطعة';
+            document.getElementById('statClients').innerText = clients.length + ' عميل';
         }
 
-        // ==================== 7. دوال مساعدة ====================
-        function showLoading(show) {
-            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+        // ==================== دوال مساعدة ====================
+        function saveData() {
+            localStorage.setItem('emaa_data', JSON.stringify(db_Data));
         }
         function closeModal() {
             document.getElementById('mainModal').style.display = 'none';
         }
+
+        // إذا كان هناك حساب مسجل مسبقاً، يمكن تسجيل الدخول
+        // (هذا مجرد مثال، يمكنك إضافة حساب تجريبي هنا)
     </script>
 </body>
 </html>
