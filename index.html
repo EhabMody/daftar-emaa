@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EMAA.Tech - Enterprise SaaS</title>
+    <title>EMAA.Tech - Cloud SaaS</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary: #111111; --secondary: #00d2ff; --bg: #f0f2f5; --text: #333;
             --gray: #777; --red: #e74c3c; --green: #2ecc71; --white: #ffffff; 
-            --border: #e0e0e0; --shadow: 0 4px 20px rgba(0,0,0,0.08); --gold: #fce500;
+            --border: #e0e0e0; --shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
         body { background: var(--bg); color: var(--text); padding-bottom: 50px; }
+        body.dark-mode { --bg: #1a1a1a; --text: #eee; --white: #2d2d2d; --border: #444; --shadow: 0 4px 20px rgba(0,0,0,0.3); }
         
         /* Auth Screens */
         #authScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a0a0a; display: flex; justify-content: center; align-items: center; z-index: 9999; padding: 20px; flex-direction: column;}
@@ -23,9 +24,6 @@
         .google-btn:hover { background: #c53929; }
         .btn-main { background: var(--primary); color: var(--secondary); border: 1px solid var(--secondary); padding: 12px 20px; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; gap: 8px; transition: 0.3s; }
         .btn-main:hover { background: var(--secondary); color: var(--primary); }
-        .form-group { display: flex; flex-direction: column; margin-bottom: 15px; text-align: right;}
-        .form-group label { font-size: 13px; font-weight: 600; margin-bottom: 5px; color: var(--text); }
-        .form-group input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--bg); }
 
         /* App Header */
         header { background: var(--primary); padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.2); flex-wrap: wrap; gap: 10px;}
@@ -39,6 +37,12 @@
         .container { max-width: 1400px; margin: 20px auto; padding: 0 15px; }
         .card { background: var(--white); padding: 25px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 25px; }
         .section-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--bg); padding-bottom: 10px; color: var(--text); }
+        
+        /* Forms & Buttons */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+        .form-group input, .form-group select { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--bg); color: var(--text); }
         
         /* Tabs */
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
@@ -55,7 +59,6 @@
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-block; }
         .b-green { background: #d4edda; color: #155724; }
         .b-yellow { background: #fff3cd; color: #856404; }
-        .b-red { background: #f8d7da; color: #721c24; }
         .btn-icon { border: 1px solid var(--border); background: transparent; padding: 6px 10px; border-radius: 5px; cursor: pointer; color: var(--text); font-size: 13px; }
 
         /* Dashboard Cards */
@@ -89,7 +92,7 @@
         <p style="margin-top: 15px; font-weight: bold; color: var(--primary);">جاري التحميل...</p>
     </div>
 
-    <!-- Main Login Screen (For Stores) -->
+    <!-- Auth Screen -->
     <div id="authScreen">
         <div style="text-align: center; margin-bottom: 30px;">
             <h1 style="color: var(--secondary); font-size: 40px; font-weight: 900;"><i class="fas fa-shield-alt"></i> EMAA.Tech</h1>
@@ -98,41 +101,23 @@
 
         <div class="auth-box">
             <h1>تسجيل الدخول للمحل</h1>
-            <p style="color: var(--gray); margin-bottom: 20px; font-size: 14px;">استخدم حساب Google الخاص بك (Chrome) للدخول</p>
+            <p style="color: var(--gray); margin-bottom: 20px; font-size: 14px;">استخدم حساب جوجل الخاص بك للدخول أو التسجيل</p>
             <button class="google-btn" onclick="signInWithGoogle()">
                 <i class="fab fa-google"></i> الدخول باستخدام Google
             </button>
-            <p style="margin-top: 20px; font-size: 12px; color: var(--gray);">بمجرد تسجيل الدخول، سيتم إنشاء حساب لمحلك تلقائياً (بانتظار موافقة المطور).</p>
-        </div>
-    </div>
-
-    <!-- Secret Developer Login Screen (Hidden from normal users) -->
-    <div id="devAuthScreen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a0a0a; z-index: 9998; justify-content: center; align-items: center; flex-direction: column; padding: 20px;">
-        <div class="auth-box" style="border-top-color: var(--gold);">
-            <h1 style="color: var(--gold);"><i class="fas fa-crown"></i> Super Admin</h1>
-            <p style="color: var(--gray); margin-bottom: 20px; font-size: 14px;">بوابة الدخول السرية للمطور</p>
-            <div class="form-group">
-                <label style="color: var(--gray);">البريد الإلكتروني</label>
-                <input type="email" id="devEmail" placeholder="admin@emaa.tech">
-            </div>
-            <div class="form-group">
-                <label style="color: var(--gray);">كلمة المرور السرية</label>
-                <input type="password" id="devPassword" placeholder="********">
-            </div>
-            <button class="btn-main" style="background: var(--gold); color: var(--primary); border: none; width: 100%;" onclick="doDevLogin()">دخول للنظام</button>
-            <button style="background: none; border: none; color: var(--gray); margin-top: 15px; cursor: pointer; font-size: 12px;" onclick="window.location.hash = ''; window.location.reload();">العودة</button>
+            <p style="margin-top: 20px; font-size: 12px; color: var(--gray);">بمجرد تسجيل الدخول، سيتم إنشاء حساب لمحلك تلقائياً.</p>
         </div>
     </div>
 
     <!-- Pending Activation Screen -->
-    <div id="pendingScreen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a0a0a; z-index: 9997; justify-content: center; align-items: center; flex-direction: column; padding: 20px; text-align: center;">
-        <i class="fas fa-clock" style="font-size: 60px; color: var(--gold); margin-bottom: 20px;"></i>
+    <div id="pendingScreen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a0a0a; z-index: 9998; justify-content: center; align-items: center; flex-direction: column; padding: 20px; text-align: center;">
+        <i class="fas fa-clock" style="font-size: 60px; color: var(--yellow); margin-bottom: 20px;"></i>
         <h2 style="color: white; margin-bottom: 10px;">حسابك قيد المراجعة</h2>
-        <p style="color: #aaa; max-width: 400px; margin-bottom: 30px;">شكراً لتسجيلك في EMAA.Tech. يرجى التواصل مع المطور لتفعيل حسابك ودفع الاشتراك.</p>
+        <p style="color: #aaa; max-width: 400px; margin-bottom: 30px;">شكراً لتسجيلك في EMAA.Tech. يرجى التواصل مع المطور (EMAA.Tech) لتفعيل حسابك ودفع الاشتراك.</p>
         <button class="btn-outline" onclick="logout()" style="border-color: var(--red); color: var(--red);">تسجيل الخروج</button>
     </div>
 
-    <!-- Store Main App -->
+    <!-- Main App -->
     <div id="appScreen" style="display: none;">
         <header>
             <div class="logo"><i class="fas fa-shield-alt"></i> <span>EMAA.Tech</span></div>
@@ -141,6 +126,8 @@
                 <small id="userEmailDisplay">إيميل المستخدم</small>
             </div>
             <div class="header-actions">
+                <!-- Dev Panel Button (Only visible to Developer) -->
+                <button class="btn-outline" id="devPanelBtn" onclick="switchTab('dev-panel', document.querySelectorAll('.tab-btn')[4])" style="border-color: #fce500; color: #fce500; display: none;"><i class="fas fa-crown"></i> لوحة المطور</button>
                 <button class="btn-outline" onclick="logout()" style="border-color: var(--red); color: var(--red);"><i class="fas fa-sign-out-alt"></i> خروج</button>
             </div>
         </header>
@@ -151,6 +138,8 @@
                 <button class="tab-btn" onclick="switchTab('inventory', this)"><i class="fas fa-box"></i> المخزون</button>
                 <button class="tab-btn" onclick="switchTab('pos', this)"><i class="fas fa-cash-register"></i> نقطة البيع</button>
                 <button class="tab-btn" onclick="switchTab('clients', this)"><i class="fas fa-users"></i> العملاء</button>
+                <!-- Developer Tab -->
+                <button class="tab-btn" id="devTabBtn" onclick="switchTab('dev-panel', this)" style="display: none; background: #fce500; color: #111;"><i class="fas fa-cogs"></i> إدارة النظام (المطور)</button>
             </div>
 
             <!-- Dashboard Tab -->
@@ -221,27 +210,19 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Developer Panel -->
-    <div id="devPanelScreen" style="display: none;">
-        <header style="background: #111; border-bottom: 3px solid var(--gold);">
-            <div class="logo" style="color: var(--gold);"><i class="fas fa-crown"></i> <span>EMAA.Tech Super Admin</span></div>
-            <div class="header-actions">
-                <button class="btn-outline" onclick="logoutDev()" style="border-color: var(--gold); color: var(--gold);"><i class="fas fa-sign-out-alt"></i> خروج</button>
-            </div>
-        </header>
-        <div class="container">
-            <div class="card" style="border-top: 4px solid var(--gold);">
-                <h3 class="section-title"><i class="fas fa-building"></i> إدارة المحلات المشتركة (التحكم عن بعد)</h3>
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr><th>اسم المحل</th><th>إيميل المالك</th><th>الحالة</th><th>تاريخ التسجيل</th><th>إجراءات</th></tr>
-                        </thead>
-                        <tbody id="devStoresTableBody"></tbody>
-                    </table>
+            <!-- Developer Panel Tab -->
+            <div id="tab-dev-panel" class="tab-content">
+                <div class="card" style="border: 2px solid #fce500;">
+                    <h3 class="section-title" style="color: #111;"><i class="fas fa-crown" style="color: #fce500;"></i> إدارة المحلات المشتركة</h3>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr><th>اسم المحل</th><th>إيميل المالك</th><th>الحالة</th><th>تاريخ التسجيل</th><th>إجراءات</th></tr>
+                            </thead>
+                            <tbody id="devStoresTableBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -250,12 +231,12 @@
     <!-- Modal for Clients -->
     <div class="modal-overlay" id="mainModal">
         <div class="modal-content" id="modalContent">
-            <i class="fas fa-close close-modal" onclick="closeModal()"></i>
+            <i class="fas fa-times close-modal" onclick="closeModal()"></i>
             <div id="modalBody"></div>
         </div>
     </div>
 
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK v9 (Compat mode for easy use) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -271,70 +252,27 @@
             appId: "1:737196522441:web:6bbcb456017e8484f7c618",
             measurementId: "G-MMGLP0E3EM"
         };
+
+        // تهيئة Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
         const provider = new firebase.auth.GoogleAuthProvider();
 
-        // ==================== 2. إعدادات المطور (Super Admin) ====================
-        // بيانات دخول المطور (سرية)
-        const DEV_EMAIL = "admin@emaa.tech"; 
-        const DEV_PASS = "SuperSecret123"; 
-        
-        let currentUser = null;
+        // ==================== 2. إعدادات المطور ====================
+        // ضع إيميلك هنا (نفس الإيميل اللي هتدخل بيه جوجل عشان تفتح لوحة المطور)
+        const DEVELOPER_EMAIL = "YOUR_EMAIL@gmail.com"; // <--- غير ده لإيميلك الحقيقي
+
+        let currentUser = null; // سيحمل بيانات المستخدم الحالي
+        let isDeveloper = false;
         let currentStoreId = null;
 
-        // ==================== 3. سيناريو الدخول ====================
-        
-        // فحص الرابط عند التحميل (هل هو المطور أم عميل؟)
-        window.onload = function() {
-            if(window.location.hash === '#dev-admin') {
-                // إخفاء صفحة الدخول العادية وإظهار بوابة المطور السرية
-                document.getElementById('authScreen').style.display = 'none';
-                document.getElementById('devAuthScreen').style.display = 'flex';
-            } else {
-                // فحص حالة تسجيل الدخول للعملاء
-                auth.onAuthStateChanged((user) => {
-                    if (user) {
-                        currentUser = user;
-                        checkUserInDatabase(user);
-                    } else {
-                        document.getElementById('authScreen').style.display = 'flex';
-                        document.getElementById('appScreen').style.display = 'none';
-                        showLoading(false);
-                    }
-                });
-            }
-        };
-
-        // دالة الدخول للمطور (من البوابة السرية)
-        function doDevLogin() {
-            const email = document.getElementById('devEmail').value;
-            const pass = document.getElementById('devPassword').value;
-
-            if(email === DEV_EMAIL && pass === DEV_PASS) {
-                showLoading(true);
-                // الدخول للمطور (لا علاقة له بـ Firebase Auth للعملاء)
-                document.getElementById('devAuthScreen').style.display = 'none';
-                document.getElementById('devPanelScreen').style.display = 'block';
-                document.getElementById('storeNameDisplay').innerText = "المطور (EMAA.Tech)";
-                loadDeveloperPanel();
-                showLoading(false);
-            } else {
-                alert('بيانات المطور غير صحيحة!');
-            }
-        }
-
-        function logoutDev() {
-            window.location.hash = '';
-            window.location.reload();
-        }
-
-        // دالة الدخول للعملاء (جوجل)
+        // ==================== 3. دوال المصادقة (Auth) ====================
         function signInWithGoogle() {
             showLoading(true);
             auth.signInWithPopup(provider).then((result) => {
-                checkUserInDatabase(result.user);
+                const user = result.user;
+                checkUserInDatabase(user);
             }).catch((error) => {
                 showLoading(false);
                 alert("خطأ في الدخول: " + error.message);
@@ -347,8 +285,29 @@
             });
         }
 
+        // مراقبة حالة الدخول
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                checkUserInDatabase(user);
+            } else {
+                document.getElementById('authScreen').style.display = 'flex';
+                document.getElementById('appScreen').style.display = 'none';
+                document.getElementById('pendingScreen').style.display = 'none';
+                showLoading(false);
+            }
+        });
+
         // ==================== 4. التحقق من المستخدم وإنشاء الحساب ====================
         function checkUserInDatabase(user) {
+            // التحقق هل المستخدم هو المطور؟
+            if (user.email === DEVELOPER_EMAIL) {
+                isDeveloper = true;
+                loginSuccess("EMAA.Tech (المطور)");
+                return;
+            }
+
+            // التحقق هل المحل مسجل مسبقاً في قاعدة البيانات؟
             db.collection("stores").doc(user.uid).get().then((doc) => {
                 if (doc.exists) {
                     const storeData = doc.data();
@@ -356,17 +315,18 @@
                         currentStoreId = user.uid;
                         loginSuccess(storeData.storeName);
                     } else {
+                        // الحساب موجود لكنه غير نشط (بانتظار الموافقة)
                         document.getElementById('authScreen').style.display = 'none';
                         document.getElementById('pendingScreen').style.display = 'flex';
                         showLoading(false);
                     }
                 } else {
-                    // محل جديد -> تسجيله
+                    // محل جديد -> تسجيله في قاعدة البيانات
                     db.collection("stores").doc(user.uid).set({
                         storeName: user.displayName || "محل جديد",
                         email: user.email,
                         ownerName: user.displayName,
-                        status: "pending",
+                        status: "pending", // بانتظار موافقة المطور
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     }).then(() => {
                         document.getElementById('authScreen').style.display = 'none';
@@ -374,6 +334,9 @@
                         showLoading(false);
                     });
                 }
+            }).catch((error) => {
+                showLoading(false);
+                alert("خطأ في الاتصال بقاعدة البيانات: " + error.message);
             });
         }
 
@@ -381,13 +344,21 @@
             document.getElementById('authScreen').style.display = 'none';
             document.getElementById('pendingScreen').style.display = 'none';
             document.getElementById('appScreen').style.display = 'block';
+            
             document.getElementById('storeNameDisplay').innerText = storeName;
             document.getElementById('userEmailDisplay').innerText = currentUser.email;
-            initApp();
+
+            if (isDeveloper) {
+                document.getElementById('devPanelBtn').style.display = 'flex';
+                document.getElementById('devTabBtn').style.display = 'flex';
+                loadDeveloperPanel();
+            } else {
+                initApp();
+            }
             showLoading(false);
         }
 
-        // ==================== 5. لوحة تحكم المطور ====================
+        // ==================== 5. دوال المطور (إدارة عن بعد) ====================
         function loadDeveloperPanel() {
             const tbody = document.getElementById('devStoresTableBody');
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">جاري تحميل المحلات...</td></tr>';
@@ -405,9 +376,11 @@
                     const statusBadge = store.status === 'active' 
                         ? '<span class="badge b-green">نشط</span>' 
                         : '<span class="badge b-yellow">قيد المراجعة</span>';
+                        
                     const actionBtn = store.status === 'active'
                         ? `<button class="btn-icon" style="color:var(--red); border-color:var(--red);" onclick="deleteStore('${id}')">حذف</button>`
                         : `<button class="btn-icon" style="color:var(--green); border-color:var(--green);" onclick="approveStore('${id}')">موافقة</button>`;
+
                     const date = store.createdAt ? store.createdAt.toDate().toLocaleDateString('ar-EG') : '-';
 
                     tbody.innerHTML += `
@@ -424,18 +397,22 @@
         }
 
         function approveStore(storeId) {
-            if(confirm('تفعيل هذا المحل؟')) {
-                db.collection("stores").doc(storeId).update({ status: 'active' });
+            if(confirm('هل أنت متأكد من تفعيل هذا المحل؟')) {
+                db.collection("stores").doc(storeId).update({ status: 'active' }).then(() => {
+                    alert('تم تفعيل المحل بنجاح!');
+                });
             }
         }
 
         function deleteStore(storeId) {
-            if(confirm('حذف هذا المحل نهائياً؟')) {
-                db.collection("stores").doc(storeId).delete();
+            if(confirm('هل أنت متأكد من حذف هذا المحل نهائياً بكل بياناته؟')) {
+                db.collection("stores").doc(storeId).delete().then(() => {
+                    alert('تم حذف المحل.');
+                });
             }
         }
 
-        // ==================== 6. دوال التطبيق للمحل ====================
+        // ==================== 6. دوال التطبيق الأساسية (للمحل) ====================
         function initApp() {
             loadInventory();
             loadClients();
@@ -449,6 +426,7 @@
             if(btn) btn.classList.add('active');
         }
 
+        // --- إدارة المخزون ---
         document.getElementById('inventoryForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const name = document.getElementById('invName').value;
@@ -480,8 +458,9 @@
 
                 snapshot.forEach((doc) => {
                     const p = doc.data();
-                    p.id = doc.id;
+                    p.id = doc.id; // حفظ الـ ID
                     
+                    // عرض في الكروت
                     grid.innerHTML += `
                         <div class="product-card">
                             <div class="product-name">${p.name}</div>
@@ -491,6 +470,7 @@
                         </div>
                     `;
 
+                    // إضافة للـ POS
                     if(p.qty > 0) {
                         select.innerHTML += `<option value="${p.id}">${p.name} (متاح: ${p.qty}) - ${p.price} ج.م</option>`;
                     }
@@ -504,6 +484,7 @@
             }
         }
 
+        // --- نقطة البيع (POS) ---
         function updatePosPrice() {
             const id = document.getElementById('posProduct').value;
             if(!id) return;
@@ -534,6 +515,7 @@
 
             const productRef = db.collection("stores").doc(currentUser.uid).collection("products").doc(id);
             
+            // استخدام Transaction لضمان خصم الكمية بشكل آمن (لا يمكن بيع كمية غير متوفرة)
             db.runTransaction((transaction) => {
                 return transaction.get(productRef).then((doc) => {
                     if (!doc.exists) throw "المنتج غير موجود";
@@ -543,6 +525,7 @@
                     const newQty = currentQty - qty;
                     transaction.update(productRef, { qty: newQty });
 
+                    // تسجيل الفاتورة
                     const saleAmount = doc.data().price * qty;
                     const saleRef = db.collection("stores").doc(currentUser.uid).collection("sales").doc();
                     transaction.set(saleRef, {
@@ -561,6 +544,7 @@
             });
         }
 
+        // --- إدارة العملاء ---
         function openAddClientModal() {
             document.getElementById('modalBody').innerHTML = `
                 <h3 class="section-title"><i class="fas fa-user-plus"></i> إضافة عميل جديد</h3>
@@ -622,6 +606,7 @@
             }
         }
 
+        // --- لوحة التحكم ---
         function loadDashboard() {
             db.collection("stores").doc(currentUser.uid).collection("products").onSnapshot(snap => {
                 let total = 0;
@@ -640,6 +625,7 @@
             });
         }
 
+        // ==================== 7. دوال مساعدة ====================
         function showLoading(show) {
             document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
         }
