@@ -76,9 +76,10 @@
         .close-modal { position: absolute; top: 15px; left: 15px; font-size: 24px; cursor: pointer; color: var(--gray); }
         
         /* Loading */
-        #loadingOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:99999; flex-direction:column;}
+        #loadingOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; z-index:99999; flex-direction:column;}
         .spinner { border: 5px solid #f3f3f3; border-top: 5px solid var(--secondary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .error-box { background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; margin-top: 15px; display: none; text-align: right; font-size: 14px; border: 1px solid #ffeeba; }
     </style>
 </head>
 <body>
@@ -87,6 +88,7 @@
     <div id="loadingOverlay">
         <div class="spinner"></div>
         <p style="margin-top: 15px; font-weight: bold; color: var(--primary);">جاري التحميل...</p>
+        <div id="loadingError" class="error-box" style="max-width: 400px;"></div>
     </div>
 
     <!-- Main Login Screen (For Stores) -->
@@ -106,7 +108,7 @@
         </div>
     </div>
 
-    <!-- Secret Developer Login Screen (Hidden from normal users) -->
+    <!-- Secret Developer Login Screen -->
     <div id="devAuthScreen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a0a0a; z-index: 9998; justify-content: center; align-items: center; flex-direction: column; padding: 20px;">
         <div class="auth-box" style="border-top-color: var(--gold);">
             <h1 style="color: var(--gold);"><i class="fas fa-crown"></i> Super Admin</h1>
@@ -167,7 +169,7 @@
                 <div class="card">
                     <h3 class="section-title"><i class="fas fa-plus"></i> إضافة منتج جديد</h3>
                     <form id="inventoryForm">
-                        <div class="form-grid">
+                        <div class="form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                             <div class="form-group"><label>اسم المنتج</label><input type="text" id="invName" required placeholder="iPhone 15"></div>
                             <div class="form-group"><label>الكمية</label><input type="number" id="invQty" required min="1" value="1"></div>
                             <div class="form-group"><label>سعر الشراء</label><input type="number" id="invCost" required min="1"></div>
@@ -184,7 +186,7 @@
             <div id="tab-pos" class="tab-content">
                 <div class="card">
                     <h3 class="section-title"><i class="fas fa-cash-register"></i> عملية بيع جديدة</h3>
-                    <div class="form-grid">
+                    <div class="form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                         <div class="form-group">
                             <label>اختر المنتج</label>
                             <select id="posProduct" required onchange="updatePosPrice()">
@@ -250,7 +252,7 @@
     <!-- Modal for Clients -->
     <div class="modal-overlay" id="mainModal">
         <div class="modal-content" id="modalContent">
-            <i class="fas fa-close close-modal" onclick="closeModal()"></i>
+            <i class="fas fa-times close-modal" onclick="closeModal()"></i>
             <div id="modalBody"></div>
         </div>
     </div>
@@ -276,24 +278,18 @@
         const auth = firebase.auth();
         const provider = new firebase.auth.GoogleAuthProvider();
 
-        // ==================== 2. إعدادات المطور (Super Admin) ====================
-        // بيانات دخول المطور (سرية)
+        // ==================== 2. إعدادات المطور ====================
         const DEV_EMAIL = "admin@emaa.tech"; 
         const DEV_PASS = "SuperSecret123"; 
-        
         let currentUser = null;
         let currentStoreId = null;
 
         // ==================== 3. سيناريو الدخول ====================
-        
-        // فحص الرابط عند التحميل (هل هو المطور أم عميل؟)
         window.onload = function() {
             if(window.location.hash === '#dev-admin') {
-                // إخفاء صفحة الدخول العادية وإظهار بوابة المطور السرية
                 document.getElementById('authScreen').style.display = 'none';
                 document.getElementById('devAuthScreen').style.display = 'flex';
             } else {
-                // فحص حالة تسجيل الدخول للعملاء
                 auth.onAuthStateChanged((user) => {
                     if (user) {
                         currentUser = user;
@@ -307,14 +303,23 @@
             }
         };
 
-        // دالة الدخول للمطور (من البوابة السرية)
+        function showLoading(show, errorMsg = "") {
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+            const errBox = document.getElementById('loadingError');
+            if(errorMsg) {
+                errBox.innerText = errorMsg;
+                errBox.style.display = 'block';
+            } else {
+                errBox.style.display = 'none';
+            }
+        }
+
         function doDevLogin() {
             const email = document.getElementById('devEmail').value;
             const pass = document.getElementById('devPassword').value;
 
             if(email === DEV_EMAIL && pass === DEV_PASS) {
                 showLoading(true);
-                // الدخول للمطور (لا علاقة له بـ Firebase Auth للعملاء)
                 document.getElementById('devAuthScreen').style.display = 'none';
                 document.getElementById('devPanelScreen').style.display = 'block';
                 document.getElementById('storeNameDisplay').innerText = "المطور (EMAA.Tech)";
@@ -330,25 +335,32 @@
             window.location.reload();
         }
 
-        // دالة الدخول للعملاء (جوجل)
+        // دالة الدخول للعملاء (جوجل) مع مؤقت لمنع التعليق
         function signInWithGoogle() {
             showLoading(true);
+            
+            const timeout = setTimeout(() => {
+                showLoading(false);
+                alert("استغرق الاتصال وقتاً طويلاً. تأكد من:\n1. تفعيل قاعدة بيانات Firestore.\n2. تفعيل تسجيل الدخول بجوجل.\n3. إضافة رابط الموقع في Authorized Domains.");
+            }, 15000);
+
             auth.signInWithPopup(provider).then((result) => {
+                clearTimeout(timeout);
                 checkUserInDatabase(result.user);
             }).catch((error) => {
+                clearTimeout(timeout);
                 showLoading(false);
                 alert("خطأ في الدخول: " + error.message);
             });
         }
 
         function logout() {
-            auth.signOut().then(() => {
-                window.location.reload();
-            });
+            auth.signOut().then(() => { window.location.reload(); });
         }
 
-        // ==================== 4. التحقق من المستخدم وإنشاء الحساب ====================
+        // ==================== 4. التحقق من المستخدم ====================
         function checkUserInDatabase(user) {
+            showLoading(true);
             db.collection("stores").doc(user.uid).get().then((doc) => {
                 if (doc.exists) {
                     const storeData = doc.data();
@@ -361,7 +373,6 @@
                         showLoading(false);
                     }
                 } else {
-                    // محل جديد -> تسجيله
                     db.collection("stores").doc(user.uid).set({
                         storeName: user.displayName || "محل جديد",
                         email: user.email,
@@ -372,8 +383,12 @@
                         document.getElementById('authScreen').style.display = 'none';
                         document.getElementById('pendingScreen').style.display = 'flex';
                         showLoading(false);
+                    }).catch(err => {
+                        showLoading(false, "خطأ في حفظ البيانات: " + err.message);
                     });
                 }
+            }).catch(err => {
+                showLoading(false, "خطأ في قراءة البيانات: " + err.message);
             });
         }
 
@@ -398,7 +413,6 @@
                     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لا توجد محلات مسجلة بعد.</td></tr>';
                     return;
                 }
-
                 snapshot.forEach((doc) => {
                     const store = doc.data();
                     const id = doc.id;
@@ -420,6 +434,8 @@
                         </tr>
                     `;
                 });
+            }, (error) => {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">حدث خطأ: ${error.message}</td></tr>`;
             });
         }
 
@@ -640,9 +656,6 @@
             });
         }
 
-        function showLoading(show) {
-            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
-        }
         function closeModal() {
             document.getElementById('mainModal').style.display = 'none';
         }
