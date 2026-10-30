@@ -34,12 +34,10 @@ body.dark-mode {
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
 body { background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.3s, color 0.3s; font-size: 14px; line-height: 1.6; }
 
-/* --- Animations --- */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideIn { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* --- Toast & Loading --- */
 #toastContainer { position: fixed; top: 20px; left: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 10px; }
 .toast { background: var(--surface); color: var(--text); padding: 14px 20px; border-radius: var(--radius-sm); font-weight: 600; box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 12px; animation: slideIn 0.3s ease-out; min-width: 280px; border-right: 4px solid var(--accent); }
 .toast.success { border-right-color: var(--success); }
@@ -49,7 +47,6 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; transition:
 #loadingOverlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 99999; flex-direction: column; }
 .spinner { width: 48px; height: 48px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
 
-/* --- Auth Screen --- */
 #authScreen, #developerLogin, #pendingScreen { position: fixed; inset: 0; background: linear-gradient(135deg, var(--primary) 0%, #1e1b4b 100%); display: flex; justify-content: center; align-items: center; z-index: 9998; padding: 20px; }
 .auth-box { background: var(--surface); padding: 40px; border-radius: 20px; width: 100%; max-width: 440px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); animation: fadeIn 0.5s ease-out; border: 1px solid var(--border); }
 .dev-brand { text-align: center; margin-bottom: 30px; color: white; }
@@ -75,7 +72,6 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; transition:
 .btn-outline:hover { background: var(--surface-hover); border-color: var(--text-muted); }
 .btn-danger { background: var(--danger); color: white; }
 
-/* --- Main App Layout --- */
 #appScreen { display: none; min-height: 100vh; }
 header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); background: rgba(255,255,255,0.9); }
 body.dark-mode header { background: rgba(30, 41, 59, 0.9); }
@@ -87,7 +83,6 @@ body.dark-mode header { background: rgba(30, 41, 59, 0.9); }
 
 .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
 
-/* --- Tabs --- */
 .tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 24px; scrollbar-width: none; }
 .tabs::-webkit-scrollbar { display: none; }
 .tab-btn { padding: 10px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 50px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; white-space: nowrap; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
@@ -98,7 +93,6 @@ body.dark-mode header { background: rgba(30, 41, 59, 0.9); }
 .tab-content { display: none; animation: fadeIn 0.3s ease-out; }
 .tab-content.active { display: block; }
 
-/* --- Cards & Stats --- */
 .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-sm); border: 1px solid var(--border); padding: 24px; margin-bottom: 24px; transition: transform 0.2s, box-shadow 0.2s; }
 .card:hover { box-shadow: var(--shadow); }
 .section-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; color: var(--text); padding-bottom: 12px; border-bottom: 1px solid var(--border); }
@@ -115,12 +109,10 @@ body.dark-mode header { background: rgba(30, 41, 59, 0.9); }
 .stat-info h3 { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
 .stat-info p { font-size: 22px; font-weight: 800; color: var(--text); }
 
-/* --- Forms Grid --- */
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
 .form-grid .span-2 { grid-column: span 2; }
 @media (max-width: 768px) { .form-grid .span-2 { grid-column: span 1; } }
 
-/* --- Tables --- */
 .table-wrapper { overflow-x: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); }
 table { width: 100%; border-collapse: collapse; min-width: 700px; background: var(--surface); }
 th, td { padding: 14px 16px; text-align: right; border-bottom: 1px solid var(--border); font-size: 13px; }
@@ -128,7 +120,6 @@ th { background: var(--bg); font-weight: 700; color: var(--text-muted); position
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: var(--surface-hover); }
 
-/* --- Products & POS --- */
 .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
 .product-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; transition: all 0.2s; display: flex; flex-direction: column; }
 .product-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--accent); }
@@ -163,13 +154,11 @@ tr:hover td { background: var(--surface-hover); }
 
 .cart-total { background: var(--primary); color: white; padding: 16px; border-radius: var(--radius-sm); display: flex; justify-content: space-between; font-size: 18px; font-weight: 800; margin-top: 16px; }
 
-/* --- Modals --- */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
 .modal-content { background: var(--surface); padding: 28px; border-radius: var(--radius); width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative; animation: fadeIn 0.2s; border: 1px solid var(--border); }
 .close-modal { position: absolute; top: 16px; left: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 .close-modal:hover { background: var(--bg); color: var(--danger); }
 
-/* --- Utilities --- */
 .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; }
 .b-green { background: rgba(16, 185, 129, 0.1); color: var(--success); }
 .b-red { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
@@ -188,7 +177,6 @@ tr:hover td { background: var(--surface-hover); }
 .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
 .empty-state i { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
 
-/* --- Print Styles --- */
 @media print {
   body * { visibility: hidden; }
   .modal-content, .modal-content * { visibility: visible; }
@@ -224,7 +212,7 @@ tr:hover td { background: var(--surface-hover); }
         <label>كلمة المرور</label>
         <input type="password" id="loginPass" class="form-input" placeholder="••••••••" onkeypress="if(event.key==='Enter')doLogin()" autocomplete="current-password">
       </div>
-      <div class="auth-error" id="loginError" style="color:var(--danger);font-size:12px;margin-bottom:12px;display:none"></div>
+      <div id="loginError" style="color:var(--danger);font-size:12px;margin-bottom:12px;display:none"></div>
       <button class="btn btn-primary" onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> دخول</button>
       <button class="btn btn-outline" style="margin-top:10px" onclick="signInWithGoogle()"><i class="fab fa-google"></i> الدخول عبر Google</button>
     </div>
@@ -242,7 +230,7 @@ tr:hover td { background: var(--surface-hover); }
         <label>كلمة المرور</label>
         <input type="password" id="signupPass" class="form-input" placeholder="6 أحرف على الأقل">
       </div>
-      <div class="auth-error" id="signupError" style="color:var(--danger);font-size:12px;margin-bottom:12px;display:none"></div>
+      <div id="signupError" style="color:var(--danger);font-size:12px;margin-bottom:12px;display:none"></div>
       <button class="btn btn-accent" onclick="doSignup()"><i class="fas fa-user-plus"></i> إنشاء الحساب</button>
     </div>
 
@@ -267,7 +255,7 @@ tr:hover td { background: var(--surface-hover); }
       <label>كلمة المرور</label>
       <input type="password" id="devAdminPass" class="form-input" placeholder="••••••••" onkeypress="if(event.key==='Enter')doDevAdminLogin()">
     </div>
-    <div class="auth-error" id="devLoginError" style="color:var(--danger);font-size:12px;margin-bottom:12px;display:none"></div>
+    <div id="devLoginError" style="color:var(--danger);font-size:12px;margin-bottom:12px;display:none"></div>
     <button class="btn btn-primary" style="background:var(--gold);color:black" onclick="doDevAdminLogin()">دخول</button>
     <button class="btn btn-outline" style="margin-top:10px" onclick="closeDevLogin()">إلغاء</button>
   </div>
@@ -379,7 +367,7 @@ tr:hover td { background: var(--surface-hover); }
 
           <div id="cashFormSection" class="card" style="margin-top:20px">
             <div class="form-group"><label>اسم العميل (اختياري)</label><input type="text" id="cashClientName" class="form-input" placeholder="عميل نقدي"></div>
-            <button class="btn btn-success" style="background:var(--success);color:white" onclick="confirmCashSale()"><i class="fas fa-check-circle"></i> تأكيد البيع النقدي</button>
+            <button class="btn btn-primary" style="background:var(--success);color:white" onclick="confirmCashSale()"><i class="fas fa-check-circle"></i> تأكيد البيع النقدي</button>
           </div>
 
           <div id="installmentFormSection" class="card" style="display:none;margin-top:20px">
@@ -566,10 +554,9 @@ tr:hover td { background: var(--surface-hover); }
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
 /* ============================================================
-   EMAA.Tech — Professional Store Management System (Refactored)
+   EMAA.Tech — Professional Store Management System
    ============================================================ */
 
-// --- Firebase Config ---
 const firebaseConfig = {
   apiKey: "AIzaSyChgRxNBPBlb41TGSZmdsE03tGkGVFl7GI",
   authDomain: "emaa-core.firebaseapp.com",
@@ -583,7 +570,6 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 const provider = new firebase.auth.GoogleAuthProvider();
 
-// --- State ---
 let currentUser=null, currentStoreData={}, currentBranchId='main', currentUserRole='owner', currentUserName='', isDevMode=false;
 let cart=[], inventory=[], clients=[], cashSales=[], expenses=[];
 let inventoryUnsub=null, clientsUnsub=null, salesUnsub=null, expensesUnsub=null, storeUnsub=null, devStoresUnsub=null, devUsersUnsub=null;
@@ -597,9 +583,8 @@ const ROLES = {
   developer:{label:'مطور',perms:['*']}
 };
 
-// --- Helpers (Timezone Safe & Utilities) ---
-function getLocalDateStr() { return new Date().toLocaleDateString('en-CA'); } // YYYY-MM-DD local
-function getLocalDateTimeStr() { return new Date().toLocaleString('sv-SE').replace(' ', 'T'); } // YYYY-MM-DD HH:MM:SS local
+function getLocalDateStr() { return new Date().toLocaleDateString('en-CA'); }
+function getLocalDateTimeStr() { return new Date().toLocaleString('sv-SE').replace(' ', 'T'); }
 function formatCurrency(n) { return (parseFloat(n)||0).toLocaleString('en-EG', {maximumFractionDigits:2}) + ' ج.م'; }
 function escapeHtml(s) { return String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
@@ -667,7 +652,6 @@ function firebaseErrorMsg(err) {
   return map[err.code] || ('خطأ: ' + (err.message || 'غير معروف'));
 }
 
-// --- Theme ---
 if (localStorage.getItem('emaa_Theme') === 'dark') document.body.classList.add('dark-mode');
 function toggleTheme() {
   document.body.classList.toggle('dark-mode');
@@ -675,7 +659,6 @@ function toggleTheme() {
   if (document.getElementById('tab-dashboard').classList.contains('active')) renderCharts();
 }
 
-// --- Auth UI ---
 function switchAuthTab(tab) {
   document.querySelectorAll('.auth-tabs button').forEach((b, i) => b.classList.toggle('active', (tab==='login'?i===0:i===1)));
   document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
@@ -684,7 +667,6 @@ function switchAuthTab(tab) {
 function showDevLogin() { document.getElementById('developerLogin').style.display = 'flex'; }
 function closeDevLogin() { document.getElementById('developerLogin').style.display = 'none'; }
 
-// --- Auth Flow ---
 window.addEventListener('load', () => {
   if (window.location.hash === '#dev-admin') {
     document.getElementById('authScreen').style.display = 'none';
@@ -736,7 +718,6 @@ async function resolveUserRole(user) {
         return loginSuccess('main');
       }
     }
-    // Auto-create pending store if not exists
     await db.collection('stores').doc(user.uid).set({
       storeName: user.displayName || 'محل جديد', email: user.email, status: 'pending',
       branches: [{ id: 'main', name: 'الفرع الرئيسي', address: '', status: 'active' }],
@@ -851,7 +832,6 @@ function attachStoreListener() {
   });
 }
 
-// --- Dev Panel ---
 function loadDevPanel() {
   if (devStoresUnsub) devStoresUnsub();
   devStoresUnsub = db.collection('stores').onSnapshot(snap => {
@@ -926,7 +906,6 @@ document.getElementById('devUserForm').addEventListener('submit', async e => {
   showLoading(false);
 });
 
-// --- Tenant Data (Optimized with limits) ---
 function loadTenantData() {
   if (inventoryUnsub) inventoryUnsub(); if (clientsUnsub) clientsUnsub();
   if (salesUnsub) salesUnsub(); if (expensesUnsub) expensesUnsub();
@@ -942,7 +921,6 @@ function loadTenantData() {
     renderClients(); renderLatePayments(); updateDashboard(); renderDailyCash();
   });
 
-  // Performance: Limit to last 200 sales to save reads and improve speed
   salesUnsub = db.collection('stores').doc(sid).collection('sales').where('branchId', '==', currentBranchId).limit(200).onSnapshot(snap => {
     cashSales = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderCashSales(); updateDashboard(); renderDailyCash();
@@ -979,7 +957,6 @@ function switchBranch(id) {
   loadTenantData();
 }
 
-// --- Inventory ---
 document.getElementById('inventoryForm').addEventListener('submit', async e => {
   e.preventDefault();
   if (!hasPermission('manage_inventory')) return toast('لا تملك صلاحية', 'error');
@@ -1061,7 +1038,6 @@ function deleteProduct(id) {
   confirmDialog('حذف هذا المنتج نهائياً؟', () => db.collection('stores').doc(currentStoreData._id).collection('products').doc(id).delete().then(() => toast('تم الحذف', 'success')));
 }
 
-// --- POS & Barcode ---
 function togglePaymentForm() {
   const m = document.getElementById('paymentMethodSelect').value;
   document.getElementById('cashFormSection').style.display = m === 'cash' ? 'block' : 'none';
@@ -1143,7 +1119,6 @@ function setQty(i, v) {
 
 function removeFromCart(i) { cart.splice(i, 1); renderCart(); calcInstallment(); }
 
-// Barcode Scanner Feature
 function startBarcodeScanner() {
   openModal(`
     <h3 style="text-align:center;margin-bottom:15px"><i class="fas fa-barcode"></i> مسح باركود المنتج</h3>
@@ -1200,7 +1175,6 @@ async function confirmCashSale() {
       });
       await batch.commit();
       
-      // Print Thermal Receipt
       printThermalReceipt({
         storeName: currentStoreData.storeName,
         phone: currentStoreData.phone,
@@ -1287,7 +1261,6 @@ async function confirmInstallmentSale() {
   });
 }
 
-// --- Clients & Payments ---
 function renderClients() {
   const tbody = document.getElementById('clientsTableBody');
   const q = (document.getElementById('clientsSearch')?.value || '').trim().toLowerCase();
@@ -1408,7 +1381,6 @@ function renderLatePayments() {
   tbody.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-check-circle" style="color:var(--success)"></i><p>لا توجد متأخرات، عمل ممتاز! 🎉</p></div></td></tr>';
 }
 
-// --- Cash Log & Print ---
 function renderCashSales() {
   const tbody = document.getElementById('cashSalesBody');
   if (!cashSales.length) {
@@ -1461,7 +1433,6 @@ function printThermalReceipt(data) {
   printWindow.document.close();
 }
 
-// --- Expenses ---
 document.getElementById('expenseForm').addEventListener('submit', e => {
   e.preventDefault();
   if (!hasPermission('manage_expenses')) return toast('لا تملك صلاحية', 'error');
@@ -1498,7 +1469,6 @@ function deleteExpense(id) {
   confirmDialog('حذف هذا المصروف؟', () => db.collection('stores').doc(currentStoreData._id).collection('expenses').doc(id).delete().then(() => toast('تم الحذف', 'success')));
 }
 
-// --- Daily Cash ---
 function renderDailyCash() {
   const date = document.getElementById('cashDate').value || getLocalDateStr();
   const inst = clients.reduce((s, c) => s + c.installments.reduce((a, i) => {
@@ -1515,7 +1485,6 @@ function renderDailyCash() {
   document.getElementById('dailyNet').innerText = formatCurrency(inst + cash - exp);
 }
 
-// --- Dashboard ---
 function updateDashboard() {
   let tSales = 0, tCollected = 0, tCost = 0, tExp = 0;
   clients.forEach(c => {
@@ -1598,7 +1567,6 @@ function renderCharts() {
   });
 }
 
-// --- Settings & Branches ---
 document.getElementById('settingsForm').addEventListener('submit', e => {
   e.preventDefault();
   db.collection('stores').doc(currentStoreData._id).update({
@@ -1683,7 +1651,6 @@ function deactivateBranch(id) {
   });
 }
 
-// --- Employees ---
 document.getElementById('userForm').addEventListener('submit', async e => {
   e.preventDefault();
   const email = document.getElementById('empEmail').value.trim().toLowerCase();
@@ -1736,7 +1703,6 @@ function deleteUser(id) {
   });
 }
 
-// --- CSV Export ---
 function exportCSV(type) {
   let rows = [];
   if (type === 'cash') {
