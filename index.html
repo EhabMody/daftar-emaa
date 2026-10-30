@@ -1,1537 +1,550 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EMAA.Tech - Cloud Enterprise</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root {
-            --yellow: #fce500; --black: #111111; --bg: #f0f2f5; --text: #333;
-            --gray: #777; --red: #e74c3c; --green: #2ecc71; --blue: #3498db;
-            --white: #ffffff; --border: #e0e0e0; --shadow: 0 4px 20px rgba(0,0,0,0.08);
-            --dev-blue: #00d2ff; --gold: #fce500;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
-        body { background: var(--bg); color: var(--text); padding-bottom: 50px; transition: background 0.3s; }
-        body.dark-mode { --bg: #1a1a1a; --text: #eee; --white: #2d2d2d; --border: #444; --shadow: 0 4px 20px rgba(0,0,0,0.3); }
-
-        /* Auth Screens */
-        #authScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a0a0a; display: flex; justify-content: center; align-items: center; z-index: 9999; padding: 20px; flex-direction: column;}
-        .dev-brand { text-align: center; margin-bottom: 30px; }
-        .dev-brand h2 { font-size: 32px; font-weight: 900; letter-spacing: 2px; color: #fff; text-shadow: 0 0 10px rgba(0, 210, 255, 0.5); }
-        .dev-brand h2 span { color: var(--dev-blue); }
-        .dev-brand p { color: #aaa; font-size: 12px; letter-spacing: 1px; margin-top: 5px; }
-        .dev-brand .shield-icon { color: var(--dev-blue); font-size: 40px; margin-bottom: 10px; text-shadow: 0 0 20px rgba(0, 210, 255, 0.6); }
-
-        .auth-box { background: var(--white); padding: 40px; border-radius: 15px; text-align: center; width: 100%; max-width: 450px; box-shadow: 0 15px 40px rgba(0,0,0,0.5); border-top: 5px solid var(--dev-blue); }
-        .auth-box h1 { color: var(--black); font-size: 35px; font-weight: 900; margin-bottom: 5px; }
-        .auth-box input, .auth-box select { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid var(--border); border-radius: 8px; text-align: center; font-size: 16px; background: var(--bg); color: var(--text); }
-        .auth-box button { width: 100%; padding: 15px; background: var(--black); color: var(--dev-blue); border: 1px solid var(--dev-blue); border-radius: 8px; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 10px; transition: 0.3s;}
-        .auth-box button:hover { background: var(--dev-blue); color: var(--black); }
-        .auth-box .link-btn { background: transparent; color: var(--blue); border: none; cursor: pointer; font-size: 14px; margin-top: 15px; text-decoration: underline; }
-        .error-msg { color: var(--red); font-size: 14px; margin-top: 10px; display: none; }
-        .success-msg { color: var(--green); font-size: 14px; margin-top: 10px; display: none; }
-
-        /* App Screen */
-        #appScreen { display: none; }
-        header { background: var(--black); padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.2); flex-wrap: wrap; gap: 10px;}
-        .logo { display: flex; align-items: center; gap: 8px; color: var(--dev-blue); font-size: 24px; font-weight: 900; }
-        .logo span { color: #fff; }
-        .logo i { font-size: 28px; }
-        .header-info { color: white; font-size: 14px; display: flex; flex-direction: column; align-items: flex-end; margin-right: 15px;}
-        .header-info small { color: var(--gray); }
-        .store-logo-nav { height: 45px; border-radius: 5px; object-fit: contain; margin-left: 15px; background: white; padding: 2px; box-shadow: 0 0 10px rgba(255,255,255,0.2);}
-        .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap;}
-        .btn-outline { background: transparent; border: 1px solid var(--dev-blue); color: var(--dev-blue); padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; display: flex; align-items: center; gap: 5px; font-family: 'Cairo'; font-size: 14px;}
-        .btn-outline:hover { background: var(--dev-blue); color: var(--black); }
-        .btn-theme { background: transparent; border: 1px solid var(--dev-blue); color: var(--dev-blue); padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 16px; transition: 0.3s; }
-
-        .container { max-width: 1400px; margin: 20px auto; padding: 0 15px; }
-
-        /* Tabs */
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
-        .tab-btn { padding: 12px 20px; background: var(--white); border: 1px solid var(--border); border-radius: 30px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.3s; white-space: nowrap; color: var(--text); box-shadow: var(--shadow); display: flex; align-items: center; gap: 8px;}
-        .tab-btn.active { background: var(--black); color: var(--dev-blue); border-color: var(--black); }
-        .tab-content { display: none; animation: fadeIn 0.3s; }
-        .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Dashboard */
-        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .card-stat { background: var(--white); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); border-right: 5px solid var(--black); }
-        .card-stat.yellow { border-right-color: var(--yellow); }
-        .card-stat.green { border-right-color: var(--green); }
-        .card-stat.red { border-right-color: var(--red); }
-        .card-stat.blue { border-right-color: var(--blue); }
-        .stat-info h3 { font-size: 13px; color: var(--gray); margin-bottom: 5px; }
-        .stat-info p { font-size: 22px; font-weight: 700; color: var(--text); }
-
-        /* Cards & Forms */
-        .card { background: var(--white); padding: 25px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 25px; }
-        .section-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid var(--bg); padding-bottom: 10px; color: var(--text); justify-content: space-between;}
-        .section-title span { display: flex; align-items: center; gap: 10px; }
-        .section-title i { color: var(--black); background: var(--dev-blue); padding: 8px; border-radius: 8px; font-size: 16px; }
-
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group label { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
-        .form-group input, .form-group select, .form-group textarea { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--bg); color: var(--text); transition: 0.2s; font-family: 'Cairo'; }
-        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--dev-blue); background: var(--white); box-shadow: 0 0 0 3px rgba(0, 210, 255, 0.2); }
-        .form-group input[type="file"] { padding: 8px; font-size: 12px; }
-        .required-star { color: var(--red); margin-right: 3px; }
-
-        .btn-main { background: var(--black); color: var(--dev-blue); border: 1px solid var(--dev-blue); padding: 14px 20px; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 15px; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.3s; font-family: 'Cairo'; }
-        .btn-main:hover { background: var(--dev-blue); color: var(--black); }
-
-        /* Tables */
-        .table-wrapper { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th, td { padding: 12px 10px; text-align: center; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--text); }
-        th { background: var(--bg); color: var(--text); font-weight: 700; }
-        tr:hover { background: rgba(0,0,0,0.02); }
-
-        .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-block; }
-        .b-green { background: #d4edda; color: #155724; }
-        .b-red { background: #f8d7da; color: #721c24; }
-        .b-yellow { background: #fff3cd; color: #856404; }
-        .b-blue { background: #d1ecf1; color: #0c5460; }
-
-        .actions-cell { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
-        .btn-icon { border: 1px solid var(--border); background: transparent; padding: 6px 10px; border-radius: 5px; cursor: pointer; transition: 0.2s; color: var(--text); font-size: 13px; }
-        .btn-icon:hover { background: rgba(0,0,0,0.05); }
-        .btn-icon.green:hover { background: var(--green); color: white; border-color: var(--green); }
-        .btn-icon.red:hover { background: var(--red); color: white; border-color: var(--red); }
-        .btn-icon.blue:hover { background: var(--blue); color: white; border-color: var(--blue); }
-
-        /* Product Cards */
-        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; margin-top: 20px; }
-        .product-card { background: var(--white); border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; transition: 0.3s; border: 1px solid var(--border); display: flex; flex-direction: column; }
-        .product-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
-        .product-img { height: 160px; background: var(--bg); display: flex; justify-content: center; align-items: center; font-size: 50px; color: #ddd; position: relative; overflow: hidden; }
-        .product-img img { width: 100%; height: 100%; object-fit: cover; }
-        .product-qty-badge { position: absolute; top: 10px; right: 10px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; z-index: 2; color: white; }
-        .product-info { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
-        .product-name { font-weight: 700; font-size: 16px; margin-bottom: 10px; color: var(--text); }
-        .product-price { font-size: 18px; font-weight: 900; color: var(--green); margin-bottom: 5px; }
-        .product-cost { font-size: 12px; color: var(--gray); margin-bottom: 10px; }
-        .product-actions { display: flex; gap: 5px; margin-top: auto; }
-
-        /* POS product picker */
-        .pos-products { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 15px; }
-        .pos-product-card { background: var(--white); border: 2px solid var(--border); border-radius: 10px; overflow: hidden; cursor: pointer; transition: 0.2s; text-align: center; }
-        .pos-product-card:hover { border-color: var(--dev-blue); transform: translateY(-3px); }
-        .pos-product-card.selected { border-color: var(--green); box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.3); }
-        .pos-product-card img { width: 100%; height: 100px; object-fit: cover; background: var(--bg); }
-        .pos-product-card .ph { width: 100%; height: 100px; display: flex; align-items: center; justify-content: center; background: var(--bg); color: #ccc; font-size: 35px; }
-        .pos-product-card .info { padding: 8px; }
-        .pos-product-card .info .nm { font-weight: 700; font-size: 13px; color: var(--text); }
-        .pos-product-card .info .pr { color: var(--green); font-weight: 900; font-size: 14px; }
-        .pos-product-card .info .sr { color: var(--gray); font-size: 10px; }
-
-        /* Charts */
-        .charts-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
-        @media(max-width: 768px) { .charts-container { grid-template-columns: 1fr; } }
-        canvas { max-height: 250px; }
-
-        /* Modal */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: var(--white); padding: 30px; border-radius: 12px; width: 90%; max-width: 650px; max-height: 90vh; overflow-y: auto; position: relative; color: var(--text); }
-        .close-modal { position: absolute; top: 15px; left: 15px; font-size: 24px; cursor: pointer; color: var(--gray); }
-        .close-modal:hover { color: var(--red); }
-
-        /* Invoice Design */
-        .invoice-header { text-align: center; margin-bottom: 20px; border-bottom: 2px dashed var(--border); padding-bottom: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center;}
-        .invoice-header img { max-height: 80px; margin-bottom: 10px; }
-        .invoice-header h2 { font-size: 28px; font-weight: 900; color: var(--text); margin-bottom: 5px;}
-        .invoice-header h2 i { color: var(--dev-blue); }
-        .invoice-header p { color: var(--gray); font-size: 14px; }
-        .invoice-details p { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 15px; border-bottom: 1px dotted var(--border); padding-bottom: 5px; }
-        .invoice-footer { text-align: center; margin-top: 20px; font-size: 12px; color: var(--gray); border-top: 1px solid var(--border); padding-top: 10px;}
-
-        /* Search */
-        .search-box { position: relative; margin-bottom: 15px; width: 100%; max-width: 400px; }
-        .search-box input { width: 100%; padding: 12px 40px 12px 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--bg); color: var(--text); }
-        .search-box i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--gray); }
-
-        /* Loading */
-        #loadingOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); display:none; justify-content:center; align-items:center; z-index:99999; flex-direction:column;}
-        .spinner { border: 5px solid #f3f3f3; border-top: 5px solid var(--dev-blue); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Print Media */
-        @media print {
-            body * { visibility: hidden; }
-            .modal-content, .modal-content * { visibility: visible; }
-            .modal-content { position: absolute; left: 0; top: 0; width: 100mm; max-width: 100%; box-shadow: none; padding: 10px; background: white; color: black; }
-            .close-modal, .print-btn { display: none !important; }
-            .invoice-header img { max-height: 60px; }
-        }
-
-        .info-hint { background: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; border-right: 4px solid #fce500; }
-    </style>
-</head>
-<body>
-
-    <div id="loadingOverlay">
-        <div class="spinner"></div>
-        <p style="margin-top: 15px; font-weight: bold; color: var(--black);">جاري التحميل...</p>
-    </div>
-
-    <!-- Auth Screen -->
-    <div id="authScreen">
-        <div class="dev-brand">
-            <i class="fas fa-shield-alt shield-icon"></i>
-            <h2>EMAA<span>.Tech</span></h2>
-            <p>Integrated Solutions & Security System</p>
+<script>
+/* ========== INVENTORY ========== */
+document.getElementById('inventoryForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  if(!hasPermission('manage_inventory'))return toast('لا تملك صلاحية','error');
+  showLoading(true);
+  try{
+    const id=document.getElementById('invEditId').value;
+    const file=document.getElementById('invImage').files[0];
+    let image=null;
+    if(file)image=await compressImage(file);
+    const data={
+      name:document.getElementById('invName').value.trim(),
+      serial:document.getElementById('invSerial').value.trim(),
+      qty:parseInt(document.getElementById('invQty').value),
+      cost:parseFloat(document.getElementById('invCost').value),
+      price:parseFloat(document.getElementById('invPrice').value),
+      warranty:parseInt(document.getElementById('invWarranty').value)||0,
+      branchId:currentBranchId
+    };
+    if(image)data.image=image;
+    if(id){
+      await db.collection('stores').doc(currentStoreData._id).collection('products').doc(id).update(data);
+      toast('تم تحديث المنتج','success');
+    }else{
+      data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('stores').doc(currentStoreData._id).collection('products').add(data);
+      toast('تمت الإضافة','success');
+    }
+    e.target.reset();
+    document.getElementById('invEditId').value='';
+    document.getElementById('invSubmitBtn').innerHTML='<i class="fas fa-plus"></i> إضافة المنتج';
+  }catch(err){toast('خطأ: '+err.message,'error')}
+  showLoading(false);
+});
+function renderProducts(){
+  const grid=document.getElementById('productsGrid');
+  const q=(document.getElementById('invSearch')?.value||'').trim().toLowerCase();
+  const list=q?inventory.filter(i=>(i.name||'').toLowerCase().includes(q)||(i.serial||'').toLowerCase().includes(q)):inventory;
+  if(!list.length){grid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><i class="fas fa-box-open"></i><p>لا توجد منتجات</p></div>';return}
+  grid.innerHTML=list.map(item=>{
+    const img=item.image?`<img src="${item.image}" alt="${escapeHtml(item.name)}">`:`<i class="fas fa-mobile-alt"></i>`;
+    const lowQty=item.qty<=2?'low':'ok';
+    return `<div class="product-card">
+      <div class="product-img">${img}<span class="product-qty-badge ${lowQty}">${item.qty}</span></div>
+      <div class="product-info">
+        <div class="product-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+        <div style="font-size:11px;color:var(--dev-blue);margin-bottom:5px">${escapeHtml(item.serial)}</div>
+        <div class="product-price">${formatCurrency(item.price)}</div>
+        <div class="product-cost">شراء: ${formatCurrency(item.cost)}</div>
+        <div class="product-actions">
+          <button class="btn-icon blue" onclick="editProduct('${item.id}')"><i class="fas fa-edit"></i></button>
+          <button class="btn-icon red" onclick="deleteProduct('${item.id}')"><i class="fas fa-trash"></i></button>
         </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function editProduct(id){
+  const p=inventory.find(x=>x.id===id);if(!p)return;
+  document.getElementById('invEditId').value=id;
+  document.getElementById('invName').value=p.name;
+  document.getElementById('invSerial').value=p.serial;
+  document.getElementById('invQty').value=p.qty;
+  document.getElementById('invCost').value=p.cost;
+  document.getElementById('invPrice').value=p.price;
+  document.getElementById('invWarranty').value=p.warranty||0;
+  document.getElementById('invSubmitBtn').innerHTML='<i class="fas fa-save"></i> حفظ التعديل';
+  document.getElementById('inventoryForm').scrollIntoView({behavior:'smooth'});
+}
+function deleteProduct(id){
+  confirmDialog('حذف هذا المنتج؟',()=>db.collection('stores').doc(currentStoreData._id).collection('products').doc(id).delete().then(()=>toast('تم الحذف','success')));
+}
 
-        <div class="auth-box">
-            <h1 style="color:var(--dev-blue); margin-bottom:20px;">تسجيل الدخول للمحل</h1>
-            <p style="color:var(--gray); margin-bottom:20px; font-size:14px;">استخدم حساب Google الخاص بك للدخول</p>
-            <button onclick="signInWithGoogle()"><i class="fab fa-google"></i> الدخول باستخدام Google</button>
-            <p style="margin-top: 20px; font-size: 12px; color: var(--gray);">سيتم إنشاء حساب لمحلك تلقائياً (بانتظار موافقة المطور).</p>
-            <button class="link-btn" onclick="showDevLogin()" style="color: var(--red); font-weight: bold; margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; width: 100%;">دخول المطور (Super Admin)</button>
-        </div>
+/* ========== POS ========== */
+function togglePaymentForm(){
+  const m=document.getElementById('paymentMethodSelect').value;
+  document.getElementById('cashFormSection').style.display=m==='cash'?'block':'none';
+  document.getElementById('installmentFormSection').style.display=m==='installment'?'block':'none';
+}
+function renderPosProducts(){
+  const grid=document.getElementById('posProducts');
+  const q=(document.getElementById('posSearch')?.value||'').trim().toLowerCase();
+  const avail=inventory.filter(i=>i.qty>0&&(!q||(i.name||'').toLowerCase().includes(q)||(i.serial||'').toLowerCase().includes(q)));
+  if(!avail.length){grid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><i class="fas fa-box-open"></i><p>لا توجد منتجات متاحة</p></div>';return}
+  grid.innerHTML=avail.map(item=>{
+    const img=item.image?`<img src="${item.image}" alt="${escapeHtml(item.name)}">`:`<div class="ph"><i class="fas fa-mobile-alt"></i></div>`;
+    return `<div class="pos-product-card" onclick="addToCart('${item.id}')">
+      ${img}<span class="qty-tag">${item.qty}</span>
+      <div class="info"><div class="nm">${escapeHtml(item.name)}</div><div class="pr">${formatCurrency(item.price)}</div><div class="sr">${escapeHtml(item.serial)}</div></div>
+    </div>`;
+  }).join('');
+}
+function addToCart(id){
+  const p=inventory.find(x=>x.id===id);if(!p)return;
+  const existing=cart.find(c=>c.id===id);
+  if(existing){
+    if(existing.qty>=p.qty)return toast('الكمية المتاحة لا تكفي','warning');
+    existing.qty++;
+  }else{
+    if(p.qty<1)return toast('غير متوفر','warning');
+    cart.push({id,name:p.name,price:p.price,cost:p.cost,serial:p.serial,image:p.image||null,qty:1});
+  }
+  renderCart();
+}
+function renderCart(){
+  const c=document.getElementById('cartContainer');
+  if(!cart.length){c.innerHTML='<div class="empty-state" style="padding:20px"><i class="fas fa-shopping-cart"></i><p>السلة فارغة</p></div>';document.getElementById('cartTotal').innerText='0 ج.م';return}
+  c.innerHTML=cart.map((item,i)=>{
+    const img=item.image?`<img src="${item.image}">`:`<div class="ph"><i class="fas fa-mobile-alt"></i></div>`;
+    return `<div class="cart-item">
+      ${img}
+      <div class="cart-item-info"><div class="name">${escapeHtml(item.name)}</div><div class="price">${formatCurrency(item.price)} × ${item.qty} = ${formatCurrency(item.price*item.qty)}</div></div>
+      <div class="cart-item-qty">
+        <button onclick="changeQty(${i},-1)">−</button>
+        <input type="number" value="${item.qty}" min="1" onchange="setQty(${i},this.value)">
+        <button onclick="changeQty(${i},1)">+</button>
+        <button onclick="removeFromCart(${i})" style="background:var(--red);color:#fff;border-color:var(--red)">×</button>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('cartTotal').innerText=formatCurrency(cart.reduce((s,i)=>s+i.price*i.qty,0));
+}
+function changeQty(i,d){const it=cart[i];const p=inventory.find(x=>x.id===it.id);const nv=it.qty+d;if(nv<1)return removeFromCart(i);if(nv>p.qty)return toast('الكمية المتاحة لا تكفي','warning');it.qty=nv;renderCart()}
+function setQty(i,v){const n=parseInt(v)||1;const p=inventory.find(x=>x.id===cart[i].id);if(n>p.qty)return toast('الكمية المتاحة لا تكفي','warning');cart[i].qty=Math.max(1,Math.min(n,p.qty));renderCart()}
+function removeFromCart(i){cart.splice(i,1);renderCart()}
+
+async function confirmCashSale(){
+  if(!cart.length)return toast('السلة فارغة','warning');
+  const client=document.getElementById('cashClientName').value.trim()||'عميل نقدي';
+  const total=cart.reduce((s,i)=>s+i.price*i.qty,0);
+  confirmDialog(`تأكيد بيع نقدي بإجمالي ${formatCurrency(total)}؟`,async()=>{
+    showLoading(true);
+    try{
+      const batch=db.batch();
+      const storeRef=db.collection('stores').doc(currentStoreData._id);
+      cart.forEach(item=>{
+        const s=storeRef.collection('sales').doc();
+        batch.set(s,{
+          productName:item.name,serial:item.serial,price:item.price,cost:item.cost,
+          qty:item.qty,image:item.image,client,date:fmtDateTime(),branchId:currentBranchId,
+          saleType:'cash',createdBy:currentUser.uid
+        });
+        const pRef=storeRef.collection('products').doc(item.id);
+        const p=inventory.find(x=>x.id===item.id);
+        batch.update(pRef,{qty:p.qty-item.qty});
+      });
+      await batch.commit();
+      toast('تم البيع النقدي','success');
+      cart=[];renderCart();document.getElementById('cashClientName').value='';
+    }catch(e){toast('خطأ: '+e.message,'error')}
+    showLoading(false);
+  });
+}
+function calcInstallment(){
+  const total=cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const d=parseFloat(document.getElementById('downPayment').value)||0;
+  const c=parseInt(document.getElementById('installmentsCount').value)||1;
+  document.getElementById('instValueDisplay').value=(total>d&&c>0)?formatCurrency((total-d)/c):'';
+}
+async function confirmInstallmentSale(){
+  if(!cart.length)return toast('السلة فارغة','warning');
+  const name=document.getElementById('clientName').value.trim();
+  const phone=document.getElementById('clientPhone').value.trim();
+  const nid=document.getElementById('clientNid').value.trim();
+  const addr=document.getElementById('clientAddress').value.trim();
+  const gName=document.getElementById('guarantorName').value.trim();
+  const gPhone=document.getElementById('guarantorPhone').value.trim();
+  const gNid=document.getElementById('guarantorNid').value.trim();
+  const down=parseFloat(document.getElementById('downPayment').value)||0;
+  const count=parseInt(document.getElementById('installmentsCount').value);
+  const startVal=document.getElementById('startDate').value;
+  if(!name||!phone||!nid||!addr)return toast('أكمل بيانات العميل','warning');
+  if(!/^01[0125][0-9]{8}$/.test(phone))return toast('رقم موبايل غير صحيح','warning');
+  if(!/^[0-9]{14}$/.test(nid))return toast('رقم قومي غير صحيح','warning');
+  if(!gName||!gPhone||!gNid)return toast('أكمل بيانات الضامن','warning');
+  if(!startVal)return toast('اختر تاريخ أول قسط','warning');
+  const total=cart.reduce((s,i)=>s+i.price*i.qty,0);
+  if(down>=total)return toast('المقدم يجب أن يكون أقل من الإجمالي','warning');
+  if(count<1)return toast('عدد الأقساط غير صحيح','warning');
+  const start=new Date(startVal);
+  const perInst=(total-down)/count;
+  const installments=Array.from({length:count},(_,i)=>{
+    const d=new Date(start);d.setMonth(d.getMonth()+i);
+    return {id:i+1,dueDate:d.toISOString().split('T')[0],amount:perInst,paid:0,isPaid:false,payments:[]};
+  });
+  confirmDialog(`تأكيد تقسيط ${count} قسط بقيمة ${formatCurrency(perInst)}؟`,async()=>{
+    showLoading(true);
+    try{
+      const storeRef=db.collection('stores').doc(currentStoreData._id);
+      await storeRef.collection('clients').add({
+        name,phone,nid,address:addr,gName,gPhone,gNid,
+        products:cart.map(i=>({name:i.name,serial:i.serial,price:i.price,cost:i.cost,image:i.image,qty:i.qty})),
+        product:cart.map(i=>i.name).join(', '),
+        serial:cart.map(i=>i.serial).join(', '),
+        productImage:cart[0]?.image||null,
+        totalPrice:total,
+        costPrice:cart.reduce((s,i)=>s+i.cost*i.qty,0),
+        downPayment:down,
+        installments,purchaseDate:fmtDateTime(),branchId:currentBranchId,
+        createdBy:currentUser.uid
+      });
+      const batch=db.batch();
+      cart.forEach(item=>{
+        const p=inventory.find(x=>x.id===item.id);
+        batch.update(storeRef.collection('products').doc(item.id),{qty:p.qty-item.qty});
+      });
+      await batch.commit();
+      toast('تم حفظ التقسيط','success');
+      cart=[];renderCart();
+      ['clientName','clientPhone','clientNid','clientAddress','guarantorName','guarantorPhone','guarantorNid','downPayment','installmentsCount','startDate','instValueDisplay'].forEach(id=>document.getElementById(id).value='');
+    }catch(e){toast('خطأ: '+e.message,'error')}
+    showLoading(false);
+  });
+}
+
+/* ========== CLIENTS ========== */
+function renderClients(){
+  const tbody=document.getElementById('clientsTableBody');
+  const q=(document.getElementById('clientsSearch')?.value||'').trim().toLowerCase();
+  const list=q?clients.filter(c=>(c.name||'').toLowerCase().includes(q)||(c.phone||'').includes(q)):clients;
+  if(!list.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state"><i class="fas fa-users"></i><p>لا يوجد عملاء</p></div></td></tr>';return}
+  tbody.innerHTML=list.map(c=>{
+    const paid=(c.downPayment||0)+c.installments.reduce((s,i)=>s+(i.paid||0),0);
+    const rem=c.totalPrice-paid;
+    const pc=c.installments.filter(i=>i.isPaid).length;
+    return `<tr>
+      <td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.phone)}</td><td>${escapeHtml(c.product)}</td>
+      <td>${formatCurrency(rem)}</td><td>${pc}/${c.installments.length}</td>
+      <td><button class="btn-icon blue" onclick="viewClient('${c.id}')"><i class="fas fa-eye"></i></button>
+          <button class="btn-icon green" onclick="openPayModal('${c.id}')"><i class="fas fa-money-bill"></i></button></td>
+    </tr>`;
+  }).join('');
+}
+function viewClient(id){
+  const c=clients.find(x=>x.id===id);if(!c)return;
+  const paid=(c.downPayment||0)+c.installments.reduce((s,i)=>s+(i.paid||0),0);
+  const rem=c.totalPrice-paid;
+  const img=c.productImage?`<img src="${c.productImage}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;margin-bottom:10px">`:'';
+  openModal(`
+    <div class="invoice-header">${img}<h2><i class="fas fa-user"></i> ${escapeHtml(c.name)}</h2><p>${escapeHtml(c.phone)} — ${escapeHtml(c.address||'')}</p></div>
+    <div class="invoice-details">
+      <p><span>المنتج:</span><b>${escapeHtml(c.product)}</b></p>
+      <p><span>السيريال:</span><b>${escapeHtml(c.serial)}</b></p>
+      <p><span>الإجمالي:</span><b>${formatCurrency(c.totalPrice)}</b></p>
+      <p><span>المقدم:</span><b>${formatCurrency(c.downPayment)}</b></p>
+      <p><span>المحصل:</span><b>${formatCurrency(paid)}</b></p>
+      <p><span>المتبقي:</span><b style="color:var(--red)">${formatCurrency(rem)}</b></p>
+      <p><span>الضامن:</span><b>${escapeHtml(c.gName||'—')} — ${escapeHtml(c.gPhone||'')}</b></p>
     </div>
-
-    <!-- Developer Login -->
-    <div id="developerLogin" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#0a0a0a; z-index:10000; justify-content:center; align-items:center; padding:20px;">
-        <div class="auth-box" style="border-top-color: var(--gold);">
-            <h1 style="color:var(--gold); font-size: 25px;">EMAA.Tech Admin</h1>
-            <p style="color:var(--gray); margin-bottom:20px;">لوحة تحكم المطور (خاص جداً)</p>
-            <input type="email" id="devEmail" placeholder="البريد الإلكتروني">
-            <input type="password" id="devAdminPass" placeholder="كلمة مرور المطور" onkeypress="if(event.key==='Enter') doDevAdminLogin()">
-            <button onclick="doDevAdminLogin()" style="background:var(--gold); color:var(--black); border:none;">دخول</button>
-            <div class="error-msg" id="devAdminError" style="text-align:center;">البريد أو كلمة المرور غير صحيحة!</div>
-            <button class="link-btn" onclick="closeDevLogin()">إغلاق</button>
-        </div>
+    <h3 style="margin:15px 0 10px;font-size:15px">الأقساط</h3>
+    <div class="table-wrapper"><table><thead><tr><th>#</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>الحالة</th></tr></thead><tbody>
+    ${c.installments.map(i=>`<tr><td>${i.id}</td><td>${i.dueDate}</td><td>${formatCurrency(i.amount)}</td><td>${formatCurrency(i.paid)}</td><td>${i.isPaid?'<span class="badge b-green">مدفوع</span>':'<span class="badge b-yellow">متبقي</span>'}</td></tr>`).join('')}
+    </tbody></table></div>
+    <button class="print-btn" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
+  `);
+}
+function openPayModal(id){
+  const c=clients.find(x=>x.id===id);if(!c)return;
+  const idx=c.installments.findIndex(i=>!i.isPaid);
+  if(idx===-1)return toast('تم سداد كل الأقساط','info');
+  const inst=c.installments[idx];
+  const remaining=inst.amount-inst.paid;
+  openModal(`
+    <h2 style="margin-bottom:15px"><i class="fas fa-money-bill"></i> تحصيل قسط</h2>
+    <div class="invoice-details">
+      <p><span>العميل:</span><b>${escapeHtml(c.name)}</b></p>
+      <p><span>القسط:</span><b>${idx+1}/${c.installments.length}</b></p>
+      <p><span>المستحق:</span><b>${formatCurrency(remaining)}</b></p>
     </div>
-
-    <!-- Pending Activation Screen -->
-    <div id="pendingScreen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a0a0a; z-index: 9998; justify-content: center; align-items: center; flex-direction: column; padding: 20px; text-align: center;">
-        <i class="fas fa-clock" style="font-size: 60px; color: var(--gold); margin-bottom: 20px;"></i>
-        <h2 style="color: white; margin-bottom: 10px;">حسابك قيد المراجعة</h2>
-        <p style="color: #aaa; max-width: 400px; margin-bottom: 30px;">شكراً لتسجيلك في EMAA.Tech. يرجى التواصل مع المطور لتفعيل حسابك ودفع الاشتراك.</p>
-        <button class="btn-outline" onclick="logout()" style="border-color: var(--red); color: var(--red);">تسجيل الخروج</button>
+    <div class="form-group" style="margin-top:15px"><label>المبلغ المحصّل</label>
+      <input type="number" id="payAmount" value="${remaining.toFixed(2)}" min="0.01" step="0.01">
     </div>
+    <button class="btn-main success" onclick="doPay('${id}',${idx})"><i class="fas fa-check"></i> تسجيل الدفعة</button>
+  `);
+}
+function doPay(clientId,idx){
+  const c=clients.find(x=>x.id===clientId);if(!c)return;
+  const amt=parseFloat(document.getElementById('payAmount').value);
+  const inst=c.installments[idx];
+  const remaining=inst.amount-inst.paid;
+  if(!amt||amt<=0)return toast('أدخل مبلغاً صحيحاً','warning');
+  if(amt>remaining+0.01)return toast('المبلغ أكبر من المتبقي','warning');
+  inst.paid+=amt;
+  if(!inst.payments)inst.payments=[];
+  inst.payments.push({amount:amt,date:fmtDateTime(),by:currentUser.uid});
+  if(inst.paid>=inst.amount-0.01)inst.isPaid=true;
+  db.collection('stores').doc(currentStoreData._id).collection('clients').doc(clientId)
+    .update({installments:c.installments})
+    .then(()=>{toast('تم تسجيل الدفعة','success');closeModal()})
+    .catch(e=>toast('خطأ: '+e.message,'error'));
+}
+function renderLatePayments(){
+  const tbody=document.getElementById('lateTableBody');
+  const today=new Date();today.setHours(0,0,0,0);
+  let lateCount=0;const rows=[];
+  clients.forEach(c=>c.installments.forEach((inst,idx)=>{
+    if(!inst.isPaid){
+      const due=new Date(inst.dueDate);
+      if(due<today){
+        lateCount++;
+        const days=Math.floor((today-due)/86400000);
+        rows.push(`<tr><td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.phone)}</td><td>${formatCurrency(inst.amount-inst.paid)}</td><td>${inst.dueDate}</td><td><span class="badge b-red">${days} يوم</span></td><td><button class="btn-icon green" onclick="openPayModal('${c.id}')">تحصيل</button></td></tr>`);
+      }
+    }
+  }));
+  document.getElementById('lateCount').innerText=lateCount;
+  tbody.innerHTML=rows.length?rows.join(''):'<tr><td colspan="6"><div class="empty-state"><i class="fas fa-check-circle" style="color:var(--green)"></i><p>لا توجد متأخرات 🎉</p></div></td></tr>';
+}
 
-    <!-- Main App Screen -->
-    <div id="appScreen" style="display: none;">
-        <header>
-            <div style="display:flex; align-items:center;">
-                <img id="navStoreLogo" class="store-logo-nav" src="" style="display:none;" alt="Store Logo">
-                <div class="logo"><i class="fas fa-shield-alt"></i> <span>EMAA.Tech</span></div>
-            </div>
-
-            <div class="header-info">
-                <span id="storeNameDisplay">اسم المحل</span>
-                <small id="branchDisplay">الفرع الرئيسي</small>
-            </div>
-            <div class="header-actions">
-                <select id="branchSwitcher" class="btn-outline" style="padding: 8px; color: var(--dev-blue); border-color: var(--dev-blue);" onchange="switchBranch(this.value)"></select>
-                <button class="btn-theme" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
-                <button class="btn-outline" onclick="logout()" style="border-color: var(--red); color: var(--red);"><i class="fas fa-sign-out-alt"></i></button>
-            </div>
-        </header>
-
-        <div class="container">
-            <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab('dashboard', this)"><i class="fas fa-chart-pie"></i> لوحة التحكم</button>
-                <button class="tab-btn" onclick="switchTab('inventory', this)"><i class="fas fa-store"></i> المنتجات</button>
-                <button class="tab-btn" onclick="switchTab('new-sale', this)"><i class="fas fa-cash-register"></i> نقطة البيع (POS)</button>
-                <button class="tab-btn" onclick="switchTab('cash-sales-log', this)"><i class="fas fa-money-bill-wave"></i> سجل النقدي</button>
-                <button class="tab-btn" onclick="switchTab('clients', this)"><i class="fas fa-users"></i> العملاء</button>
-                <button class="tab-btn" onclick="switchTab('late', this)"><i class="fas fa-exclamation-triangle"></i> المتأخرات <span id="lateCount" style="background:var(--red); color:white; border-radius:50%; padding:2px 6px; font-size:10px; margin-right:5px;">0</span></button>
-                <button class="tab-btn" onclick="switchTab('expenses', this)"><i class="fas fa-receipt"></i> المصروفات</button>
-                <button class="tab-btn" onclick="switchTab('settings', this)"><i class="fas fa-cog"></i> الإعدادات والمستخدمون</button>
-            </div>
-
-            <!-- Dashboard Tab -->
-            <div id="tab-dashboard" class="tab-content active">
-                <div class="dashboard">
-                    <div class="card-stat yellow"><div class="stat-info"><h3>إجمالي المبيعات</h3><p id="statSales">0 ج.م</p></div></div>
-                    <div class="card-stat green"><div class="stat-info"><h3>إجمالي المحصل</h3><p id="statCollected">0 ج.م</p></div></div>
-                    <div class="card-stat red"><div class="stat-info"><h3>المتبقي في السوق</h3><p id="statRemaining">0 ج.م</p></div></div>
-                    <div class="card-stat blue"><div class="stat-info"><h3>صافي الربح</h3><p id="statProfit">0 ج.م</p></div></div>
-                </div>
-                <div class="card">
-                    <h3 class="section-title"><i class="fas fa-clock"></i> تنبيهات الأقساط القادمة (خلال 5 أيام)</h3>
-                    <ul id="upcomingList" style="list-style:none; padding:0;"></ul>
-                </div>
-                <div class="charts-container">
-                    <div class="card"><h3 class="section-title" style="font-size:15px;">المبيعات (كاش vs تقسيط)</h3><canvas id="salesChart"></canvas></div>
-                    <div class="card"><h3 class="section-title" style="font-size:15px;">المصروفات</h3><canvas id="expensesChart"></canvas></div>
-                </div>
-            </div>
-
-            <!-- Inventory Tab -->
-            <div id="tab-inventory" class="tab-content">
-                <div class="card">
-                    <h3 class="section-title"><i class="fas fa-plus-square"></i> إضافة منتج جديد</h3>
-                    <form id="inventoryForm">
-                        <div class="form-grid">
-                            <div class="form-group"><label>اسم المنتج <span class="required-star">*</span></label><input type="text" id="invName" required placeholder="iPhone 15 Pro"></div>
-                            <div class="form-group"><label>الرقم التسلسلي (Serial) <span class="required-star">*</span></label><input type="text" id="invSerial" required></div>
-                            <div class="form-group"><label>الكمية <span class="required-star">*</span></label><input type="number" id="invQty" required min="1" value="1"></div>
-                            <div class="form-group"><label>سعر الشراء <span class="required-star">*</span></label><input type="number" id="invCost" required min="1"></div>
-                            <div class="form-group"><label>سعر البيع <span class="required-star">*</span></label><input type="number" id="invPrice" required min="1"></div>
-                            <div class="form-group"><label>مدة الضمان (بالشهور)</label><input type="number" id="invWarranty" value="12" min="0"></div>
-                            <div class="form-group" style="grid-column: span 2;"><label>صورة المنتج</label><input type="file" id="invImage" accept="image/*"></div>
-                        </div>
-                        <button type="submit" class="btn-main"><i class="fas fa-plus"></i> إضافة المنتج للمخزون</button>
-                    </form>
-                </div>
-                <h3 class="section-title"><i class="fas fa-store"></i> أرض المنتجات</h3>
-                <div class="products-grid" id="productsGrid"></div>
-            </div>
-
-            <!-- POS Tab -->
-            <div id="tab-new-sale" class="tab-content">
-                <div class="card">
-                    <h3 class="section-title"><i class="fas fa-cash-register"></i> بدء عملية بيع جديدة</h3>
-                    <div class="form-grid" style="margin-bottom: 20px;">
-                        <div class="form-group">
-                            <label>اختر طريقة الدفع <span class="required-star">*</span></label>
-                            <select id="paymentMethodSelect" onchange="togglePaymentForm()" required>
-                                <option value="">-- اختر --</option>
-                                <option value="cash">دفع نقدي (Cash)</option>
-                                <option value="installment">تقسيط (Installment)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Cash Sale -->
-                    <div id="cashSaleFormContainer" style="display:none;">
-                        <h4 style="margin-bottom: 15px; color: var(--green);">بيانات البيع النقدي</h4>
-                        <form id="cashSaleForm">
-                            <label style="font-size: 13px; font-weight: 600; margin-bottom: 8px; display:block;">اختر منتجاً من البطاقات:</label>
-                            <div class="pos-products" id="cashPosProducts"></div>
-                            <div class="form-grid" style="margin-top: 15px;">
-                                <div class="form-group"><label>المنتج المختار</label><input type="text" id="cashProductName" readonly style="background:var(--bg);"></div>
-                                <div class="form-group"><label>سعر البيع</label><input type="number" id="cashTotalPrice" readonly style="background:var(--bg);"></div>
-                                <div class="form-group"><label>اسم العميل</label><input type="text" id="cashClientName" placeholder="عميل نقدي"></div>
-                            </div>
-                            <button type="submit" class="btn-main" style="background:var(--green); color:white; border:none;">تأكيد البيع النقدي</button>
-                        </form>
-                    </div>
-
-                    <!-- Installment Sale -->
-                    <div id="installmentSaleFormContainer" style="display:none;">
-                        <h4 style="margin-bottom: 15px; color: var(--dev-blue);">بيانات التقسيط</h4>
-                        <form id="saleForm">
-                            <div class="form-grid" style="margin-bottom: 15px;">
-                                <div class="form-group"><label>اسم العميل (الثلاثي) <span class="required-star">*</span></label><input type="text" id="clientName" required minlength="5"></div>
-                                <div class="form-group"><label>رقم الموبايل <span class="required-star">*</span></label><input type="tel" id="clientPhone" required pattern="^01[0125][0-9]{8}$"></div>
-                                <div class="form-group"><label>الرقم القومي <span class="required-star">*</span></label><input type="text" id="clientNid" required pattern="^[0-9]{14}$"></div>
-                                <div class="form-group"><label>العنوان <span class="required-star">*</span></label><input type="text" id="clientAddress" required></div>
-                            </div>
-                            <h4 style="margin: 20px 0 10px; font-size: 15px;">بيانات الضامن</h4>
-                            <div class="form-grid" style="margin-bottom: 15px;">
-                                <div class="form-group"><label>اسم الضامن <span class="required-star">*</span></label><input type="text" id="guarantorName" required></div>
-                                <div class="form-group"><label>موبايل الضامن <span class="required-star">*</span></label><input type="tel" id="guarantorPhone" required pattern="^01[0125][0-9]{8}$"></div>
-                                <div class="form-group"><label>الرقم القومي للضامن <span class="required-star">*</span></label><input type="text" id="guarantorNid" required pattern="^[0-9]{14}$"></div>
-                            </div>
-                            <h4 style="margin: 20px 0 10px; font-size: 15px;">بيانات المنتج والتقسيط</h4>
-                            <label style="font-size: 13px; font-weight: 600; margin-bottom: 8px; display:block;">اختر منتجاً من البطاقات:</label>
-                            <div class="pos-products" id="installmentPosProducts"></div>
-                            <div class="form-grid" style="margin-top: 15px;">
-                                <div class="form-group"><label>المنتج المختار</label><input type="text" id="productName" readonly style="background:var(--bg);"></div>
-                                <div class="form-group"><label>سعر البيع</label><input type="number" id="totalPrice" readonly style="background:var(--bg);"></div>
-                                <div class="form-group"><label>المقدم <span class="required-star">*</span></label><input type="number" id="downPayment" required min="0" value="0" oninput="calcInstallment()"></div>
-                                <div class="form-group"><label>عدد الأقساط <span class="required-star">*</span></label><input type="number" id="installmentsCount" required min="1" value="6" oninput="calcInstallment()"></div>
-                                <div class="form-group"><label>تاريخ أول قسط <span class="required-star">*</span></label><input type="date" id="startDate" required></div>
-                                <div class="form-group"><label>قيمة القسط</label><input type="text" id="instValueDisplay" readonly style="background:var(--bg); font-weight:bold; color:var(--green);"></div>
-                            </div>
-                            <button type="submit" class="btn-main">حفظ البيع بالتقسيط</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Cash Sales Log Tab -->
-            <div id="tab-cash-sales-log" class="tab-content">
-                <div class="card">
-                    <h3 class="section-title"><i class="fas fa-money-bill-wave"></i> سجل المبيعات النقدية</h3>
-                    <div class="table-wrapper"><table><thead><tr><th>التاريخ</th><th>المنتج</th><th>السيريال</th><th>العميل</th><th>الإجمالي</th></tr></thead><tbody id="cashSalesBody"></tbody></table></div>
-                </div>
-            </div>
-
-            <!-- Clients Tab -->
-            <div id="tab-clients" class="tab-content">
-                <div class="card">
-                    <div class="section-title">
-                        <span><i class="fas fa-users"></i> سجل العملاء</span>
-                    </div>
-                    <div class="table-wrapper"><table><thead><tr><th>العميل</th><th>الموبايل</th><th>المنتج</th><th>المتبقي</th><th>الأقساط</th><th>إجراءات</th></tr></thead><tbody id="clientsTableBody"></tbody></table></div>
-                </div>
-            </div>
-
-            <!-- Late Payments Tab -->
-            <div id="tab-late" class="tab-content">
-                <div class="card">
-                    <h3 class="section-title" style="color:var(--red);"><i class="fas fa-exclamation-triangle"></i> المتأخرات</h3>
-                    <div class="table-wrapper"><table><thead><tr><th>العميل</th><th>الموبايل</th><th>المتبقي</th><th>الاستحقاق</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="lateTableBody"></tbody></table></div>
-                </div>
-            </div>
-
-            <!-- Expenses Tab -->
-            <div id="tab-expenses" class="tab-content">
-                <div class="card">
-                    <h3 class="section-title">إضافة مصروف</h3>
-                    <form id="expenseForm">
-                        <div class="form-grid">
-                            <div class="form-group"><label>البيان <span class="required-star">*</span></label><input type="text" id="expDesc" required></div>
-                            <div class="form-group"><label>المبلغ <span class="required-star">*</span></label><input type="number" id="expAmount" required min="1"></div>
-                            <div class="form-group"><label>التاريخ <span class="required-star">*</span></label><input type="date" id="expDate" required></div>
-                        </div>
-                        <button type="submit" class="btn-main">تسجيل المصروف</button>
-                    </form>
-                </div>
-                <div class="card"><h3 class="section-title">سجل المصروفات</h3><div class="table-wrapper"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>المبلغ</th><th>حذف</th></tr></thead><tbody id="expensesBody"></tbody></table></div></div>
-            </div>
-
-            <!-- Settings Tab -->
-            <div id="tab-settings" class="tab-content">
-                <div class="card">
-                    <h3 class="section-title">إعدادات المحل</h3>
-                    <form id="settingsForm">
-                        <div class="form-grid">
-                            <div class="form-group"><label>اسم المحل</label><input type="text" id="settingsStoreName"></div>
-                            <div class="form-group"><label>رقم الموبايل</label><input type="text" id="settingsPhone"></div>
-                            <div class="form-group"><label>العنوان</label><input type="text" id="settingsAddress"></div>
-                        </div>
-                        <button type="submit" class="btn-main">حفظ</button>
-                    </form>
-                </div>
-
-                <!-- Branch Management -->
-                <div class="card" style="border: 2px solid var(--yellow);">
-                    <h3 class="section-title">إدارة الفروع (بمقابل مادي)</h3>
-                    <div class="info-hint">
-                        <i class="fas fa-info-circle"></i>
-                        إضافة فرع جديد تتطلب سداد قيمة الاشتراك للمطور. بعد السداد يمنحك المطور <b>كود تفعيل</b> تدخله لتشغيل الفرع.
-                    </div>
-                    <form id="branchForm">
-                        <div class="form-grid">
-                            <div class="form-group"><label>اسم الفرع <span class="required-star">*</span></label><input type="text" id="newBranchName" required></div>
-                            <div class="form-group"><label>عنوان الفرع <span class="required-star">*</span></label><input type="text" id="newBranchAddress" required></div>
-                        </div>
-                        <button type="submit" class="btn-main" style="background:var(--yellow); color:var(--black); border:none;">إرسال طلب إضافة فرع</button>
-                    </form>
-                    <div class="table-wrapper" style="margin-top:20px;">
-                        <table>
-                            <thead><tr><th>الفرع</th><th>العنوان</th><th>الحالة</th><th>كود التفعيل</th><th>تفعيل</th></tr></thead>
-                            <tbody id="branchesBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Employee Management -->
-                <div class="card" style="border: 2px solid var(--dev-blue);">
-                    <h3 class="section-title">إدارة مستخدمي المحل (الموظفين)</h3>
-                    <form id="userForm">
-                        <div class="form-grid">
-                            <div class="form-group"><label>اسم الموظف <span class="required-star">*</span></label><input type="text" id="empName" required></div>
-                            <div class="form-group"><label>رقم الموبايل <span class="required-star">*</span></label><input type="tel" id="empPhone" required></div>
-                            <div class="form-group"><label>البريد الإلكتروني (للدخول) <span class="required-star">*</span></label><input type="email" id="empEmail" required placeholder="employee@example.com"></div>
-                            <div class="form-group"><label>كلمة المرور <span class="required-star">*</span></label><input type="password" id="empPass" required minlength="6"></div>
-                            <div class="form-group"><label>الصلاحية</label>
-                                <select id="empRole">
-                                    <option value="cashier">كاشير</option>
-                                    <option value="inventory">مخزون</option>
-                                    <option value="manager">مدير</option>
-                                </select>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn-main">إضافة موظف</button>
-                    </form>
-                    <div class="table-wrapper" style="margin-top:20px;">
-                        <table><thead><tr><th>الاسم</th><th>الموبايل</th><th>الإيميل</th><th>الصلاحية</th><th>حذف</th></tr></thead><tbody id="usersBody"></tbody></table>
-                    </div>
-                </div>
-            </div>
-        </div>
+/* ========== CASH SALES LOG ========== */
+function renderCashSales(){
+  const tbody=document.getElementById('cashSalesBody');
+  if(!cashSales.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state"><i class="fas fa-receipt"></i><p>لا توجد مبيعات نقدية</p></div></td></tr>';return}
+  const sorted=[...cashSales].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  tbody.innerHTML=sorted.map(s=>`<tr><td>${escapeHtml(formatDate(s.date))}</td><td>${escapeHtml(s.productName)}</td><td>${escapeHtml(s.serial)}</td><td>${escapeHtml(s.client)}</td><td>${formatCurrency(s.price*(s.qty||1))}</td><td><button class="btn-icon blue" onclick="printSale('${s.id}')"><i class="fas fa-receipt"></i></button></td></tr>`).join('');
+}
+function printSale(id){
+  const s=cashSales.find(x=>x.id===id);if(!s)return;
+  openModal(`
+    <div class="invoice-header"><h2><i class="fas fa-shield-alt"></i> ${escapeHtml(currentStoreData.storeName||'')}</h2><p>${escapeHtml(currentStoreData.phone||'')} — ${escapeHtml(currentStoreData.address||'')}</p></div>
+    <div class="invoice-details">
+      <p><span>التاريخ:</span><b>${formatDate(s.date)}</b></p>
+      <p><span>المنتج:</span><b>${escapeHtml(s.productName)}</b></p>
+      <p><span>السيريال:</span><b>${escapeHtml(s.serial)}</b></p>
+      <p><span>العميل:</span><b>${escapeHtml(s.client)}</b></p>
+      <p><span>الإجمالي:</span><b style="color:var(--green)">${formatCurrency(s.price*(s.qty||1))}</b></p>
     </div>
+    <div class="invoice-footer">شكراً لتعاملكم معنا</div>
+    <button class="print-btn" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
+  `);
+}
 
-    <!-- Developer Panel Screen -->
-    <div id="devAdminPanel" style="display:none; padding: 20px; background: var(--bg); min-height: 100vh;">
-        <header style="border-radius: 10px; margin-bottom: 20px; background: var(--black);">
-            <div class="logo" style="color:var(--gold);"><i class="fas fa-crown"></i> <span>EMAA.Tech Admin</span></div>
-            <button class="btn-outline" onclick="logoutDevAdmin()" style="border-color:var(--red); color:var(--red);"><i class="fas fa-sign-out-alt"></i> خروج</button>
-        </header>
-        <div class="container">
+/* ========== EXPENSES ========== */
+document.getElementById('expenseForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  if(!hasPermission('manage_expenses'))return toast('لا تملك صلاحية','error');
+  db.collection('stores').doc(currentStoreData._id).collection('expenses').add({
+    desc:document.getElementById('expDesc').value.trim(),
+    amount:parseFloat(document.getElementById('expAmount').value),
+    category:document.getElementById('expCategory').value,
+    date:document.getElementById('expDate').value,
+    branchId:currentBranchId,createdBy:currentUser.uid
+  }).then(()=>{toast('تم تسجيل المصروف','success');e.target.reset();document.getElementById('expDate').value=todayStr()});
+});
+function renderExpenses(){
+  const tbody=document.getElementById('expensesBody');
+  if(!expenses.length){tbody.innerHTML='<tr><td colspan="5"><div class="empty-state"><i class="fas fa-receipt"></i><p>لا توجد مصروفات</p></div></td></tr>';return}
+  const cats={general:'عام',rent:'إيجار',salaries:'رواتب',utilities:'كهرباء ومياه',purchases:'مشتريات',other:'أخرى'};
+  const sorted=[...expenses].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  tbody.innerHTML=sorted.map(ex=>`<tr><td>${ex.date}</td><td>${escapeHtml(ex.desc)}</td><td><span class="badge b-blue">${cats[ex.category]||'عام'}</span></td><td>${formatCurrency(ex.amount)}</td><td><button class="btn-icon red" onclick="deleteExpense('${ex.id}')"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+}
+function deleteExpense(id){confirmDialog('حذف المصروف؟',()=>db.collection('stores').doc(currentStoreData._id).collection('expenses').doc(id).delete().then(()=>toast('تم الحذف','success')))}
 
-            <!-- Stores + Branch approval -->
-            <div class="card" style="border-top:4px solid var(--gold);">
-                <h3 class="section-title">إدارة المحلات والفروع (عن بعد)</h3>
-                <div class="table-wrapper">
-                    <table>
-                        <thead><tr><th>المحل</th><th>الإيميل</th><th>الحالة</th><th>فروع معلّقة (توليد كود)</th><th>إجراء المحل</th></tr></thead>
-                        <tbody id="devStoresBody"></tbody>
-                    </table>
-                </div>
-            </div>
+/* ========== DAILY CASH ========== */
+function renderDailyCash(){
+  const date=document.getElementById('cashDate').value||todayStr();
+  const inst=clients.reduce((s,c)=>s+c.installments.reduce((a,i)=>{
+    if(!i.payments)return a;
+    return a+i.payments.filter(p=>(p.date||'').startsWith(date)).reduce((x,p)=>x+p.amount,0);
+  },0),0);
+  const cash=cashSales.filter(s=>(s.date||'').startsWith(date)).reduce((s,x)=>s+(x.price*(x.qty||1)),0);
+  const exp=expenses.filter(e=>e.date===date).reduce((s,x)=>s+x.amount,0);
+  document.getElementById('dailyInst').innerText=formatCurrency(inst);
+  document.getElementById('dailyCash').innerText=formatCurrency(cash);
+  document.getElementById('dailyExp').innerText=formatCurrency(exp);
+  document.getElementById('dailyNet').innerText=formatCurrency(inst+cash-exp);
+}
 
-            <!-- Developer users management -->
-            <div class="card" style="border-top:4px solid var(--gold);">
-                <h3 class="section-title">إدارة مستخدمي المطور (Super Admins)</h3>
-                <form id="devUserForm">
-                    <div class="form-grid">
-                        <div class="form-group"><label>اسم المطور <span class="required-star">*</span></label><input type="text" id="devUserName" required></div>
-                        <div class="form-group"><label>البريد الإلكتروني <span class="required-star">*</span></label><input type="email" id="devUserEmail" required></div>
-                        <div class="form-group"><label>كلمة المرور <span class="required-star">*</span></label><input type="password" id="devUserPass" required minlength="6"></div>
-                    </div>
-                    <button type="submit" class="btn-main" style="background:var(--gold); color:var(--black); border:none;">إضافة مستخدم مطور</button>
-                </form>
-                <div class="table-wrapper" style="margin-top:20px;">
-                    <table><thead><tr><th>الاسم</th><th>البريد</th><th>الدور</th><th>حذف</th></tr></thead><tbody id="devUsersBody"></tbody></table>
-                </div>
-            </div>
-        </div>
-    </div>
+/* ========== DASHBOARD ========== */
+function updateDashboard(){
+  let tSales=0,tCollected=0,tCost=0,tExp=0;
+  clients.forEach(c=>{
+    tSales+=c.totalPrice||0;
+    tCollected+=(c.downPayment||0)+c.installments.reduce((s,i)=>s+(i.paid||0),0);
+    tCost+=c.costPrice||0;
+  });
+  cashSales.forEach(s=>{tSales+=s.price*(s.qty||1);tCollected+=s.price*(s.qty||1);tCost+=s.cost*(s.qty||1)});
+  expenses.forEach(e=>tExp+=e.amount||0);
+  const rem=clients.reduce((a,c)=>a+(c.totalPrice-(c.downPayment||0)-c.installments.reduce((s,i)=>s+(i.paid||0),0)),0);
+  const monthStr=new Date().toISOString().slice(0,7);
+  const monthExp=expenses.filter(e=>(e.date||'').startsWith(monthStr)).reduce((s,x)=>s+x.amount,0);
+  document.getElementById('statSales').innerText=formatCurrency(tSales);
+  document.getElementById('statCollected').innerText=formatCurrency(tCollected);
+  document.getElementById('statRemaining').innerText=formatCurrency(rem);
+  document.getElementById('statProfit').innerText=formatCurrency(tCollected-tCost-tExp);
+  document.getElementById('statMonthExp').innerText=formatCurrency(monthExp);
+  const today=new Date();today.setHours(0,0,0,0);
+  const soon=new Date(today);soon.setDate(soon.getDate()+5);
+  const up=[];
+  clients.forEach(c=>c.installments.forEach(inst=>{
+    if(!inst.isPaid){
+      const due=new Date(inst.dueDate);
+      if(due>=today&&due<=soon)up.push({client:c.name,phone:c.phone,date:inst.dueDate,amount:inst.amount-inst.paid});
+    }
+  }));
+  const ul=document.getElementById('upcomingList');
+  ul.innerHTML=up.length?up.map(u=>`<li style="padding:10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span>${escapeHtml(u.client)} — ${escapeHtml(u.phone)}</span><b>${formatCurrency(u.amount)}</b><span>${u.date}</span></li>`).join(''):'<li style="color:#999;padding:10px">لا توجد أقساط قادمة</li>';
+}
+function renderCharts(){
+  const sc=document.getElementById('salesChart'),ec=document.getElementById('expensesChart');
+  if(!sc||!ec)return;
+  const cashTotal=cashSales.reduce((s,x)=>s+x.price*(x.qty||1),0);
+  const instTotal=clients.reduce((s,x)=>s+(x.totalPrice||0),0);
+  if(salesChartInstance)salesChartInstance.destroy();
+  salesChartInstance=new Chart(sc,{type:'doughnut',data:{labels:['كاش','تقسيط'],datasets:[{data:[cashTotal,instTotal],backgroundColor:['#2ecc71','#3498db']}]},options:{responsive:true,maintainAspectRatio:false}});
+  const byMonth={};
+  expenses.forEach(e=>{const m=(e.date||'').slice(0,7);if(m)byMonth[m]=(byMonth[m]||0)+(e.amount||0)});
+  const labels=Object.keys(byMonth).sort().slice(-6);
+  if(expensesChartInstance)expensesChartInstance.destroy();
+  expensesChartInstance=new Chart(ec,{type:'bar',data:{labels:labels.length?labels:['—'],datasets:[{label:'المصروفات',data:labels.length?labels.map(l=>byMonth[l]):[0],backgroundColor:'#e74c3c'}]},options:{responsive:true,maintainAspectRatio:false}});
+}
 
-    <!-- Modal for Invoices -->
-    <div class="modal-overlay" id="mainModal">
-        <div class="modal-content" id="invoiceContent">
-            <i class="fas fa-times close-modal" onclick="closeModal()"></i>
-            <div id="modalBody"></div>
-        </div>
-    </div>
+/* ========== SETTINGS ========== */
+document.getElementById('settingsForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  db.collection('stores').doc(currentStoreData._id).update({
+    storeName:document.getElementById('settingsStoreName').value.trim(),
+    phone:document.getElementById('settingsPhone').value.trim(),
+    address:document.getElementById('settingsAddress').value.trim()
+  }).then(()=>toast('تم الحفظ','success'));
+});
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-
-    <script>
-        // ==================== 1. Firebase Config ====================
-        const firebaseConfig = {
-            apiKey: "AIzaSyChgRxNBPBlb41TGSZmdsE03tGkGVFl7GI",
-            authDomain: "emaa-core.firebaseapp.com",
-            projectId: "emaa-core",
-            storageBucket: "emaa-core.firebasestorage.app",
-            messagingSenderId: "737196522441",
-            appId: "1:737196522441:web:6bbcb456017e8484f7c618",
-            measurementId: "G-MMGLP0E3EM"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-        const provider = new firebase.auth.GoogleAuthProvider();
-
-        // ==================== 2. Global State ====================
-        // ⚠️ ملاحظة أمنية: بيانات المطور هنا للتوضيح فقط. في الإنتاج يجب استخدام
-        // Firebase Auth + Custom Claims (developer: true) — انظر نهاية الملف.
-        const DEV_EMAILS = ["admin@emaa.tech"]; 
-        const DEV_PASS_FALLBACK = "SuperSecret123"; // للتوضيح فقط
-
-        let currentUser = null;
-        let currentStoreData = {};
-        let currentBranchId = 'main';
-        let currentUserRole = 'owner';
-        let isDevMode = false;
-
-        let clients = [], inventory = [], cashSales = [], expenses = [];
-        let selectedCashProductId = null;
-        let selectedInstallmentProductId = null;
-        let salesChartInstance = null, expensesChartInstance = null;
-
-        // Theme
-        if(localStorage.getItem('emaa_Theme') === 'dark') document.body.classList.add('dark-mode');
-        function toggleTheme() {
-            document.body.classList.toggle('dark-mode');
-            localStorage.setItem('emaa_Theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-            if(document.getElementById('tab-dashboard').classList.contains('active')) renderCharts();
+/* ========== BRANCHES ========== */
+document.getElementById('branchForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const name=document.getElementById('newBranchName').value.trim();
+  const address=document.getElementById('newBranchAddress').value.trim();
+  if((currentStoreData.branches||[]).some(b=>b.name===name))return toast('اسم الفرع مستخدم','warning');
+  db.collection('stores').doc(currentStoreData._id).update({
+    branches:firebase.firestore.FieldValue.arrayUnion({
+      id:'BR-'+Date.now(),name,address,status:'pending',activationCode:null,price:0,requestedAt:fmtDateTime()
+    })
+  }).then(()=>{toast('تم إرسال الطلب. تواصل مع المطور لسداد الاشتراك','success');e.target.reset()});
+});
+function renderBranches(){
+  const tbody=document.getElementById('branchesBody');
+  if(!tbody)return;
+  const branches=currentStoreData.branches||[];
+  if(!branches.length){tbody.innerHTML='<tr><td colspan="5"><div class="empty-state"><p>لا توجد فروع</p></div></td></tr>';return}
+  tbody.innerHTML=branches.map(b=>{
+    let badge='<span class="badge b-yellow">بانتظار</span>';
+    if(b.status==='active')badge='<span class="badge b-green">نشط</span>';
+    else if(b.status==='inactive')badge='<span class="badge b-red">موقوف</span>';
+    const code=b.activationCode?`<b style="font-size:12px;color:#856404">${b.activationCode}</b> (${b.price||0} ج.م)`:'—';
+    let action='—';
+    if(b.status==='pending'&&b.activationCode){
+      action=`<div style="display:flex;gap:5px;justify-content:center"><input type="text" id="code-${b.id}" placeholder="الكود" style="width:110px;padding:5px;border:1px solid var(--border);border-radius:5px;font-size:12px"><button class="btn-icon green" onclick="activateBranch('${b.id}')">تفعيل</button></div>`;
+    }else if(b.status==='pending'){
+      action='<span style="font-size:11px;color:#856404">بانتظار المطور</span>';
+    }else if(b.status==='active'&&b.id!=='main'){
+      action=`<button class="btn-icon red" onclick="deactivateBranch('${b.id}')">إيقاف</button>`;
+    }else if(b.status==='inactive'){
+      action=`<button class="btn-icon green" onclick="activateBranch('${b.id}',true)">إعادة تفعيل</button>`;
+    }
+    return `<tr><td>${escapeHtml(b.name)}</td><td>${escapeHtml(b.address||'—')}</td><td>${badge}</td><td>${code}</td><td>${action}</td></tr>`;
+  }).join('');
+}
+function activateBranch(id,force){
+  db.collection('stores').doc(currentStoreData._id).get().then(doc=>{
+    const branches=doc.data().branches.map(b=>{
+      if(b.id===id){
+        if(!force){
+          const code=(document.getElementById(`code-${id}`)?.value||'').trim().toUpperCase();
+          if(!b.activationCode||b.activationCode.toUpperCase()!==code)throw new Error('كود غير صحيح');
         }
-
-        // ==================== 3. Auth Logic ====================
-        function showDevLogin() { document.getElementById('developerLogin').style.display = 'flex'; }
-        function closeDevLogin() { document.getElementById('developerLogin').style.display = 'none'; }
-
-        window.onload = function() {
-            if(window.location.hash === '#dev-admin') {
-                document.getElementById('authScreen').style.display = 'none';
-                document.getElementById('developerLogin').style.display = 'flex';
-            } else {
-                auth.onAuthStateChanged((user) => {
-                    if (user) {
-                        currentUser = user;
-                        checkUserInDatabase(user);
-                    } else if (!isDevMode) {
-                        document.getElementById('authScreen').style.display = 'flex';
-                        document.getElementById('appScreen').style.display = 'none';
-                        document.getElementById('devAdminPanel').style.display = 'none';
-                        showLoading(false);
-                    }
-                });
-            }
-        };
-
-        // Dev login: email + password من مجموعة platform_users
-        // ملاحظة: للتوضيح فقط. الحل الآمن هو Firebase Auth + Custom Claims.
-        function doDevAdminLogin() {
-            const email = document.getElementById('devEmail').value.trim().toLowerCase();
-            const pass = document.getElementById('devAdminPass').value;
-
-            // فحص المطور الافتراضي أولاً
-            if (DEV_EMAILS.includes(email) && pass === DEV_PASS_FALLBACK) {
-                isDevMode = true;
-                document.getElementById('developerLogin').style.display = 'none';
-                document.getElementById('appScreen').style.display = 'none';
-                document.getElementById('devAdminPanel').style.display = 'block';
-                loadDevPanel();
-                return;
-            }
-
-            // فحص مطورين إضافيين من قاعدة البيانات
-            db.collection("platform_users").where("email", "==", email).get().then(snap => {
-                if (snap.empty) {
-                    document.getElementById('devAdminError').style.display = 'block';
-                    return;
-                }
-                const doc = snap.docs[0].data();
-                // ⚠️ المقارنة النصية غير آمنة — استخدم hashing
-                if (doc.role === 'developer' && doc.password === pass) {
-                    isDevMode = true;
-                    document.getElementById('developerLogin').style.display = 'none';
-                    document.getElementById('appScreen').style.display = 'none';
-                    document.getElementById('devAdminPanel').style.display = 'block';
-                    loadDevPanel();
-                } else {
-                    document.getElementById('devAdminError').style.display = 'block';
-                }
-            }).catch(() => {
-                document.getElementById('devAdminError').style.display = 'block';
-            });
-        }
-
-        function logoutDevAdmin() {
-            isDevMode = false;
-            window.location.hash = '';
-            window.location.reload();
-        }
-
-        function signInWithGoogle() {
-            showLoading(true);
-            auth.signInWithPopup(provider).then((result) => {
-                checkUserInDatabase(result.user);
-            }).catch((error) => {
-                showLoading(false);
-                alert("خطأ في الدخول: " + error.message);
-            });
-        }
-
-        function logout() {
-            auth.signOut().then(() => window.location.reload());
-        }
-
-        function checkUserInDatabase(user) {
-            db.collection("stores").doc(user.uid).get().then((doc) => {
-                if (doc.exists) {
-                    currentStoreData = doc.data();
-                    if (currentStoreData.status === 'active') {
-                        loginSuccess();
-                    } else {
-                        document.getElementById('authScreen').style.display = 'none';
-                        document.getElementById('pendingScreen').style.display = 'flex';
-                        showLoading(false);
-                    }
-                } else {
-                    db.collection("stores").doc(user.uid).set({
-                        storeName: user.displayName || "محل جديد",
-                        email: user.email,
-                        status: "pending",
-                        branches: [{ id: 'main', name: 'الفرع الرئيسي', address: '', status: 'active' }],
-                        users: [],
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    }).then(() => {
-                        document.getElementById('authScreen').style.display = 'none';
-                        document.getElementById('pendingScreen').style.display = 'flex';
-                        showLoading(false);
-                    });
-                }
-            });
-        }
-
-        function loginSuccess() {
-            document.getElementById('authScreen').style.display = 'none';
-            document.getElementById('pendingScreen').style.display = 'none';
-            document.getElementById('devAdminPanel').style.display = 'none';
-            document.getElementById('appScreen').style.display = 'block';
-            document.getElementById('storeNameDisplay').innerText = currentStoreData.storeName || 'محل';
-            document.getElementById('settingsStoreName').value = currentStoreData.storeName || '';
-            document.getElementById('settingsPhone').value = currentStoreData.phone || '';
-            document.getElementById('settingsAddress').value = currentStoreData.address || '';
-
-            renderBranchSwitcher();
-            renderBranches();
-            renderUsers();
-            loadTenantData();
-            showLoading(false);
-        }
-
-        // ==================== 4. Dev Panel Logic ====================
-        let devStoresUnsub = null;
-        function loadDevPanel() {
-            if (devStoresUnsub) devStoresUnsub();
-            devStoresUnsub = db.collection("stores").onSnapshot((snapshot) => {
-                const tbody = document.getElementById('devStoresBody');
-                tbody.innerHTML = '';
-                snapshot.forEach((doc) => {
-                    const store = doc.data();
-                    const statusBadge = store.status === 'active' ? '<span class="badge b-green">نشط</span>' : '<span class="badge b-yellow">قيد المراجعة</span>';
-                    const actionBtn = store.status === 'active'
-                        ? `<button class="btn-icon" style="color:var(--red);" onclick="deleteStore('${doc.id}')">حذف</button>`
-                        : `<button class="btn-icon" style="color:var(--green);" onclick="approveStore('${doc.id}')">موافقة</button>`;
-
-                    const pendingBranches = (store.branches || []).filter(b => b.status === 'pending');
-                    let branchHtml = '<span style="color:#999; font-size:12px;">لا يوجد</span>';
-                    if (pendingBranches.length) {
-                        branchHtml = pendingBranches.map(b => `
-                            <div style="margin:6px 0; padding:8px; background:#fff3cd; border-radius:6px; font-size:12px; text-align:right;">
-                                <b>${b.name}</b> — <span style="color:#666;">${b.address || ''}</span><br>
-                                <input type="number" id="price-${doc.id}-${b.id}" placeholder="السعر (ج.م)" style="width:100px; padding:4px; margin:6px 4px 0 0; border:1px solid #ccc; border-radius:4px;">
-                                <button class="btn-icon green" style="padding:4px 8px; font-size:11px;" onclick="issueBranchCode('${doc.id}','${b.id}')">توليد كود</button>
-                                ${b.activationCode ? `<div style="margin-top:6px; color:#155724;"><b>الكود: ${b.activationCode}</b> (${b.price} ج.م)</div>` : ''}
-                            </div>
-                        `).join('');
-                    }
-
-                    tbody.innerHTML += `<tr>
-                        <td>${store.storeName || '—'}</td>
-                        <td>${store.email || '—'}</td>
-                        <td>${statusBadge}</td>
-                        <td>${branchHtml}</td>
-                        <td>${actionBtn}</td>
-                    </tr>`;
-                });
-            });
-            loadDevUsers();
-        }
-
-        function approveStore(id) { db.collection("stores").doc(id).update({ status: 'active' }); }
-        function deleteStore(id) {
-            if (!confirm('حذف هذا المحل نهائياً؟')) return;
-            db.collection("stores").doc(id).delete();
-        }
-
-        // توليد كود تفعيل للفرع (من المطور)
-        function issueBranchCode(storeId, branchId) {
-            const priceInput = document.getElementById(`price-${storeId}-${branchId}`);
-            const price = parseFloat(priceInput.value);
-            if (!price || price <= 0) return alert('أدخل سعر الاشتراك أولاً');
-
-            const code = 'EMA-' + Math.random().toString(36).substring(2, 10).toUpperCase();
-
-            db.collection("stores").doc(storeId).get().then(doc => {
-                const branches = doc.data().branches.map(b =>
-                    b.id === branchId
-                        ? { ...b, activationCode: code, price: price, codeIssuedAt: new Date().toISOString() }
-                        : b
-                );
-                return db.collection("stores").doc(storeId).update({ branches });
-            }).then(() => {
-                alert(`تم توليد الكود للفرع:\n\nالكود: ${code}\nالسعر: ${price} ج.م\n\nأرسل الكود لصاحب المحل بعد استلام المبلغ.`);
-            });
-        }
-
-        // إدارة مستخدمي المطور
-        function loadDevUsers() {
-            db.collection("platform_users").where("role", "==", "developer").onSnapshot(snap => {
-                const tbody = document.getElementById('devUsersBody');
-                tbody.innerHTML = '';
-                if (snap.empty) {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#999;">لا يوجد مستخدمون إضافيون</td></tr>';
-                    return;
-                }
-                snap.forEach(doc => {
-                    const u = doc.data();
-                    tbody.innerHTML += `<tr>
-                        <td>${u.name || '—'}</td>
-                        <td>${u.email}</td>
-                        <td><span class="badge b-blue">مطور</span></td>
-                        <td><button class="btn-icon red" onclick="removeDeveloper('${doc.id}')">حذف</button></td>
-                    </tr>`;
-                });
-            });
-        }
-
-        function removeDeveloper(docId) {
-            if (!confirm('حذف مستخدم المطور؟')) return;
-            db.collection("platform_users").doc(docId).delete();
-        }
-
-        // form: إضافة مستخدم مطور
-        document.getElementById('devUserForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const email = document.getElementById('devUserEmail').value.trim().toLowerCase();
-            const name = document.getElementById('devUserName').value.trim();
-            const password = document.getElementById('devUserPass').value;
-
-            // التحقق أن الإيميل غير مستخدم
-            db.collection("platform_users").where("email", "==", email).get().then(snap => {
-                if (!snap.empty) {
-                    return alert('هذا البريد مستخدم بالفعل');
-                }
-                return db.collection("platform_users").add({
-                    name, email, password, role: 'developer',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                }).then(() => {
-                    alert('تمت إضافة المطور');
-                    e.target.reset();
-                });
-            });
-        });
-
-        // ==================== 5. Tenant Data ====================
-        function loadTenantData() {
-            // Products
-            db.collection("stores").doc(currentUser.uid).collection("products").where("branchId", "==", currentBranchId).onSnapshot(snap => {
-                inventory = [];
-                snap.forEach(doc => { let d = doc.data(); d.id = doc.id; inventory.push(d); });
-                renderProducts();
-                renderPosProducts();
-                updateDashboard();
-            });
-
-            // Clients
-            db.collection("stores").doc(currentUser.uid).collection("clients").where("branchId", "==", currentBranchId).onSnapshot(snap => {
-                clients = [];
-                snap.forEach(doc => { let d = doc.data(); d.id = doc.id; clients.push(d); });
-                renderClients();
-                renderLatePayments();
-                updateDashboard();
-            });
-
-            // Cash sales
-            db.collection("stores").doc(currentUser.uid).collection("sales").where("branchId", "==", currentBranchId).onSnapshot(snap => {
-                cashSales = [];
-                snap.forEach(doc => { let d = doc.data(); d.id = doc.id; cashSales.push(d); });
-                renderCashSales();
-                updateDashboard();
-            });
-
-            // Expenses
-            db.collection("stores").doc(currentUser.uid).collection("expenses").where("branchId", "==", currentBranchId).onSnapshot(snap => {
-                expenses = [];
-                snap.forEach(doc => { let d = doc.data(); d.id = doc.id; expenses.push(d); });
-                renderExpenses();
-                updateDashboard();
-            });
-        }
-
-        // ==================== 6. Helpers ====================
-        function switchTab(tabId, btn) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(`tab-${tabId}`).classList.add('active');
-            if(btn) btn.classList.add('active');
-            if(tabId === 'dashboard') renderCharts();
-        }
-
-        function renderBranchSwitcher() {
-            const sel = document.getElementById('branchSwitcher');
-            sel.innerHTML = '';
-            const active = (currentStoreData.branches || []).filter(b => b.status === 'active');
-            active.forEach(b => {
-                sel.innerHTML += `<option value="${b.id}" ${b.id === currentBranchId ? 'selected' : ''}>${b.name}</option>`;
-            });
-            const cur = active.find(b => b.id === currentBranchId) || active[0];
-            if (cur) {
-                currentBranchId = cur.id;
-                document.getElementById('branchDisplay').innerText = cur.name;
-            }
-        }
-
-        function switchBranch(id) {
-            currentBranchId = id;
-            const cur = (currentStoreData.branches || []).find(b => b.id === id);
-            document.getElementById('branchDisplay').innerText = cur ? cur.name : '';
-            loadTenantData();
-        }
-
-        const formatCurrency = (num) => parseFloat(num || 0).toLocaleString('en-EG') + ' ج.م';
-        const formatDate = (d) => { let date = new Date(d); return date.toISOString().split('T')[0]; };
-        function showLoading(s) { document.getElementById('loadingOverlay').style.display = s ? 'flex' : 'none'; }
-        function closeModal() { document.getElementById('mainModal').style.display = 'none'; }
-
-        // ضغط الصور
-        function compressImage(file, maxWidth = 500, quality = 0.7) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                const reader = new FileReader();
-                reader.onload = e => {
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const ratio = Math.min(maxWidth / img.width, 1);
-                        canvas.width = img.width * ratio;
-                        canvas.height = img.height * ratio;
-                        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', quality));
-                    };
-                    img.onerror = reject;
-                    img.src = e.target.result;
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
-
-        function reloadStoreData() {
-            db.collection("stores").doc(currentUser.uid).get().then(doc => {
-                currentStoreData = doc.data();
-                renderBranches();
-                renderUsers();
-                renderBranchSwitcher();
-                const cur = (currentStoreData.branches || []).find(b => b.id === currentBranchId);
-                if (!cur || cur.status !== 'active') {
-                    const firstActive = (currentStoreData.branches || []).find(b => b.status === 'active');
-                    if (firstActive) {
-                        currentBranchId = firstActive.id;
-                        loadTenantData();
-                    }
-                }
-            });
-        }
-
-        // ==================== 7. Inventory ====================
-        document.getElementById('inventoryForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            showLoading(true);
-            try {
-                const imgFile = document.getElementById('invImage').files[0];
-                let imageData = null;
-                if (imgFile) imageData = await compressImage(imgFile);
-
-                await db.collection("stores").doc(currentUser.uid).collection("products").add({
-                    name: document.getElementById('invName').value.trim(),
-                    serial: document.getElementById('invSerial').value.trim(),
-                    qty: parseInt(document.getElementById('invQty').value),
-                    cost: parseFloat(document.getElementById('invCost').value),
-                    price: parseFloat(document.getElementById('invPrice').value),
-                    warranty: parseInt(document.getElementById('invWarranty').value) || 0,
-                    image: imageData,
-                    branchId: currentBranchId,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                this.reset();
-                alert('تمت إضافة المنتج!');
-            } catch (err) {
-                alert('خطأ: ' + err.message);
-            }
-            showLoading(false);
-        });
-
-        function renderProducts() {
-            const grid = document.getElementById('productsGrid');
-            grid.innerHTML = '';
-            if (inventory.length === 0) {
-                grid.innerHTML = '<p style="text-align:center; width:100%; color:var(--gray);">لا توجد منتجات.</p>';
-                return;
-            }
-            inventory.forEach(item => {
-                const imgHtml = item.image
-                    ? `<img src="${item.image}" alt="${item.name}">`
-                    : `<i class="fas fa-mobile-alt"></i>`;
-                grid.innerHTML += `
-                    <div class="product-card">
-                        <div class="product-img">${imgHtml}</div>
-                        <div class="product-info">
-                            <div class="product-name">${item.name}</div>
-                            <div style="font-size:12px; color:var(--dev-blue); margin-bottom:5px;">${item.serial}</div>
-                            <div class="product-price">${formatCurrency(item.price)}</div>
-                            <div class="product-cost">متاح: ${item.qty}</div>
-                            <div class="product-actions">
-                                <button class="btn-icon red" onclick="deleteProduct('${item.id}')"><i class="fas fa-trash"></i> حذف</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        function deleteProduct(id) {
-            if (confirm('حذف المنتج؟')) {
-                db.collection("stores").doc(currentUser.uid).collection("products").doc(id).delete();
-            }
-        }
-
-        // ==================== 8. POS ====================
-        function togglePaymentForm() {
-            const m = document.getElementById('paymentMethodSelect').value;
-            document.getElementById('cashSaleFormContainer').style.display = m === 'cash' ? 'block' : 'none';
-            document.getElementById('installmentSaleFormContainer').style.display = m === 'installment' ? 'block' : 'none';
-            if (m === 'cash' || m === 'installment') renderPosProducts();
-        }
-
-        // عرض بطاقات المنتجات في POS بالصور
-        function renderPosProducts() {
-            const available = inventory.filter(i => i.qty > 0);
-
-            // Cash POS
-            const cashGrid = document.getElementById('cashPosProducts');
-            if (cashGrid) {
-                cashGrid.innerHTML = '';
-                available.forEach(item => {
-                    const imgHtml = item.image
-                        ? `<img src="${item.image}" alt="${item.name}">`
-                        : `<div class="ph"><i class="fas fa-mobile-alt"></i></div>`;
-                    const selected = selectedCashProductId === item.id ? 'selected' : '';
-                    cashGrid.innerHTML += `
-                        <div class="pos-product-card ${selected}" onclick="selectCashProduct('${item.id}')">
-                            ${imgHtml}
-                            <div class="info">
-                                <div class="nm">${item.name}</div>
-                                <div class="pr">${formatCurrency(item.price)}</div>
-                                <div class="sr">${item.serial}</div>
-                            </div>
-                        </div>
-                    `;
-                });
-                if (available.length === 0) cashGrid.innerHTML = '<p style="color:var(--gray);">لا توجد منتجات متاحة</p>';
-            }
-
-            // Installment POS
-            const instGrid = document.getElementById('installmentPosProducts');
-            if (instGrid) {
-                instGrid.innerHTML = '';
-                available.forEach(item => {
-                    const imgHtml = item.image
-                        ? `<img src="${item.image}" alt="${item.name}">`
-                        : `<div class="ph"><i class="fas fa-mobile-alt"></i></div>`;
-                    const selected = selectedInstallmentProductId === item.id ? 'selected' : '';
-                    instGrid.innerHTML += `
-                        <div class="pos-product-card ${selected}" onclick="selectInstallmentProduct('${item.id}')">
-                            ${imgHtml}
-                            <div class="info">
-                                <div class="nm">${item.name}</div>
-                                <div class="pr">${formatCurrency(item.price)}</div>
-                                <div class="sr">${item.serial}</div>
-                            </div>
-                        </div>
-                    `;
-                });
-                if (available.length === 0) instGrid.innerHTML = '<p style="color:var(--gray);">لا توجد منتجات متاحة</p>';
-            }
-        }
-
-        function selectCashProduct(id) {
-            selectedCashProductId = id;
-            const p = inventory.find(i => i.id === id);
-            if (p) {
-                document.getElementById('cashProductName').value = p.name + ' (' + p.serial + ')';
-                document.getElementById('cashTotalPrice').value = p.price;
-            }
-            renderPosProducts();
-        }
-
-        function selectInstallmentProduct(id) {
-            selectedInstallmentProductId = id;
-            const p = inventory.find(i => i.id === id);
-            if (p) {
-                document.getElementById('productName').value = p.name + ' (' + p.serial + ')';
-                document.getElementById('totalPrice').value = p.price;
-                calcInstallment();
-            }
-            renderPosProducts();
-        }
-
-        function calcInstallment() {
-            const t = parseFloat(document.getElementById('totalPrice').value) || 0;
-            const d = parseFloat(document.getElementById('downPayment').value) || 0;
-            const c = parseInt(document.getElementById('installmentsCount').value) || 1;
-            if (t > d && c > 0) {
-                document.getElementById('instValueDisplay').value = formatCurrency((t - d) / c);
-            } else {
-                document.getElementById('instValueDisplay').value = '';
-            }
-        }
-
-        // Cash Sale
-        document.getElementById('cashSaleForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            if (!selectedCashProductId) return alert('اختر منتجاً من البطاقات');
-            const p = inventory.find(i => i.id === selectedCashProductId);
-            if (!p) return alert('المنتج غير موجود');
-            if (p.qty <= 0) return alert('المنتج غير متوفر');
-
-            showLoading(true);
-            try {
-                await db.collection("stores").doc(currentUser.uid).collection("sales").add({
-                    productName: p.name,
-                    serial: p.serial,
-                    price: p.price,
-                    cost: p.cost,
-                    image: p.image || null,
-                    client: document.getElementById('cashClientName').value.trim() || 'عميل نقدي',
-                    date: formatDate(new Date()),
-                    branchId: currentBranchId
-                });
-                await db.collection("stores").doc(currentUser.uid).collection("products").doc(selectedCashProductId)
-                    .update({ qty: p.qty - 1 });
-
-                alert('تم البيع النقدي!');
-                selectedCashProductId = null;
-                this.reset();
-                document.getElementById('cashProductName').value = '';
-                document.getElementById('cashTotalPrice').value = '';
-                renderPosProducts();
-            } catch (err) { alert('خطأ: ' + err.message); }
-            showLoading(false);
-        });
-
-        // Installment Sale
-        document.getElementById('saleForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            if (!selectedInstallmentProductId) return alert('اختر منتجاً من البطاقات');
-            const p = inventory.find(i => i.id === selectedInstallmentProductId);
-            if (!p) return alert('المنتج غير موجود');
-            if (p.qty <= 0) return alert('المنتج غير متوفر');
-
-            const total = parseFloat(document.getElementById('totalPrice').value);
-            const down = parseFloat(document.getElementById('downPayment').value) || 0;
-            const count = parseInt(document.getElementById('installmentsCount').value);
-            if (total <= down) return alert('المقدم يجب أن يكون أقل من سعر المنتج');
-            if (count < 1) return alert('عدد الأقساط غير صحيح');
-            const startVal = document.getElementById('startDate').value;
-            if (!startVal) return alert('اختر تاريخ أول قسط');
-            const start = new Date(startVal);
-
-            let installments = [];
-            const perInst = (total - down) / count;
-            for (let i = 0; i < count; i++) {
-                let d = new Date(start);
-                d.setMonth(d.getMonth() + i);
-                installments.push({
-                    id: i + 1,
-                    dueDate: formatDate(d),
-                    amount: perInst,
-                    paid: 0,
-                    isPaid: false
-                });
-            }
-
-            showLoading(true);
-            try {
-                await db.collection("stores").doc(currentUser.uid).collection("clients").add({
-                    name: document.getElementById('clientName').value.trim(),
-                    phone: document.getElementById('clientPhone').value.trim(),
-                    nid: document.getElementById('clientNid').value.trim(),
-                    address: document.getElementById('clientAddress').value.trim(),
-                    gName: document.getElementById('guarantorName').value.trim(),
-                    gPhone: document.getElementById('guarantorPhone').value.trim(),
-                    gNid: document.getElementById('guarantorNid').value.trim(),
-                    product: p.name,
-                    serial: p.serial,
-                    productImage: p.image || null,
-                    totalPrice: total,
-                    costPrice: p.cost,
-                    downPayment: down,
-                    installments: installments,
-                    purchaseDate: formatDate(new Date()),
-                    branchId: currentBranchId
-                });
-                await db.collection("stores").doc(currentUser.uid).collection("products").doc(selectedInstallmentProductId)
-                    .update({ qty: p.qty - 1 });
-
-                alert('تم حفظ البيع بالتقسيط!');
-                selectedInstallmentProductId = null;
-                this.reset();
-                document.getElementById('productName').value = '';
-                document.getElementById('totalPrice').value = '';
-                document.getElementById('instValueDisplay').value = '';
-                renderPosProducts();
-            } catch (err) { alert('خطأ: ' + err.message); }
-            showLoading(false);
-        });
-
-        // ==================== 9. Clients & Late ====================
-        function renderClients() {
-            const tbody = document.getElementById('clientsTableBody');
-            tbody.innerHTML = '';
-            if (clients.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#999;">لا يوجد عملاء</td></tr>';
-                return;
-            }
-            clients.forEach(c => {
-                const paid = (c.downPayment || 0) + c.installments.reduce((s, i) => s + (i.paid || 0), 0);
-                const rem = c.totalPrice - paid;
-                const pc = c.installments.filter(i => i.isPaid).length;
-                tbody.innerHTML += `<tr>
-                    <td>${c.name}</td>
-                    <td>${c.phone}</td>
-                    <td>${c.product}</td>
-                    <td>${formatCurrency(rem)}</td>
-                    <td>${pc}/${c.installments.length}</td>
-                    <td><button class="btn-icon green" onclick="payInst('${c.id}')"><i class="fas fa-money-bill"></i> تحصيل</button></td>
-                </tr>`;
-            });
-        }
-
-        function payInst(id) {
-            const c = clients.find(x => x.id === id);
-            if (!c) return;
-            const idx = c.installments.findIndex(i => !i.isPaid);
-            if (idx === -1) return alert('تم سداد جميع الأقساط');
-            const inst = c.installments[idx];
-            const remaining = inst.amount - inst.paid;
-            let amt = parseFloat(prompt(`القسط المستحق: ${remaining.toFixed(2)} ج.م\nأدخل المبلغ المحصّل:`, remaining.toFixed(2)));
-            if (!amt || amt <= 0) return;
-            if (amt > remaining) {
-                if (!confirm('المبلغ أكبر من المتبقي. هل تريد احتسابه كسداد كامل؟')) return;
-                amt = remaining;
-            }
-            c.installments[idx].paid += amt;
-            if (c.installments[idx].paid >= c.installments[idx].amount - 0.01) {
-                c.installments[idx].isPaid = true;
-            }
-            db.collection("stores").doc(currentUser.uid).collection("clients").doc(id)
-                .update({ installments: c.installments })
-                .then(() => alert('تم تسجيل الدفعة'));
-        }
-
-        function renderLatePayments() {
-            const tbody = document.getElementById('lateTableBody');
-            tbody.innerHTML = '';
-            const today = new Date(); today.setHours(0, 0, 0, 0);
-            let lateCount = 0;
-            clients.forEach(c => {
-                c.installments.forEach(inst => {
-                    if (!inst.isPaid) {
-                        const due = new Date(inst.dueDate);
-                        if (due < today) {
-                            lateCount++;
-                            const days = Math.floor((today - due) / 86400000);
-                            tbody.innerHTML += `<tr>
-                                <td>${c.name}</td>
-                                <td>${c.phone}</td>
-                                <td>${formatCurrency(inst.amount - inst.paid)}</td>
-                                <td>${inst.dueDate}</td>
-                                <td><span class="badge b-red">متأخر ${days} يوم</span></td>
-                                <td><button class="btn-icon green" onclick="payInst('${c.id}')">تحصيل</button></td>
-                            </tr>`;
-                        }
-                    }
-                });
-            });
-            document.getElementById('lateCount').innerText = lateCount;
-            if (lateCount === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#999;">لا توجد متأخرات 🎉</td></tr>';
-            }
-        }
-
-        // ==================== 10. Cash Sales Log ====================
-        function renderCashSales() {
-            const tbody = document.getElementById('cashSalesBody');
-            tbody.innerHTML = '';
-            if (cashSales.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#999;">لا توجد مبيعات نقدية</td></tr>';
-                return;
-            }
-            const sorted = [...cashSales].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-            sorted.forEach(s => {
-                tbody.innerHTML += `<tr>
-                    <td>${s.date || '—'}</td>
-                    <td>${s.productName || '—'}</td>
-                    <td>${s.serial || '—'}</td>
-                    <td>${s.client || '—'}</td>
-                    <td>${formatCurrency(s.price)}</td>
-                </tr>`;
-            });
-        }
-
-        // ==================== 11. Expenses ====================
-        document.getElementById('expenseForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            db.collection("stores").doc(currentUser.uid).collection("expenses").add({
-                desc: document.getElementById('expDesc').value.trim(),
-                amount: parseFloat(document.getElementById('expAmount').value),
-                date: document.getElementById('expDate').value,
-                branchId: currentBranchId
-            }).then(() => this.reset());
-        });
-
-        function renderExpenses() {
-            const tbody = document.getElementById('expensesBody');
-            tbody.innerHTML = '';
-            if (expenses.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#999;">لا توجد مصروفات</td></tr>';
-                return;
-            }
-            const sorted = [...expenses].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-            sorted.forEach(ex => {
-                tbody.innerHTML += `<tr>
-                    <td>${ex.date}</td>
-                    <td>${ex.desc}</td>
-                    <td>${formatCurrency(ex.amount)}</td>
-                    <td><button class="btn-icon red" onclick="deleteExpense('${ex.id}')">حذف</button></td>
-                </tr>`;
-            });
-        }
-
-        function deleteExpense(id) {
-            if (confirm('حذف المصروف؟')) {
-                db.collection("stores").doc(currentUser.uid).collection("expenses").doc(id).delete();
-            }
-        }
-
-        // ==================== 12. Dashboard & Charts ====================
-        function updateDashboard() {
-            let tSales = 0, tCollected = 0, tCost = 0, tExp = 0;
-            clients.forEach(c => {
-                tSales += c.totalPrice || 0;
-                tCollected += (c.downPayment || 0) + c.installments.reduce((s, i) => s + (i.paid || 0), 0);
-                tCost += c.costPrice || 0;
-            });
-            cashSales.forEach(s => {
-                tSales += s.price || 0;
-                tCollected += s.price || 0;
-                tCost += s.cost || 0;
-            });
-            expenses.forEach(e => tExp += e.amount || 0);
-            const tRem = clients.reduce((a, c) => a + (c.totalPrice - (c.downPayment || 0) - c.installments.reduce((s, i) => s + (i.paid || 0), 0)), 0);
-
-            document.getElementById('statSales').innerText = formatCurrency(tSales);
-            document.getElementById('statCollected').innerText = formatCurrency(tCollected);
-            document.getElementById('statRemaining').innerText = formatCurrency(tRem);
-            document.getElementById('statProfit').innerText = formatCurrency(tCollected - tCost - tExp);
-
-            // Upcoming installments (5 days)
-            const today = new Date(); today.setHours(0, 0, 0, 0);
-            const soon = new Date(today); soon.setDate(soon.getDate() + 5);
-            const upcoming = [];
-            clients.forEach(c => {
-                c.installments.forEach(inst => {
-                    if (!inst.isPaid) {
-                        const due = new Date(inst.dueDate);
-                        if (due >= today && due <= soon) {
-                            upcoming.push({ client: c.name, phone: c.phone, date: inst.dueDate, amount: inst.amount - inst.paid });
-                        }
-                    }
-                });
-            });
-            const ul = document.getElementById('upcomingList');
-            ul.innerHTML = upcoming.length
-                ? upcoming.map(u => `<li style="padding:8px; border-bottom:1px solid var(--border);">${u.client} — ${u.phone} — <b>${formatCurrency(u.amount)}</b> — ${u.date}</li>`).join('')
-                : '<li style="color:#999;">لا توجد أقساط قادمة</li>';
-        }
-
-        function renderCharts() {
-            const salesCtx = document.getElementById('salesChart');
-            const expCtx = document.getElementById('expensesChart');
-            if (!salesCtx || !expCtx) return;
-
-            // Sales breakdown
-            const cashTotal = cashSales.reduce((s, x) => s + (x.price || 0), 0);
-            const instTotal = clients.reduce((s, x) => s + (x.totalPrice || 0), 0);
-
-            if (salesChartInstance) salesChartInstance.destroy();
-            salesChartInstance = new Chart(salesCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['كاش', 'تقسيط'],
-                    datasets: [{ data: [cashTotal, instTotal], backgroundColor: ['#2ecc71', '#3498db'] }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-
-            // Expenses by month
-            const byMonth = {};
-            expenses.forEach(e => {
-                const m = (e.date || '').slice(0, 7);
-                if (!m) return;
-                byMonth[m] = (byMonth[m] || 0) + (e.amount || 0);
-            });
-            const labels = Object.keys(byMonth).sort();
-            const data = labels.map(l => byMonth[l]);
-
-            if (expensesChartInstance) expensesChartInstance.destroy();
-            expensesChartInstance = new Chart(expCtx, {
-                type: 'bar',
-                data: {
-                    labels: labels.length ? labels : ['لا يوجد'],
-                    datasets: [{ label: 'المصروفات', data: data.length ? data : [0], backgroundColor: '#e74c3c' }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
-
-        // ==================== 13. Settings ====================
-        document.getElementById('settingsForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            db.collection("stores").doc(currentUser.uid).update({
-                storeName: document.getElementById('settingsStoreName').value.trim(),
-                phone: document.getElementById('settingsPhone').value.trim(),
-                address: document.getElementById('settingsAddress').value.trim()
-            }).then(() => {
-                alert('تم الحفظ!');
-                document.getElementById('storeNameDisplay').innerText = document.getElementById('settingsStoreName').value.trim();
-            });
-        });
-
-        // Employees
-        document.getElementById('userForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const email = document.getElementById('empEmail').value.trim().toLowerCase();
-            const name = document.getElementById('empName').value.trim();
-            const phone = document.getElementById('empPhone').value.trim();
-            const password = document.getElementById('empPass').value;
-            const role = document.getElementById('empRole').value;
-
-            db.collection("stores").doc(currentUser.uid).get().then(doc => {
-                const users = doc.data().users || [];
-                if (users.some(u => u.email === email)) {
-                    throw new Error('هذا البريد مستخدم بالفعل');
-                }
-                return db.collection("stores").doc(currentUser.uid).update({
-                    users: firebase.firestore.FieldValue.arrayUnion({
-                        id: 'U-' + Date.now(),
-                        name, phone, email, password, role,
-                        createdAt: new Date().toISOString()
-                    })
-                });
-            }).then(() => {
-                alert('تمت إضافة الموظف!');
-                e.target.reset();
-                reloadStoreData();
-            }).catch(err => alert(err.message));
-        });
-
-        function renderUsers() {
-            const tbody = document.getElementById('usersBody');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-            const users = currentStoreData.users || [];
-            if (users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#999;">لا يوجد موظفون</td></tr>';
-                return;
-            }
-            const roleNames = { cashier: 'كاشير', inventory: 'مخزون', manager: 'مدير' };
-            users.forEach(u => {
-                tbody.innerHTML += `<tr>
-                    <td>${u.name}</td>
-                    <td>${u.phone || '—'}</td>
-                    <td>${u.email || '—'}</td>
-                    <td><span class="badge b-blue">${roleNames[u.role] || u.role}</span></td>
-                    <td><button class="btn-icon red" onclick="deleteUser('${u.id}')">حذف</button></td>
-                </tr>`;
-            });
-        }
-
-        function deleteUser(userId) {
-            if (!confirm('حذف هذا الموظف؟')) return;
-            db.collection("stores").doc(currentUser.uid).get().then(doc => {
-                const users = (doc.data().users || []).filter(u => u.id !== userId);
-                return db.collection("stores").doc(currentUser.uid).update({ users });
-            }).then(() => reloadStoreData());
-        }
-
-        // ==================== 14. Branches ====================
-        document.getElementById('branchForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const name = document.getElementById('newBranchName').value.trim();
-            const address = document.getElementById('newBranchAddress').value.trim();
-
-            if ((currentStoreData.branches || []).some(b => b.name === name)) {
-                return alert('يوجد فرع بنفس الاسم بالفعل');
-            }
-
-            db.collection("stores").doc(currentUser.uid).update({
-                branches: firebase.firestore.FieldValue.arrayUnion({
-                    id: 'BR-' + Date.now(),
-                    name,
-                    address,
-                    status: 'pending',
-                    activationCode: null,
-                    price: 0,
-                    requestedAt: new Date().toISOString()
-                })
-            }).then(() => {
-                alert('تم إرسال طلب الفرع. تواصل مع المطور لسداد الاشتراك واستلام كود التفعيل.');
-                e.target.reset();
-                reloadStoreData();
-            });
-        });
-
-        function renderBranches() {
-            const tbody = document.getElementById('branchesBody');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-            const branches = currentStoreData.branches || [];
-            if (branches.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#999;">لا توجد فروع</td></tr>';
-                return;
-            }
-            branches.forEach(b => {
-                let statusBadge = '<span class="badge b-yellow">بانتظار التفعيل</span>';
-                if (b.status === 'active') statusBadge = '<span class="badge b-green">نشط</span>';
-                else if (b.status === 'rejected') statusBadge = '<span class="badge b-red">مرفوض</span>';
-                else if (b.status === 'inactive') statusBadge = '<span class="badge b-red">موقوف</span>';
-
-                let codeCell = '—';
-                if (b.activationCode) {
-                    codeCell = b.status === 'active'
-                        ? `<span style="font-size:12px; color:#155724;"><b>${b.activationCode}</b> (${b.price || 0} ج.م)</span>`
-                        : `<span style="font-size:12px; color:#856404;"><b>${b.activationCode}</b> (${b.price || 0} ج.م)</span>`;
-                }
-
-                let actionCell = '—';
-                if (b.status === 'pending' && b.activationCode) {
-                    actionCell = `<div style="display:flex; gap:5px; justify-content:center;">
-                        <input type="text" id="code-${b.id}" placeholder="أدخل الكود" style="width:120px; padding:6px; border:1px solid var(--border); border-radius:5px; font-size:12px;">
-                        <button class="btn-icon green" onclick="activateBranch('${b.id}')">تفعيل</button>
-                    </div>`;
-                } else if (b.status === 'pending' && !b.activationCode) {
-                    actionCell = '<span style="font-size:12px; color:#856404;">بانتظار المطور</span>';
-                } else if (b.status === 'active' && b.id !== 'main') {
-                    actionCell = `<button class="btn-icon red" onclick="deactivateBranch('${b.id}')">إيقاف</button>`;
-                }
-
-                tbody.innerHTML += `<tr>
-                    <td>${b.name}</td>
-                    <td>${b.address || '—'}</td>
-                    <td>${statusBadge}</td>
-                    <td>${codeCell}</td>
-                    <td>${actionCell}</td>
-                </tr>`;
-            });
-        }
-
-        function activateBranch(branchId) {
-            const codeInput = document.getElementById(`code-${branchId}`);
-            const code = codeInput.value.trim().toUpperCase();
-            if (!code) return alert('أدخل كود التفعيل');
-
-            db.collection("stores").doc(currentUser.uid).get().then(doc => {
-                const branches = doc.data().branches.map(b => {
-                    if (b.id === branchId) {
-                        if (!b.activationCode || b.activationCode.toUpperCase() !== code) {
-                            throw new Error('كود التفعيل غير صحيح');
-                        }
-                        return { ...b, status: 'active', activatedAt: new Date().toISOString() };
-                    }
-                    return b;
-                });
-                return db.collection("stores").doc(currentUser.uid).update({ branches });
-            }).then(() => {
-                alert('تم تفعيل الفرع بنجاح! 🎉');
-                reloadStoreData();
-            }).catch(err => alert(err.message));
-        }
-
-        function deactivateBranch(branchId) {
-            if (!confirm('إيقاف هذا الفرع؟')) return;
-            db.collection("stores").doc(currentUser.uid).get().then(doc => {
-                const branches = doc.data().branches.map(b =>
-                    b.id === branchId ? { ...b, status: 'inactive' } : b
-                );
-                return db.collection("stores").doc(currentUser.uid).update({ branches });
-            }).then(() => reloadStoreData());
-        }
-
-    </script>
+        return {...b,status:'active',activatedAt:fmtDateTime()};
+      }
+      return b;
+    });
+    return db.collection('stores').doc(currentStoreData._id).update({branches});
+  }).then(()=>{toast('تم التفعيل','success');})
+    .catch(e=>toast(e.message,'error'));
+}
+function deactivateBranch(id){
+  confirmDialog('إيقاف هذا الفرع؟',()=>{
+    db.collection('stores').doc(currentStoreData._id).get().then(doc=>{
+      const branches=doc.data().branches.map(b=>b.id===id?{...b,status:'inactive'}:b);
+      return db.collection('stores').doc(currentStoreData._id).update({branches});
+    }).then(()=>toast('تم الإيقاف','success'));
+  });
+}
+
+/* ========== EMPLOYEES ========== */
+document.getElementById('userForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const email=document.getElementById('empEmail').value.trim().toLowerCase();
+  const name=document.getElementById('empName').value.trim();
+  const phone=document.getElementById('empPhone').value.trim();
+  const pass=document.getElementById('empPass').value;
+  const role=document.getElementById('empRole').value;
+  if(pass.length<6)return toast('كلمة المرور 6 أحرف على الأقل','warning');
+  showLoading(true);
+  try{
+    // إنشاء حساب Firebase Auth في تطبيق ثانوي (بدون تسجيل خروج المالك)
+    const secondary=firebase.initializeApp(firebaseConfig,'emp-'+Date.now());
+    const secAuth=secondary.auth();
+    const {user}=await secAuth.createUserWithEmailAndPassword(email,pass);
+    await user.updateProfile({displayName:name});
+    // ربط الموظف بالمحل
+    await db.collection('employees').doc(user.uid).set({
+      authUid:user.uid,storeId:currentStoreData._id,name,phone,email,role,
+      branchId:currentBranchId,createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await secAuth.signOut();
+    await secondary.delete();
+    toast('تمت إضافة الموظف','success');
+    e.target.reset();
+  }catch(err){toast('خطأ: '+err.message,'error')}
+  showLoading(false);
+});
+function renderUsers(){
+  const tbody=document.getElementById('usersBody');
+  if(!tbody)return;
+  db.collection('employees').where('storeId','==',currentStoreData._id).get().then(snap=>{
+    if(snap.empty){tbody.innerHTML='<tr><td colspan="5"><div class="empty-state"><p>لا يوجد موظفون</p></div></td></tr>';return}
+    tbody.innerHTML=snap.docs.map(d=>{
+      const u=d.data();
+      return `<tr><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.phone||'—')}</td><td>${escapeHtml(u.email)}</td><td><span class="badge b-blue">${ROLES[u.role]?.label||u.role}</span></td><td><button class="btn-icon red" onclick="deleteUser('${d.id}')">حذف</button></td></tr>`;
+    }).join('');
+  });
+}
+function deleteUser(id){
+  confirmDialog('حذف الموظف؟ (الحساب سيبقى لكن لن يستطيع الدخول)',()=>{
+    db.collection('employees').doc(id).delete().then(()=>{toast('تم الحذف','success');renderUsers()});
+  });
+}
+
+/* ========== CSV EXPORTS ========== */
+function exportCashSalesCSV(){
+  const rows=[['التاريخ','المنتج','السيريال','العميل','الإجمالي']];
+  cashSales.forEach(s=>rows.push([formatDate(s.date),s.productName,s.serial,s.client,s.price*(s.qty||1)]));
+  downloadCSV('cash-sales.csv',rows);
+}
+function exportClientsCSV(){
+  const rows=[['العميل','الموبايل','المنتج','الإجمالي','المحصل','المتبقي']];
+  clients.forEach(c=>{
+    const paid=(c.downPayment||0)+c.installments.reduce((s,i)=>s+(i.paid||0),0);
+    rows.push([c.name,c.phone,c.product,c.totalPrice,paid,c.totalPrice-paid]);
+  });
+  downloadCSV('clients.csv',rows);
+}
+function exportExpensesCSV(){
+  const rows=[['التاريخ','البيان','التصنيف','المبلغ']];
+  expenses.forEach(e=>rows.push([e.date,e.desc,e.category||'general',e.amount]));
+  downloadCSV('expenses.csv',rows);
+}
+</script>
 </body>
 </html>
