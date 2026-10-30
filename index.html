@@ -1,4 +1,942 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EMAA.Tech — نظام إدارة المحلات الاحترافي</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+  --yellow:#fce500; --black:#111; --bg:#f0f2f5; --text:#333; --gray:#777;
+  --red:#e74c3c; --green:#2ecc71; --blue:#3498db; --white:#fff;
+  --border:#e0e0e0; --shadow:0 4px 20px rgba(0,0,0,.08);
+  --dev-blue:#00d2ff; --gold:#fce500; --orange:#f39c12;
+  --radius:12px; --radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Cairo',sans-serif}
+body{background:var(--bg);color:var(--text);padding-bottom:50px;transition:background .3s;min-height:100vh}
+body.dark-mode{--bg:#1a1a1a;--text:#eee;--white:#2d2d2d;--border:#444;--shadow:0 4px 20px rgba(0,0,0,.3)}
+body.dark-mode .card,body.dark-mode .product-card,body.dark-mode .pos-product-card{color:var(--text)}
+
+#toastContainer{position:fixed;top:20px;left:20px;z-index:999999;display:flex;flex-direction:column;gap:10px}
+.toast{background:#333;color:#fff;padding:14px 20px;border-radius:10px;font-weight:600;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.3);display:flex;align-items:center;gap:10px;animation:slideIn .3s;min-width:260px;max-width:420px}
+.toast.success{background:var(--green)}.toast.error{background:var(--red)}
+.toast.info{background:var(--blue)}.toast.warning{background:var(--orange);color:#000}
+@keyframes slideIn{from{transform:translateX(-100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+#loadingOverlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,.9);display:none;justify-content:center;align-items:center;z-index:99999;flex-direction:column}
+.dark-mode #loadingOverlay{background:rgba(0,0,0,.85)}
+.spinner{border:5px solid #f3f3f3;border-top:5px solid var(--dev-blue);border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+#authScreen{position:fixed;inset:0;background:#0a0a0a;display:flex;justify-content:center;align-items:center;z-index:9999;padding:20px;flex-direction:column;overflow-y:auto}
+.dev-brand{text-align:center;margin-bottom:30px}
+.dev-brand h2{font-size:32px;font-weight:900;letter-spacing:2px;color:#fff;text-shadow:0 0 10px rgba(0,210,255,.5)}
+.dev-brand h2 span{color:var(--dev-blue)}
+.dev-brand p{color:#aaa;font-size:12px;letter-spacing:1px;margin-top:5px}
+.dev-brand .shield-icon{color:var(--dev-blue);font-size:40px;margin-bottom:10px;text-shadow:0 0 20px rgba(0,210,255,.6)}
+.auth-box{background:#fff;padding:40px;border-radius:15px;text-align:center;width:100%;max-width:460px;box-shadow:0 15px 40px rgba(0,0,0,.5);border-top:5px solid var(--dev-blue)}
+.auth-box h1{color:var(--black);font-size:30px;font-weight:900;margin-bottom:8px}
+.auth-box input{width:100%;padding:14px;margin:8px 0;border:2px solid #e0e0e0;border-radius:8px;text-align:center;font-size:16px;background:#f0f2f5;color:#333}
+.auth-box button{width:100%;padding:14px;background:var(--black);color:var(--dev-blue);border:1px solid var(--dev-blue);border-radius:8px;font-weight:700;font-size:17px;cursor:pointer;margin-top:10px;transition:.3s}
+.auth-box button:hover{background:var(--dev-blue);color:var(--black)}
+.auth-box .link-btn{background:transparent;color:var(--blue);border:none;cursor:pointer;font-size:13px;margin-top:15px;text-decoration:underline}
+.auth-tabs{display:flex;gap:5px;margin-bottom:20px;background:#f0f2f5;padding:5px;border-radius:10px}
+.auth-tabs button{flex:1;padding:10px;border:none;background:transparent;border-radius:8px;font-weight:700;cursor:pointer;color:#666;transition:.2s;margin:0}
+.auth-tabs button.active{background:#fff;color:#111;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+
+#appScreen,#devAdminPanel{display:none}
+header{background:var(--black);padding:15px 25px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 4px 10px rgba(0,0,0,.2);flex-wrap:wrap;gap:10px}
+.logo{display:flex;align-items:center;gap:8px;color:var(--dev-blue);font-size:22px;font-weight:900}
+.logo span{color:#fff}
+.header-info{color:#fff;font-size:14px;display:flex;flex-direction:column;align-items:flex-end;margin-right:15px}
+.header-info small{color:var(--gray)}
+.header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn-outline{background:transparent;border:1px solid var(--dev-blue);color:var(--dev-blue);padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:700;transition:.3s;display:flex;align-items:center;gap:5px;font-family:'Cairo';font-size:13px}
+.btn-outline:hover{background:var(--dev-blue);color:var(--black)}
+.btn-outline.danger{border-color:var(--red);color:var(--red)}
+.btn-outline.danger:hover{background:var(--red);color:#fff}
+.btn-theme{background:transparent;border:1px solid var(--dev-blue);color:var(--dev-blue);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:16px}
+
+.container{max-width:1400px;margin:20px auto;padding:0 15px}
+
+.tabs{display:flex;gap:8px;margin-bottom:20px;overflow-x:auto;padding-bottom:5px;scrollbar-width:thin}
+.tab-btn{padding:11px 18px;background:var(--white);border:1px solid var(--border);border-radius:30px;cursor:pointer;font-weight:700;font-size:13px;transition:.3s;white-space:nowrap;color:var(--text);box-shadow:var(--shadow);display:flex;align-items:center;gap:7px}
+.tab-btn.active{background:var(--black);color:var(--dev-blue);border-color:var(--black)}
+.tab-content{display:none;animation:fadeIn .3s}
+.tab-content.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+.dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:25px}
+.card-stat{background:var(--white);padding:20px;border-radius:var(--radius);box-shadow:var(--shadow);border-right:5px solid var(--black)}
+.card-stat.yellow{border-right-color:var(--yellow)}
+.card-stat.green{border-right-color:var(--green)}
+.card-stat.red{border-right-color:var(--red)}
+.card-stat.blue{border-right-color:var(--blue)}
+.card-stat.orange{border-right-color:var(--orange)}
+.stat-info h3{font-size:12px;color:var(--gray);margin-bottom:5px;font-weight:600}
+.stat-info p{font-size:22px;font-weight:900;color:var(--text)}
+
+.card{background:var(--white);padding:25px;border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:25px}
+.section-title{font-size:17px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px;border-bottom:2px solid var(--bg);padding-bottom:10px;color:var(--text);justify-content:space-between;flex-wrap:wrap}
+.section-title span{display:flex;align-items:center;gap:10px}
+.section-title i{color:var(--black);background:var(--dev-blue);padding:7px;border-radius:6px;font-size:15px}
+
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.form-group{display:flex;flex-direction:column}
+.form-group label{font-size:12px;font-weight:700;margin-bottom:6px;color:var(--text)}
+.form-group input,.form-group select,.form-group textarea{padding:11px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--bg);color:var(--text);transition:.2s;font-family:'Cairo'}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--dev-blue);background:var(--white);box-shadow:0 0 0 3px rgba(0,210,255,.2)}
+.form-group input[type="file"]{padding:8px;font-size:12px}
+.required-star{color:var(--red);margin-right:3px}
+
+.btn-main{background:var(--black);color:var(--dev-blue);border:1px solid var(--dev-blue);padding:13px 20px;border-radius:var(--radius-sm);font-size:15px;font-weight:700;cursor:pointer;width:100%;margin-top:12px;display:flex;justify-content:center;align-items:center;gap:8px;transition:.3s;font-family:'Cairo'}
+.btn-main:hover{background:var(--dev-blue);color:var(--black)}
+.btn-main.success{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-main.success:hover{background:#27ae60;border-color:#27ae60;color:#fff}
+.btn-main.warning{background:var(--yellow);color:var(--black);border-color:var(--yellow)}
+
+.table-wrapper{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:700px}
+th,td{padding:11px 9px;text-align:center;border-bottom:1px solid var(--border);font-size:13px;color:var(--text)}
+th{background:var(--bg);font-weight:700}
+tr:hover{background:rgba(0,0,0,.02)}
+
+.badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;display:inline-block}
+.b-green{background:#d4edda;color:#155724}.b-red{background:#f8d7da;color:#721c24}
+.b-yellow{background:#fff3cd;color:#856404}.b-blue{background:#d1ecf1;color:#0c5460}
+.b-gray{background:#e2e3e5;color:#383d41}
+
+.btn-icon{border:1px solid var(--border);background:transparent;padding:6px 9px;border-radius:6px;cursor:pointer;transition:.2s;color:var(--text);font-size:12px}
+.btn-icon:hover{background:rgba(0,0,0,.05)}
+.btn-icon.green:hover{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-icon.red:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-icon.blue:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px;margin-top:20px}
+.product-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:.3s;border:1px solid var(--border);display:flex;flex-direction:column}
+.product-card:hover{transform:translateY(-4px);box-shadow:0 8px 25px rgba(0,0,0,.15)}
+.product-img{height:160px;background:var(--bg);display:flex;justify-content:center;align-items:center;font-size:48px;color:#ddd;position:relative;overflow:hidden}
+.product-img img{width:100%;height:100%;object-fit:cover}
+.product-qty-badge{position:absolute;top:10px;right:10px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;color:#fff;z-index:2}
+.product-qty-badge.low{background:var(--red)}.product-qty-badge.ok{background:var(--green)}
+.product-info{padding:14px;flex-grow:1;display:flex;flex-direction:column}
+.product-name{font-weight:700;font-size:14px;margin-bottom:8px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.product-price{font-size:17px;font-weight:900;color:var(--green);margin-bottom:3px}
+.product-cost{font-size:11px;color:var(--gray);margin-bottom:10px}
+.product-actions{display:flex;gap:5px;margin-top:auto}
+
+.pos-products{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:12px;max-height:400px;overflow-y:auto;padding:5px}
+.pos-product-card{background:var(--white);border:2px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:.2s;text-align:center;position:relative}
+.pos-product-card:hover{border-color:var(--dev-blue);transform:translateY(-2px)}
+.pos-product-card img{width:100%;height:90px;object-fit:cover;background:var(--bg)}
+.pos-product-card .ph{width:100%;height:90px;display:flex;align-items:center;justify-content:center;background:var(--bg);color:#ccc;font-size:32px}
+.pos-product-card .info{padding:7px}
+.pos-product-card .info .nm{font-weight:700;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pos-product-card .info .pr{color:var(--green);font-weight:900;font-size:13px}
+.pos-product-card .info .sr{color:var(--gray);font-size:10px}
+.pos-product-card .qty-tag{position:absolute;top:5px;left:5px;background:var(--blue);color:#fff;padding:2px 6px;border-radius:10px;font-size:10px;font-weight:700}
+
+.cart-item{display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg);border-radius:8px;margin-bottom:8px}
+.cart-item img{width:50px;height:50px;object-fit:cover;border-radius:6px}
+.cart-item .ph{width:50px;height:50px;background:var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--gray)}
+.cart-item-info{flex:1}
+.cart-item-info .name{font-weight:700;font-size:13px}
+.cart-item-info .price{color:var(--green);font-weight:700;font-size:13px}
+.cart-item-qty{display:flex;align-items:center;gap:5px}
+.cart-item-qty button{width:28px;height:28px;border:1px solid var(--border);background:var(--white);border-radius:6px;cursor:pointer;font-weight:700}
+.cart-item-qty input{width:45px;text-align:center;padding:4px;border:1px solid var(--border);border-radius:6px}
+.cart-total{background:var(--black);color:#fff;padding:15px;border-radius:10px;display:flex;justify-content:space-between;font-size:16px;font-weight:900;margin:15px 0}
+
+.search-box{position:relative;margin-bottom:12px;width:100%;max-width:400px}
+.search-box input{width:100%;padding:11px 38px 11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--bg);color:var(--text)}
+.search-box i{position:absolute;right:13px;top:50%;transform:translateY(-50%);color:var(--gray)}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;justify-content:center;align-items:center;z-index:1000;padding:15px}
+.modal-content{background:var(--white);padding:28px;border-radius:var(--radius);width:100%;max-width:650px;max-height:90vh;overflow-y:auto;position:relative;color:var(--text)}
+.close-modal{position:absolute;top:12px;left:12px;font-size:22px;cursor:pointer;color:var(--gray);background:transparent;border:none}
+.close-modal:hover{color:var(--red)}
+
+.invoice-header{text-align:center;margin-bottom:18px;border-bottom:2px dashed var(--border);padding-bottom:12px}
+.invoice-header h2{font-size:24px;font-weight:900;color:var(--text);margin-bottom:5px}
+.invoice-header h2 i{color:var(--dev-blue)}
+.invoice-header p{color:var(--gray);font-size:12px}
+.invoice-details p{display:flex;justify-content:space-between;margin-bottom:7px;font-size:13px;border-bottom:1px dotted var(--border);padding-bottom:5px}
+.invoice-footer{text-align:center;margin-top:18px;font-size:11px;color:var(--gray);border-top:1px solid var(--border);padding-top:10px}
+.print-btn{background:var(--dev-blue);color:var(--black);border:none;padding:10px 20px;border-radius:8px;font-weight:700;cursor:pointer;margin-top:15px;width:100%;font-family:'Cairo'}
+
+.charts-container{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+@media(max-width:768px){.charts-container{grid-template-columns:1fr}}
+canvas{max-height:250px}
+
+.info-hint{background:#fff3cd;color:#856404;padding:12px;border-radius:8px;font-size:12px;margin-bottom:15px;border-right:4px solid var(--yellow)}
+.info-hint.blue{background:#d1ecf1;color:#0c5460;border-right-color:var(--blue)}
+
+.empty-state{text-align:center;padding:40px 15px;color:var(--gray)}
+.empty-state i{font-size:50px;margin-bottom:15px;opacity:.5}
+
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;justify-content:center;align-items:center;z-index:10001;padding:15px}
+.confirm-box{background:var(--white);padding:28px;border-radius:var(--radius);max-width:400px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.confirm-box h3{margin-bottom:12px;color:var(--text)}
+.confirm-box p{margin-bottom:20px;color:var(--gray);font-size:14px}
+.confirm-box .btns{display:flex;gap:10px}
+.confirm-box button{flex:1;padding:11px;border-radius:8px;font-weight:700;cursor:pointer;font-family:'Cairo';font-size:14px;border:none}
+.confirm-box .cancel{background:var(--bg);color:var(--text)}
+.confirm-box .confirm{background:var(--red);color:#fff}
+
+@media print{
+  body *{visibility:hidden}
+  .modal-content,.modal-content *{visibility:visible}
+  .modal-content{position:absolute;left:0;top:0;width:100mm;max-width:100%;box-shadow:none;padding:10px;background:#fff;color:#000}
+  .close-modal,.print-btn{display:none!important}
+}
+</style>
+</head>
+<body>
+
+<div id="toastContainer"></div>
+
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <p style="margin-top:15px;font-weight:700;color:var(--text)">جاري التحميل...</p>
+</div>
+
+<!-- AUTH SCREEN -->
+<div id="authScreen">
+  <div class="dev-brand">
+    <i class="fas fa-shield-alt shield-icon"></i>
+    <h2>EMAA<span>.Tech</span></h2>
+    <p>Integrated Solutions & Security System</p>
+  </div>
+  <div class="auth-box">
+    <div class="auth-tabs">
+      <button class="active" id="tabLoginBtn" onclick="switchAuthTab('login')">دخول</button>
+      <button id="tabSignupBtn" onclick="switchAuthTab('signup')">حساب جديد</button>
+    </div>
+    <div id="loginForm">
+      <h1 style="color:var(--dev-blue)">تسجيل الدخول</h1>
+      <p style="color:#777;font-size:13px;margin-bottom:15px">للمحلات والموظفين</p>
+      <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" autocomplete="email">
+      <input type="password" id="loginPass" placeholder="كلمة المرور" onkeypress="if(event.key==='Enter')doLogin()" autocomplete="current-password">
+      <button onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> دخول</button>
+      <button class="link-btn" onclick="signInWithGoogle()"><i class="fab fa-google"></i> الدخول بـ Google (للمالك)</button>
+    </div>
+    <div id="signupForm" style="display:none">
+      <h1 style="color:var(--dev-blue)">حساب جديد</h1>
+      <p style="color:#777;font-size:13px;margin-bottom:15px">لأصحاب المحلات الجدد</p>
+      <input type="text" id="signupName" placeholder="اسم المحل" autocomplete="organization">
+      <input type="email" id="signupEmail" placeholder="البريد الإلكتروني" autocomplete="email">
+      <input type="password" id="signupPass" placeholder="كلمة المرور (6+ أحرف)" autocomplete="new-password">
+      <button onclick="doSignup()"><i class="fas fa-user-plus"></i> إنشاء الحساب</button>
+    </div>
+    <button class="link-btn" style="color:var(--red);font-weight:700;margin-top:12px;border-top:1px solid #eee;padding-top:12px;width:100%" onclick="showDevLogin()">
+      دخول المطور (Super Admin)
+    </button>
+  </div>
+</div>
+
+<!-- DEV LOGIN -->
+<div id="developerLogin" style="display:none;position:fixed;inset:0;background:#0a0a0a;z-index:10000;justify-content:center;align-items:center;padding:20px">
+  <div class="auth-box" style="border-top-color:var(--gold)">
+    <h1 style="color:var(--gold);font-size:24px">EMAA.Tech Admin</h1>
+    <p style="color:#777;margin-bottom:15px;font-size:13px">لوحة تحكم المطور</p>
+    <input type="email" id="devEmail" placeholder="البريد الإلكتروني" autocomplete="email">
+    <input type="password" id="devAdminPass" placeholder="كلمة المرور" onkeypress="if(event.key==='Enter')doDevAdminLogin()" autocomplete="current-password">
+    <button onclick="doDevAdminLogin()" style="background:var(--gold);color:var(--black);border:none">دخول</button>
+    <button class="link-btn" onclick="closeDevLogin()">إغلاق</button>
+  </div>
+</div>
+
+<!-- PENDING -->
+<div id="pendingScreen" style="display:none;position:fixed;inset:0;background:#0a0a0a;z-index:9998;justify-content:center;align-items:center;flex-direction:column;padding:20px;text-align:center">
+  <i class="fas fa-clock" style="font-size:60px;color:var(--gold);margin-bottom:20px"></i>
+  <h2 style="color:#fff;margin-bottom:10px">حسابك قيد المراجعة</h2>
+  <p style="color:#aaa;max-width:420px;margin-bottom:30px;line-height:1.7">شكراً لتسجيلك في EMAA.Tech. يرجى التواصل مع المطور لتفعيل حسابك وسداد الاشتراك.</p>
+  <button class="btn-outline danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
+</div>
+
+<!-- MAIN APP -->
+<div id="appScreen">
+  <header>
+    <div style="display:flex;align-items:center">
+      <div class="logo"><i class="fas fa-shield-alt"></i><span>EMAA.Tech</span></div>
+    </div>
+    <div class="header-info">
+      <span id="storeNameDisplay">اسم المحل</span>
+      <small id="branchDisplay">الفرع الرئيسي</small>
+      <small id="userRoleDisplay" style="color:var(--dev-blue);font-weight:700"></small>
+    </div>
+    <div class="header-actions">
+      <select id="branchSwitcher" class="btn-outline" style="padding:8px" onchange="switchBranch(this.value)"></select>
+      <button class="btn-theme" onclick="toggleTheme()" title="الوضع الليلي"><i class="fas fa-moon"></i></button>
+      <button class="btn-outline danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="tabs" id="mainTabs">
+      <button class="tab-btn active" onclick="switchTab('dashboard',this)" data-perm="view_dashboard"><i class="fas fa-chart-pie"></i> لوحة التحكم</button>
+      <button class="tab-btn" onclick="switchTab('inventory',this)" data-perm="manage_inventory"><i class="fas fa-store"></i> المنتجات</button>
+      <button class="tab-btn" onclick="switchTab('pos',this)" data-perm="sell"><i class="fas fa-cash-register"></i> نقطة البيع</button>
+      <button class="tab-btn" onclick="switchTab('cash-log',this)" data-perm="view_dashboard"><i class="fas fa-money-bill-wave"></i> سجل المبيعات</button>
+      <button class="tab-btn" onclick="switchTab('clients',this)" data-perm="manage_clients"><i class="fas fa-users"></i> العملاء</button>
+      <button class="tab-btn" onclick="switchTab('late',this)" data-perm="manage_clients"><i class="fas fa-exclamation-triangle"></i> المتأخرات <span id="lateCount" style="background:var(--red);color:#fff;border-radius:50%;padding:2px 7px;font-size:10px;margin-right:5px">0</span></button>
+      <button class="tab-btn" onclick="switchTab('expenses',this)" data-perm="manage_expenses"><i class="fas fa-receipt"></i> المصروفات</button>
+      <button class="tab-btn" onclick="switchTab('daily-cash',this)" data-perm="view_dashboard"><i class="fas fa-calculator"></i> يومية الكاشير</button>
+      <button class="tab-btn" onclick="switchTab('settings',this)" data-perm="manage_settings"><i class="fas fa-cog"></i> الإعدادات</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="tab-dashboard" class="tab-content active">
+      <div class="dashboard">
+        <div class="card-stat yellow"><div class="stat-info"><h3>إجمالي المبيعات</h3><p id="statSales">0 ج.م</p></div></div>
+        <div class="card-stat green"><div class="stat-info"><h3>إجمالي المحصل</h3><p id="statCollected">0 ج.م</p></div></div>
+        <div class="card-stat red"><div class="stat-info"><h3>المتبقي في السوق</h3><p id="statRemaining">0 ج.م</p></div></div>
+        <div class="card-stat blue"><div class="stat-info"><h3>صافي الربح</h3><p id="statProfit">0 ج.م</p></div></div>
+        <div class="card-stat orange"><div class="stat-info"><h3>مصروفات الشهر</h3><p id="statMonthExp">0 ج.م</p></div></div>
+      </div>
+      <div class="card">
+        <h3 class="section-title"><span><i class="fas fa-clock"></i> تنبيهات الأقساط القادمة (5 أيام)</span></h3>
+        <ul id="upcomingList" style="list-style:none;padding:0"></ul>
+      </div>
+      <div class="charts-container">
+        <div class="card"><h3 class="section-title" style="font-size:14px"><span>المبيعات (كاش vs تقسيط)</span></h3><canvas id="salesChart"></canvas></div>
+        <div class="card"><h3 class="section-title" style="font-size:14px"><span>المصروفات (آخر 6 أشهر)</span></h3><canvas id="expensesChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div id="tab-inventory" class="tab-content">
+      <div class="card">
+        <h3 class="section-title"><span><i class="fas fa-plus-square"></i> إضافة / تعديل منتج</span></h3>
+        <form id="inventoryForm">
+          <input type="hidden" id="invEditId">
+          <div class="form-grid">
+            <div class="form-group"><label>اسم المنتج <span class="required-star">*</span></label><input type="text" id="invName" required placeholder="iPhone 15 Pro"></div>
+            <div class="form-group"><label>الرقم التسلسلي <span class="required-star">*</span></label><input type="text" id="invSerial" required></div>
+            <div class="form-group"><label>الكمية <span class="required-star">*</span></label><input type="number" id="invQty" required min="1" value="1"></div>
+            <div class="form-group"><label>سعر الشراء <span class="required-star">*</span></label><input type="number" id="invCost" required min="1"></div>
+            <div class="form-group"><label>سعر البيع <span class="required-star">*</span></label><input type="number" id="invPrice" required min="1"></div>
+            <div class="form-group"><label>مدة الضمان (شهور)</label><input type="number" id="invWarranty" value="12" min="0"></div>
+            <div class="form-group" style="grid-column:span 2"><label>صورة المنتج</label><input type="file" id="invImage" accept="image/*"></div>
+          </div>
+          <button type="submit" class="btn-main" id="invSubmitBtn"><i class="fas fa-plus"></i> إضافة المنتج</button>
+        </form>
+      </div>
+      <div class="card">
+        <h3 class="section-title"><span><i class="fas fa-store"></i> أرض المنتجات</span></h3>
+        <div class="search-box"><input type="text" id="invSearch" placeholder="بحث في المنتجات..." oninput="renderProducts()"><i class="fas fa-search"></i></div>
+        <div class="products-grid" id="productsGrid"></div>
+      </div>
+    </div>
+
+    <!-- POS -->
+    <div id="tab-pos" class="tab-content">
+      <div class="card">
+        <h3 class="section-title"><span><i class="fas fa-cash-register"></i> نقطة البيع</span></h3>
+        <div class="form-grid" style="margin-bottom:15px">
+          <div class="form-group"><label>طريقة الدفع <span class="required-star">*</span></label>
+            <select id="paymentMethodSelect" onchange="togglePaymentForm()">
+              <option value="cash">نقدي (Cash)</option>
+              <option value="installment">تقسيط (Installment)</option>
+            </select>
+          </div>
+        </div>
+
+        <label style="font-size:13px;font-weight:700;margin-bottom:8px;display:block">اختر المنتجات:</label>
+        <div class="search-box"><input type="text" id="posSearch" placeholder="بحث سريع..." oninput="renderPosProducts()"><i class="fas fa-search"></i></div>
+        <div class="pos-products" id="posProducts"></div>
+
+        <div style="margin-top:20px">
+          <h4 style="margin-bottom:12px;font-size:15px">🛒 السلة</h4>
+          <div id="cartContainer"></div>
+          <div class="cart-total"><span>الإجمالي:</span><span id="cartTotal">0 ج.م</span></div>
+        </div>
+
+        <div id="cashFormSection" style="margin-top:20px">
+          <div class="form-grid">
+            <div class="form-group"><label>اسم العميل</label><input type="text" id="cashClientName" placeholder="عميل نقدي"></div>
+          </div>
+          <button class="btn-main success" onclick="confirmCashSale()"><i class="fas fa-check"></i> تأكيد البيع النقدي</button>
+        </div>
+
+        <div id="installmentFormSection" style="display:none;margin-top:20px">
+          <h4 style="margin-bottom:10px;font-size:14px;color:var(--dev-blue)">بيانات العميل</h4>
+          <div class="form-grid" style="margin-bottom:15px">
+            <div class="form-group"><label>اسم العميل <span class="required-star">*</span></label><input type="text" id="clientName" minlength="5"></div>
+            <div class="form-group"><label>الموبايل <span class="required-star">*</span></label><input type="tel" id="clientPhone" pattern="^01[0125][0-9]{8}$"></div>
+            <div class="form-group"><label>الرقم القومي <span class="required-star">*</span></label><input type="text" id="clientNid" pattern="^[0-9]{14}$"></div>
+            <div class="form-group"><label>العنوان <span class="required-star">*</span></label><input type="text" id="clientAddress"></div>
+          </div>
+          <h4 style="margin-bottom:10px;font-size:14px">بيانات الضامن</h4>
+          <div class="form-grid" style="margin-bottom:15px">
+            <div class="form-group"><label>اسم الضامن <span class="required-star">*</span></label><input type="text" id="guarantorName"></div>
+            <div class="form-group"><label>موبايل الضامن <span class="required-star">*</span></label><input type="tel" id="guarantorPhone" pattern="^01[0125][0-9]{8}$"></div>
+            <div class="form-group"><label>الرقم القومي للضامن <span class="required-star">*</span></label><input type="text" id="guarantorNid" pattern="^[0-9]{14}$"></div>
+          </div>
+          <h4 style="margin-bottom:10px;font-size:14px">شروط التقسيط</h4>
+          <div class="form-grid">
+            <div class="form-group"><label>المقدم <span class="required-star">*</span></label><input type="number" id="downPayment" min="0" value="0" oninput="calcInstallment()"></div>
+            <div class="form-group"><label>عدد الأقساط <span class="required-star">*</span></label><input type="number" id="installmentsCount" min="1" value="6" oninput="calcInstallment()"></div>
+            <div class="form-group"><label>تاريخ أول قسط <span class="required-star">*</span></label><input type="date" id="startDate"></div>
+            <div class="form-group"><label>قيمة القسط</label><input type="text" id="instValueDisplay" readonly style="background:var(--bg);font-weight:900;color:var(--green)"></div>
+          </div>
+          <button class="btn-main" onclick="confirmInstallmentSale()"><i class="fas fa-save"></i> حفظ البيع بالتقسيط</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CASH LOG -->
+    <div id="tab-cash-log" class="tab-content">
+      <div class="card">
+        <h3 class="section-title"><span><i class="fas fa-money-bill-wave"></i> سجل المبيعات النقدية</span>
+          <button class="btn-icon blue" onclick="exportCashSalesCSV()"><i class="fas fa-download"></i> تصدير CSV</button>
+        </h3>
+        <div class="table-wrapper"><table><thead><tr><th>التاريخ</th><th>المنتج</th><th>السيريال</th><th>العميل</th><th>الإجمالي</th><th>الفاتورة</th></tr></thead><tbody id="cashSalesBody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- CLIENTS -->
+    <div id="tab-clients" class="tab-content">
+      <div class="card">
+        <h3 class="section-title"><span><i class="fas fa-users"></i> سجل العملاء</span>
+          <button class="btn-icon blue" onclick="exportClientsCSV()"><i class="fas fa-download"></i> تصدير CSV</button>
+        </h3>
+        <div class="search-box"><input type="text" id="clientsSearch" placeholder="بحث بالاسم أو الموبايل..." oninput="renderClients()"><i class="fas fa-search"></i></div>
+        <div class="table-wrapper"><table><thead><tr><th>العميل</th><th>الموبايل</th><th>المنتج</th><th>المتبقي</th><th>الأقساط</th><th>إجراءات</th></tr></thead><tbody id="clientsTableBody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- LATE -->
+    <div id="tab-late" class="tab-content">
+      <div class="card">
+        <h3 class="section-title" style="color:var(--red)"><span><i class="fas fa-exclamation-triangle"></i> المتأخرات</span></h3>
+        <div class="table-wrapper"><table><thead><tr><th>العميل</th><th>الموبايل</th><th>المتبقي</th><th>الاستحقاق</th><th>التأخير</th><th>إجراءات</th></tr></thead><tbody id="lateTableBody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- EXPENSES -->
+    <div id="tab-expenses" class="tab-content">
+      <div class="card">
+        <h3 class="section-title"><span><i class="fas fa-plus"></i> إضافة مصروف</span></h3>
+        <form id="expenseForm">
+          <div class="form-grid">
+            <div class="form-group"><label>البيان <span class="required-star">*</span></label><input type="text" id="expDesc" required></div>
+            <div class="form-group"><label>المبلغ <span class="required-star">*</span></label><input type="number" id="expAmount" required min="1"></div>
+            <div class="form-group"><label>التصنيف</label>
+              <select id="expCategory"><option value="general">عام</option><option value="rent">إيجار</option><option value="salaries">رواتب</option><option value="utilities">كهرباء ومياه</option><option value="purchases">مشتريات</option><option value="other">أخرى</option></select>
+            </div>
+            <div class="form-group"><label>التاريخ <span class="required-star">*</span></label><input type="date" id="expDate" required></div>
+          </div>
+          <button type="submit" class="btn-main">تسجيل المصروف</button>
+        </form>
+      </div>
+      <div class="card">
+        <h3 class="section-title"><span>سجل المصروفات</span>
+          <button class="btn-icon blue" onclick="exportExpensesCSV()"><i class="fas fa-download"></i> CSV</button>
+        </h3>
+        <div class="table-wrapper"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>التصنيف</th><th>المبلغ</th><th>حذف</th></tr></thead><tbody id="expensesBody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- DAILY CASH -->
+    <div id="tab-daily-cash" class="tab-content">
+      <div class="card">
+        <h3 class="section-title"><span><i class="fas fa-calculator"></i> يومية الكاشير</span></h3>
+        <div class="form-group" style="max-width:280px;margin-bottom:20px"><label>التاريخ</label><input type="date" id="cashDate" onchange="renderDailyCash()"></div>
+        <div class="dashboard">
+          <div class="card-stat green"><div class="stat-info"><h3>تحصيل أقساط</h3><p id="dailyInst">0 ج.م</p></div></div>
+          <div class="card-stat yellow"><div class="stat-info"><h3>مبيعات نقدية</h3><p id="dailyCash">0 ج.م</p></div></div>
+          <div class="card-stat red"><div class="stat-info"><h3>مصروفات</h3><p id="dailyExp">0 ج.م</p></div></div>
+          <div class="card-stat blue"><div class="stat-info"><h3>صافي الدرج</h3><p id="dailyNet">0 ج.م</p></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="tab-settings" class="tab-content">
+      <div class="card">
+        <h3 class="section-title"><span><i class="fas fa-store"></i> إعدادات المحل</span></h3>
+        <form id="settingsForm">
+          <div class="form-grid">
+            <div class="form-group"><label>اسم المحل</label><input type="text" id="settingsStoreName"></div>
+            <div class="form-group"><label>الموبايل</label><input type="text" id="settingsPhone"></div>
+            <div class="form-group"><label>العنوان</label><input type="text" id="settingsAddress"></div>
+          </div>
+          <button type="submit" class="btn-main">حفظ الإعدادات</button>
+        </form>
+      </div>
+
+      <div class="card" style="border:2px solid var(--yellow)">
+        <h3 class="section-title"><span><i class="fas fa-code-branch"></i> إدارة الفروع</span></h3>
+        <div class="info-hint"><i class="fas fa-info-circle"></i> إضافة فرع بمقابل مادي. أرسل طلباً → المطور يولّد كوداً → أدخل الكود لتفعيل الفرع.</div>
+        <form id="branchForm">
+          <div class="form-grid">
+            <div class="form-group"><label>اسم الفرع <span class="required-star">*</span></label><input type="text" id="newBranchName" required></div>
+            <div class="form-group"><label>العنوان <span class="required-star">*</span></label><input type="text" id="newBranchAddress" required></div>
+          </div>
+          <button type="submit" class="btn-main warning"><i class="fas fa-paper-plane"></i> طلب فرع جديد</button>
+        </form>
+        <div class="table-wrapper" style="margin-top:20px"><table><thead><tr><th>الفرع</th><th>العنوان</th><th>الحالة</th><th>الكود</th><th>إجراء</th></tr></thead><tbody id="branchesBody"></tbody></table></div>
+      </div>
+
+      <div class="card" style="border:2px solid var(--dev-blue)">
+        <h3 class="section-title"><span><i class="fas fa-user-tie"></i> إدارة الموظفين</span></h3>
+        <div class="info-hint blue"><i class="fas fa-shield-alt"></i> الموظف يدخل بنفس صفحة الدخول بالبريد وكلمة المرور. أنشئ الحساب من هنا.</div>
+        <form id="userForm">
+          <div class="form-grid">
+            <div class="form-group"><label>اسم الموظف <span class="required-star">*</span></label><input type="text" id="empName" required></div>
+            <div class="form-group"><label>الموبايل <span class="required-star">*</span></label><input type="tel" id="empPhone" required></div>
+            <div class="form-group"><label>البريد الإلكتروني <span class="required-star">*</span></label><input type="email" id="empEmail" required></div>
+            <div class="form-group"><label>كلمة المرور <span class="required-star">*</span></label><input type="password" id="empPass" required minlength="6"></div>
+            <div class="form-group"><label>الصلاحية</label>
+              <select id="empRole"><option value="cashier">كاشير</option><option value="inventory">مخزون</option><option value="manager">مدير</option></select>
+            </div>
+          </div>
+          <button type="submit" class="btn-main">إضافة موظف</button>
+        </form>
+        <div class="table-wrapper" style="margin-top:20px"><table><thead><tr><th>الاسم</th><th>الموبايل</th><th>الإيميل</th><th>الصلاحية</th><th>حذف</th></tr></thead><tbody id="usersBody"></tbody></table></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DEV PANEL -->
+<div id="devAdminPanel" style="padding:20px;min-height:100vh">
+  <header style="border-radius:10px;margin-bottom:20px">
+    <div class="logo" style="color:var(--gold)"><i class="fas fa-crown"></i><span>EMAA.Tech Admin</span></div>
+    <div class="header-actions"><button class="btn-outline danger" onclick="logoutDevAdmin()"><i class="fas fa-sign-out-alt"></i> خروج</button></div>
+  </header>
+  <div class="container">
+    <div class="card" style="border-top:4px solid var(--gold)">
+      <h3 class="section-title"><span><i class="fas fa-building"></i> إدارة المحلات والفروع</span></h3>
+      <div class="table-wrapper"><table><thead><tr><th>المحل</th><th>الإيميل</th><th>الحالة</th><th>فروع معلّقة</th><th>إجراء</th></tr></thead><tbody id="devStoresBody"></tbody></table></div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--gold)">
+      <h3 class="section-title"><span><i class="fas fa-user-shield"></i> مستخدمو المطور</span></h3>
+      <form id="devUserForm">
+        <div class="form-grid">
+          <div class="form-group"><label>الاسم</label><input type="text" id="devUserName" required></div>
+          <div class="form-group"><label>البريد</label><input type="email" id="devUserEmail" required></div>
+          <div class="form-group"><label>كلمة المرور</label><input type="password" id="devUserPass" required minlength="6"></div>
+        </div>
+        <button type="submit" class="btn-main warning">إضافة مطور</button>
+      </form>
+      <div class="table-wrapper" style="margin-top:20px"><table><thead><tr><th>الاسم</th><th>البريد</th><th>الدور</th><th>حذف</th></tr></thead><tbody id="devUsersBody"></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="mainModal">
+  <div class="modal-content">
+    <button class="close-modal" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
+/* ========== FIREBASE ========== */
+const firebaseConfig = {
+  apiKey: "AIzaSyChgRxNBPBlb41TGSZmdsE03tGkGVFl7GI",
+  authDomain: "emaa-core.firebaseapp.com",
+  projectId: "emaa-core",
+  storageBucket: "emaa-core.firebasestorage.app",
+  messagingSenderId: "737196522441",
+  appId: "1:737196522441:web:6bbcb456017e8484f7c618"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+const provider = new firebase.auth.GoogleAuthProvider();
+
+/* ========== STATE ========== */
+let currentUser=null, currentStoreData={}, currentBranchId='main',
+    currentUserRole='owner', currentUserName='', isDevMode=false,
+    cart=[], inventory=[], clients=[], cashSales=[], expenses=[],
+    inventoryUnsub=null, clientsUnsub=null, salesUnsub=null, expensesUnsub=null,
+    storeUnsub=null, devStoresUnsub=null, devUsersUnsub=null,
+    salesChartInstance=null, expensesChartInstance=null;
+
+const ROLES = {
+  owner:{label:'مالك',perms:['*']},
+  manager:{label:'مدير',perms:['view_dashboard','manage_inventory','sell','manage_clients','manage_expenses','manage_settings']},
+  cashier:{label:'كاشير',perms:['sell','manage_clients','view_dashboard']},
+  inventory:{label:'مخزون',perms:['manage_inventory','view_dashboard']},
+  developer:{label:'مطور',perms:['*']}
+};
+
+/* ========== HELPERS ========== */
+function toast(msg,type='info',duration=3500){
+  const c=document.getElementById('toastContainer');if(!c)return;
+  const icons={success:'fa-check-circle',error:'fa-times-circle',info:'fa-info-circle',warning:'fa-exclamation-triangle'};
+  const el=document.createElement('div');
+  el.className='toast '+type;
+  el.innerHTML=`<i class="fas ${icons[type]||'fa-info-circle'}"></i> <span>${msg}</span>`;
+  c.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),300)},duration);
+}
+function showLoading(s){const o=document.getElementById('loadingOverlay');if(o)o.style.display=s?'flex':'none'}
+function closeModal(){document.getElementById('mainModal').style.display='none'}
+function openModal(html){document.getElementById('modalBody').innerHTML=html;document.getElementById('mainModal').style.display='flex'}
+function formatCurrency(n){return (parseFloat(n)||0).toLocaleString('en-EG',{maximumFractionDigits:2})+' ج.م'}
+function formatDate(d){if(!d)return'—';try{const dt=new Date(d);return isNaN(dt.getTime())?d:dt.toISOString().split('T')[0]}catch{return d}}
+function todayStr(){return new Date().toISOString().split('T')[0]}
+function fmtDateTime(){return new Date().toISOString()}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function hasPermission(perm){
+  if(isDevMode||currentUserRole==='owner')return true;
+  const r=ROLES[currentUserRole];if(!r)return false;
+  return r.perms.includes('*')||r.perms.includes(perm);
+}
+function confirmDialog(msg,onConfirm){
+  const o=document.createElement('div');o.className='confirm-overlay';
+  o.innerHTML=`<div class="confirm-box"><h3>تأكيد</h3><p>${msg}</p><div class="btns"><button class="cancel">إلغاء</button><button class="confirm">تأكيد</button></div></div>`;
+  o.querySelector('.cancel').onclick=()=>o.remove();
+  o.querySelector('.confirm').onclick=()=>{o.remove();try{onConfirm()}catch(e){toast(e.message,'error')}};
+  document.body.appendChild(o);
+}
+function compressImage(file,max=600,q=0.75){
+  return new Promise((res,rej)=>{
+    const img=new Image(),r=new FileReader();
+    r.onload=e=>{img.onload=()=>{
+      const c=document.createElement('canvas');
+      const ratio=Math.min(max/img.width,1);
+      c.width=img.width*ratio;c.height=img.height*ratio;
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      res(c.toDataURL('image/jpeg',q));
+    };img.onerror=rej;img.src=e.target.result};
+    r.onerror=rej;r.readAsDataURL(file);
+  });
+}
+function downloadCSV(filename,rows){
+  const csv=rows.map(r=>r.map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  toast('تم التصدير','success');
+}
+
+/* ========== THEME ========== */
+if(localStorage.getItem('emaa_Theme')==='dark')document.body.classList.add('dark-mode');
+function toggleTheme(){
+  document.body.classList.toggle('dark-mode');
+  localStorage.setItem('emaa_Theme',document.body.classList.contains('dark-mode')?'dark':'light');
+  if(document.getElementById('tab-dashboard').classList.contains('active'))renderCharts();
+}
+
+/* ========== AUTH UI ========== */
+function switchAuthTab(tab){
+  document.getElementById('tabLoginBtn').classList.toggle('active',tab==='login');
+  document.getElementById('tabSignupBtn').classList.toggle('active',tab==='signup');
+  document.getElementById('loginForm').style.display=tab==='login'?'block':'none';
+  document.getElementById('signupForm').style.display=tab==='signup'?'block':'none';
+}
+function showDevLogin(){document.getElementById('developerLogin').style.display='flex'}
+function closeDevLogin(){document.getElementById('developerLogin').style.display='none'}
+
+/* ========== AUTH FLOW ========== */
+window.addEventListener('load',()=>{
+  if(window.location.hash==='#dev-admin'){
+    document.getElementById('authScreen').style.display='none';
+    document.getElementById('developerLogin').style.display='flex';
+    return;
+  }
+  auth.onAuthStateChanged(user=>{
+    if(user){currentUser=user;resolveUserRole(user)}
+    else if(!isDevMode){
+      document.getElementById('authScreen').style.display='flex';
+      document.getElementById('appScreen').style.display='none';
+      document.getElementById('devAdminPanel').style.display='none';
+      document.getElementById('pendingScreen').style.display='none';
+      showLoading(false);
+    }
+  });
+});
+
+async function resolveUserRole(user){
+  showLoading(true);
+  try{
+    const pu=await db.collection('platform_users').doc(user.uid).get();
+    if(pu.exists&&pu.data().role==='developer'){
+      isDevMode=true;
+      document.getElementById('authScreen').style.display='none';
+      document.getElementById('appScreen').style.display='none';
+      document.getElementById('pendingScreen').style.display='none';
+      document.getElementById('devAdminPanel').style.display='block';
+      loadDevPanel();
+      showLoading(false);return;
+    }
+    const empSnap=await db.collection('employees').where('authUid','==',user.uid).limit(1).get();
+    if(!empSnap.empty){
+      const emp=empSnap.docs[0].data();
+      const storeDoc=await db.collection('stores').doc(emp.storeId).get();
+      if(storeDoc.exists&&storeDoc.data().status==='active'){
+        currentStoreData={...storeDoc.data(),_id:emp.storeId};
+        currentUserRole=emp.role||'cashier';
+        currentUserName=emp.name||user.email;
+        return loginSuccess(emp.branchId||'main');
+      }
+      document.getElementById('authScreen').style.display='none';
+      document.getElementById('pendingScreen').style.display='flex';
+      showLoading(false);return;
+    }
+    const storeDoc=await db.collection('stores').doc(user.uid).get();
+    if(storeDoc.exists){
+      currentStoreData={...storeDoc.data(),_id:user.uid};
+      if(currentStoreData.status==='active'){
+        currentUserRole='owner';
+        currentUserName=user.displayName||user.email;
+        return loginSuccess('main');
+      }
+      document.getElementById('authScreen').style.display='none';
+      document.getElementById('pendingScreen').style.display='flex';
+      showLoading(false);return;
+    }
+    await db.collection('stores').doc(user.uid).set({
+      storeName:user.displayName||'محل جديد',
+      email:user.email,
+      status:'pending',
+      branches:[{id:'main',name:'الفرع الرئيسي',address:'',status:'active'}],
+      users:[],
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    document.getElementById('authScreen').style.display='none';
+    document.getElementById('pendingScreen').style.display='flex';
+  }catch(e){console.error(e);toast('خطأ في الدخول: '+e.message,'error')}
+  showLoading(false);
+}
+
+async function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  if(!email||!pass)return toast('أدخل البريد وكلمة المرور','warning');
+  showLoading(true);
+  try{await auth.signInWithEmailAndPassword(email,pass)}
+  catch(e){toast('فشل الدخول: '+e.message,'error')}
+  showLoading(false);
+}
+async function doSignup(){
+  const name=document.getElementById('signupName').value.trim();
+  const email=document.getElementById('signupEmail').value.trim();
+  const pass=document.getElementById('signupPass').value;
+  if(!name||!email||!pass)return toast('أكمل البيانات','warning');
+  if(pass.length<6)return toast('كلمة المرور 6 أحرف على الأقل','warning');
+  showLoading(true);
+  try{
+    const {user}=await auth.createUserWithEmailAndPassword(email,pass);
+    await user.updateProfile({displayName:name});
+    await db.collection('stores').doc(user.uid).set({
+      storeName:name,email,status:'pending',
+      branches:[{id:'main',name:'الفرع الرئيسي',address:'',status:'active'}],
+      users:[],createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    document.getElementById('authScreen').style.display='none';
+    document.getElementById('pendingScreen').style.display='flex';
+  }catch(e){toast('خطأ: '+e.message,'error')}
+  showLoading(false);
+}
+async function signInWithGoogle(){
+  showLoading(true);
+  try{await auth.signInWithPopup(provider)}
+  catch(e){toast('فشل: '+e.message,'error')}
+  showLoading(false);
+}
+async function doDevAdminLogin(){
+  const email=document.getElementById('devEmail').value.trim();
+  const pass=document.getElementById('devAdminPass').value;
+  if(!email||!pass)return toast('أكمل البيانات','warning');
+  showLoading(true);
+  try{
+    const {user}=await auth.signInWithEmailAndPassword(email,pass);
+    const pu=await db.collection('platform_users').doc(user.uid).get();
+    if(!pu.exists||pu.data().role!=='developer'){
+      await auth.signOut();
+      throw new Error('هذا الحساب ليس حساب مطور');
+    }
+    isDevMode=true;
+    document.getElementById('developerLogin').style.display='none';
+    document.getElementById('appScreen').style.display='none';
+    document.getElementById('devAdminPanel').style.display='block';
+    loadDevPanel();
+  }catch(e){toast('فشل دخول المطور: '+e.message,'error')}
+  showLoading(false);
+}
+async function logout(){await auth.signOut();window.location.reload()}
+async function logoutDevAdmin(){isDevMode=false;window.location.hash='';await auth.signOut();window.location.reload()}
+
+function loginSuccess(startBranch){
+  currentBranchId=startBranch||'main';
+  document.getElementById('authScreen').style.display='none';
+  document.getElementById('pendingScreen').style.display='none';
+  document.getElementById('devAdminPanel').style.display='none';
+  document.getElementById('appScreen').style.display='block';
+  document.getElementById('storeNameDisplay').innerText=currentStoreData.storeName||'محل';
+  document.getElementById('userRoleDisplay').innerText=ROLES[currentUserRole]?.label||'';
+  document.getElementById('settingsStoreName').value=currentStoreData.storeName||'';
+  document.getElementById('settingsPhone').value=currentStoreData.phone||'';
+  document.getElementById('settingsAddress').value=currentStoreData.address||'';
+  applyPermissions();
+  renderBranchSwitcher();
+  renderBranches();
+  renderUsers();
+  attachStoreListener();
+  loadTenantData();
+  document.getElementById('cashDate').value=todayStr();
+  document.getElementById('expDate').value=todayStr();
+  showLoading(false);
+}
+function applyPermissions(){
+  document.querySelectorAll('.tab-btn[data-perm]').forEach(b=>{
+    b.style.display=hasPermission(b.dataset.perm)?'':'none';
+  });
+}
+function attachStoreListener(){
+  if(storeUnsub)storeUnsub();
+  storeUnsub=db.collection('stores').doc(currentStoreData._id).onSnapshot(doc=>{
+    if(!doc.exists)return;
+    currentStoreData={...doc.data(),_id:doc.id};
+    document.getElementById('storeNameDisplay').innerText=currentStoreData.storeName||'';
+    renderBranches();renderUsers();renderBranchSwitcher();
+  });
+}
+
+/* ========== DEV PANEL ========== */
+function loadDevPanel(){
+  if(devStoresUnsub)devStoresUnsub();
+  devStoresUnsub=db.collection('stores').onSnapshot(snap=>{
+    const tbody=document.getElementById('devStoresBody');if(!tbody)return;
+    tbody.innerHTML='';
+    snap.forEach(doc=>{
+      const s=doc.data();
+      const statusBadge=s.status==='active'?'<span class="badge b-green">نشط</span>':'<span class="badge b-yellow">قيد المراجعة</span>';
+      const actionBtn=s.status==='active'
+        ?`<button class="btn-icon red" onclick="deleteStore('${doc.id}')">حذف</button>`
+        :`<button class="btn-icon green" onclick="approveStore('${doc.id}')">موافقة</button>`;
+      const pending=(s.branches||[]).filter(b=>b.status==='pending');
+      let branchHtml='<span style="color:#999;font-size:12px">لا يوجد</span>';
+      if(pending.length){
+        branchHtml=pending.map(b=>`
+          <div style="margin:6px 0;padding:8px;background:#fff3cd;border-radius:6px;font-size:12px;text-align:right">
+            <b>${escapeHtml(b.name)}</b> — <span style="color:#666">${escapeHtml(b.address||'')}</span><br>
+            <input type="number" id="pr-${doc.id}-${b.id}" placeholder="السعر" style="width:90px;padding:3px;margin:6px 3px 0 0;border:1px solid #ccc;border-radius:4px">
+            <button class="btn-icon green" style="padding:3px 7px;font-size:11px" onclick="issueBranchCode('${doc.id}','${b.id}')">توليد كود</button>
+            ${b.activationCode?`<div style="margin-top:6px;color:#155724"><b>${b.activationCode}</b> (${b.price||0} ج.م)</div>`:''}
+          </div>`).join('');
+      }
+      tbody.innerHTML+=`<tr><td>${escapeHtml(s.storeName||'—')}</td><td>${escapeHtml(s.email||'—')}</td><td>${statusBadge}</td><td>${branchHtml}</td><td>${actionBtn}</td></tr>`;
+    });
+  });
+  loadDevUsers();
+}
+function approveStore(id){db.collection('stores').doc(id).update({status:'active'}).then(()=>toast('تم تفعيل المحل','success')).catch(e=>toast(e.message,'error'))}
+function deleteStore(id){confirmDialog('حذف هذا المحل نهائياً؟',()=>db.collection('stores').doc(id).delete().then(()=>toast('تم الحذف','success')))}
+function issueBranchCode(storeId,branchId){
+  const price=parseFloat(document.getElementById(`pr-${storeId}-${branchId}`).value);
+  if(!price||price<=0)return toast('أدخل السعر أولاً','warning');
+  const code='EMA-'+Math.random().toString(36).substring(2,10).toUpperCase();
+  db.collection('stores').doc(storeId).get().then(d=>{
+    const branches=d.data().branches.map(b=>b.id===branchId?{...b,activationCode:code,price,codeIssuedAt:fmtDateTime()}:b);
+    return db.collection('stores').doc(storeId).update({branches});
+  }).then(()=>toast(`كود الفرع: ${code} — السعر: ${price} ج.م`,'success',8000))
+    .catch(e=>toast(e.message,'error'));
+}
+function loadDevUsers(){
+  if(devUsersUnsub)devUsersUnsub();
+  devUsersUnsub=db.collection('platform_users').where('role','==','developer').onSnapshot(snap=>{
+    const tbody=document.getElementById('devUsersBody');if(!tbody)return;
+    tbody.innerHTML='';
+    if(snap.empty){tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#999">لا يوجد</td></tr>';return}
+    snap.forEach(doc=>{const u=doc.data();
+      tbody.innerHTML+=`<tr><td>${escapeHtml(u.name||'—')}</td><td>${escapeHtml(u.email)}</td><td><span class="badge b-blue">مطور</span></td><td><button class="btn-icon red" onclick="removeDeveloper('${doc.id}')">حذف</button></td></tr>`;
+    });
+  });
+}
+function removeDeveloper(id){confirmDialog('حذف مستخدم المطور؟',()=>db.collection('platform_users').doc(id).delete().then(()=>toast('تم الحذف','success')))}
+
+document.getElementById('devUserForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const email=document.getElementById('devUserEmail').value.trim();
+  const name=document.getElementById('devUserName').value.trim();
+  const pass=document.getElementById('devUserPass').value;
+  if(pass.length<6)return toast('كلمة المرور 6 أحرف على الأقل','warning');
+  showLoading(true);
+  try{
+    const secondary=firebase.initializeApp(firebaseConfig,'secondary-'+Date.now());
+    const secAuth=secondary.auth();
+    const {user}=await secAuth.createUserWithEmailAndPassword(email,pass);
+    await user.updateProfile({displayName:name});
+    await db.collection('platform_users').doc(user.uid).set({
+      name,email,role:'developer',createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await secAuth.signOut();
+    await secondary.delete();
+    toast('تمت إضافة المطور','success');
+    e.target.reset();
+  }catch(err){toast('خطأ: '+err.message,'error')}
+  showLoading(false);
+});
+
+/* ========== TENANT DATA ========== */
+function loadTenantData(){
+  if(inventoryUnsub)inventoryUnsub();if(clientsUnsub)clientsUnsub();
+  if(salesUnsub)salesUnsub();if(expensesUnsub)expensesUnsub();
+  const sid=currentStoreData._id;
+
+  inventoryUnsub=db.collection('stores').doc(sid).collection('products')
+    .where('branchId','==',currentBranchId).onSnapshot(snap=>{
+      inventory=snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderProducts();renderPosProducts();updateDashboard();
+    },err=>toast('مخزون: '+err.message,'error'));
+
+  clientsUnsub=db.collection('stores').doc(sid).collection('clients')
+    .where('branchId','==',currentBranchId).onSnapshot(snap=>{
+      clients=snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderClients();renderLatePayments();updateDashboard();renderDailyCash();
+    },err=>toast('عملاء: '+err.message,'error'));
+
+  salesUnsub=db.collection('stores').doc(sid).collection('sales')
+    .where('branchId','==',currentBranchId).onSnapshot(snap=>{
+      cashSales=snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderCashSales();updateDashboard();renderDailyCash();
+    },err=>toast('مبيعات: '+err.message,'error'));
+
+  expensesUnsub=db.collection('stores').doc(sid).collection('expenses')
+    .where('branchId','==',currentBranchId).onSnapshot(snap=>{
+      expenses=snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderExpenses();updateDashboard();renderDailyCash();
+    },err=>toast('مصروفات: '+err.message,'error'));
+}
+
+function switchTab(tabId,btn){
+  document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(e=>e.classList.remove('active'));
+  const t=document.getElementById(`tab-${tabId}`);if(t)t.classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(tabId==='dashboard')renderCharts();
+  if(tabId==='daily-cash')renderDailyCash();
+}
+function renderBranchSwitcher(){
+  const sel=document.getElementById('branchSwitcher');
+  const active=(currentStoreData.branches||[]).filter(b=>b.status==='active');
+  if(!active.length){sel.innerHTML='<option>لا فروع نشطة</option>';return}
+  sel.innerHTML=active.map(b=>`<option value="${b.id}" ${b.id===currentBranchId?'selected':''}>${escapeHtml(b.name)}</option>`).join('');
+  const cur=active.find(b=>b.id===currentBranchId)||active[0];
+  if(cur){currentBranchId=cur.id;document.getElementById('branchDisplay').innerText=cur.name}
+}
+function switchBranch(id){
+  currentBranchId=id;
+  const c=(currentStoreData.branches||[]).find(b=>b.id===id);
+  document.getElementById('branchDisplay').innerText=c?c.name:'';
+  cart=[];renderCart();
+  loadTenantData();
+}
+
 /* ========== INVENTORY ========== */
 document.getElementById('inventoryForm').addEventListener('submit',async e=>{
   e.preventDefault();
@@ -59,11 +997,11 @@ function renderProducts(){
 function editProduct(id){
   const p=inventory.find(x=>x.id===id);if(!p)return;
   document.getElementById('invEditId').value=id;
-  document.getElementById('invName').value=p.name;
-  document.getElementById('invSerial').value=p.serial;
-  document.getElementById('invQty').value=p.qty;
-  document.getElementById('invCost').value=p.cost;
-  document.getElementById('invPrice').value=p.price;
+  document.getElementById('invName').value=p.name||'';
+  document.getElementById('invSerial').value=p.serial||'';
+  document.getElementById('invQty').value=p.qty||1;
+  document.getElementById('invCost').value=p.cost||0;
+  document.getElementById('invPrice').value=p.price||0;
   document.getElementById('invWarranty').value=p.warranty||0;
   document.getElementById('invSubmitBtn').innerHTML='<i class="fas fa-save"></i> حفظ التعديل';
   document.getElementById('inventoryForm').scrollIntoView({behavior:'smooth'});
@@ -77,6 +1015,7 @@ function togglePaymentForm(){
   const m=document.getElementById('paymentMethodSelect').value;
   document.getElementById('cashFormSection').style.display=m==='cash'?'block':'none';
   document.getElementById('installmentFormSection').style.display=m==='installment'?'block':'none';
+  calcInstallment();
 }
 function renderPosProducts(){
   const grid=document.getElementById('posProducts');
@@ -101,7 +1040,7 @@ function addToCart(id){
     if(p.qty<1)return toast('غير متوفر','warning');
     cart.push({id,name:p.name,price:p.price,cost:p.cost,serial:p.serial,image:p.image||null,qty:1});
   }
-  renderCart();
+  renderCart();calcInstallment();
 }
 function renderCart(){
   const c=document.getElementById('cartContainer');
@@ -121,9 +1060,9 @@ function renderCart(){
   }).join('');
   document.getElementById('cartTotal').innerText=formatCurrency(cart.reduce((s,i)=>s+i.price*i.qty,0));
 }
-function changeQty(i,d){const it=cart[i];const p=inventory.find(x=>x.id===it.id);const nv=it.qty+d;if(nv<1)return removeFromCart(i);if(nv>p.qty)return toast('الكمية المتاحة لا تكفي','warning');it.qty=nv;renderCart()}
-function setQty(i,v){const n=parseInt(v)||1;const p=inventory.find(x=>x.id===cart[i].id);if(n>p.qty)return toast('الكمية المتاحة لا تكفي','warning');cart[i].qty=Math.max(1,Math.min(n,p.qty));renderCart()}
-function removeFromCart(i){cart.splice(i,1);renderCart()}
+function changeQty(i,d){const it=cart[i];const p=inventory.find(x=>x.id===it.id);const nv=it.qty+d;if(nv<1)return removeFromCart(i);if(nv>p.qty)return toast('الكمية المتاحة لا تكفي','warning');it.qty=nv;renderCart();calcInstallment()}
+function setQty(i,v){const n=parseInt(v)||1;const p=inventory.find(x=>x.id===cart[i].id);if(n>p.qty)return toast('الكمية المتاحة لا تكفي','warning');cart[i].qty=Math.max(1,Math.min(n,p.qty));renderCart();calcInstallment()}
+function removeFromCart(i){cart.splice(i,1);renderCart();calcInstallment()}
 
 async function confirmCashSale(){
   if(!cart.length)return toast('السلة فارغة','warning');
@@ -294,7 +1233,7 @@ function renderLatePayments(){
   const tbody=document.getElementById('lateTableBody');
   const today=new Date();today.setHours(0,0,0,0);
   let lateCount=0;const rows=[];
-  clients.forEach(c=>c.installments.forEach((inst,idx)=>{
+  clients.forEach(c=>c.installments.forEach((inst)=>{
     if(!inst.isPaid){
       const due=new Date(inst.dueDate);
       if(due<today){
@@ -313,7 +1252,7 @@ function renderCashSales(){
   const tbody=document.getElementById('cashSalesBody');
   if(!cashSales.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state"><i class="fas fa-receipt"></i><p>لا توجد مبيعات نقدية</p></div></td></tr>';return}
   const sorted=[...cashSales].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  tbody.innerHTML=sorted.map(s=>`<tr><td>${escapeHtml(formatDate(s.date))}</td><td>${escapeHtml(s.productName)}</td><td>${escapeHtml(s.serial)}</td><td>${escapeHtml(s.client)}</td><td>${formatCurrency(s.price*(s.qty||1))}</td><td><button class="btn-icon blue" onclick="printSale('${s.id}')"><i class="fas fa-receipt"></i></button></td></tr>`).join('');
+  tbody.innerHTML=sorted.map(s=>`<tr><td>${formatDate(s.date)}</td><td>${escapeHtml(s.productName)}</td><td>${escapeHtml(s.serial)}</td><td>${escapeHtml(s.client)}</td><td>${formatCurrency(s.price*(s.qty||1))}</td><td><button class="btn-icon blue" onclick="printSale('${s.id}')"><i class="fas fa-receipt"></i></button></td></tr>`).join('');
 }
 function printSale(id){
   const s=cashSales.find(x=>x.id===id);if(!s)return;
@@ -341,7 +1280,8 @@ document.getElementById('expenseForm').addEventListener('submit',e=>{
     category:document.getElementById('expCategory').value,
     date:document.getElementById('expDate').value,
     branchId:currentBranchId,createdBy:currentUser.uid
-  }).then(()=>{toast('تم تسجيل المصروف','success');e.target.reset();document.getElementById('expDate').value=todayStr()});
+  }).then(()=>{toast('تم تسجيل المصروف','success');e.target.reset();document.getElementById('expDate').value=todayStr()})
+    .catch(err=>toast('خطأ: '+err.message,'error'));
 });
 function renderExpenses(){
   const tbody=document.getElementById('expensesBody');
@@ -354,7 +1294,9 @@ function deleteExpense(id){confirmDialog('حذف المصروف؟',()=>db.collec
 
 /* ========== DAILY CASH ========== */
 function renderDailyCash(){
-  const date=document.getElementById('cashDate').value||todayStr();
+  const dateEl=document.getElementById('cashDate');
+  if(!dateEl)return;
+  const date=dateEl.value||todayStr();
   const inst=clients.reduce((s,c)=>s+c.installments.reduce((a,i)=>{
     if(!i.payments)return a;
     return a+i.payments.filter(p=>(p.date||'').startsWith(date)).reduce((x,p)=>x+p.amount,0);
@@ -418,7 +1360,8 @@ document.getElementById('settingsForm').addEventListener('submit',e=>{
     storeName:document.getElementById('settingsStoreName').value.trim(),
     phone:document.getElementById('settingsPhone').value.trim(),
     address:document.getElementById('settingsAddress').value.trim()
-  }).then(()=>toast('تم الحفظ','success'));
+  }).then(()=>toast('تم الحفظ','success'))
+    .catch(err=>toast('خطأ: '+err.message,'error'));
 });
 
 /* ========== BRANCHES ========== */
@@ -431,7 +1374,8 @@ document.getElementById('branchForm').addEventListener('submit',e=>{
     branches:firebase.firestore.FieldValue.arrayUnion({
       id:'BR-'+Date.now(),name,address,status:'pending',activationCode:null,price:0,requestedAt:fmtDateTime()
     })
-  }).then(()=>{toast('تم إرسال الطلب. تواصل مع المطور لسداد الاشتراك','success');e.target.reset()});
+  }).then(()=>{toast('تم إرسال الطلب. تواصل مع المطور لسداد الاشتراك','success');e.target.reset()})
+    .catch(err=>toast('خطأ: '+err.message,'error'));
 });
 function renderBranches(){
   const tbody=document.getElementById('branchesBody');
@@ -469,7 +1413,7 @@ function activateBranch(id,force){
       return b;
     });
     return db.collection('stores').doc(currentStoreData._id).update({branches});
-  }).then(()=>{toast('تم التفعيل','success');})
+  }).then(()=>toast('تم التفعيل','success'))
     .catch(e=>toast(e.message,'error'));
 }
 function deactivateBranch(id){
@@ -492,12 +1436,10 @@ document.getElementById('userForm').addEventListener('submit',async e=>{
   if(pass.length<6)return toast('كلمة المرور 6 أحرف على الأقل','warning');
   showLoading(true);
   try{
-    // إنشاء حساب Firebase Auth في تطبيق ثانوي (بدون تسجيل خروج المالك)
     const secondary=firebase.initializeApp(firebaseConfig,'emp-'+Date.now());
     const secAuth=secondary.auth();
     const {user}=await secAuth.createUserWithEmailAndPassword(email,pass);
     await user.updateProfile({displayName:name});
-    // ربط الموظف بالمحل
     await db.collection('employees').doc(user.uid).set({
       authUid:user.uid,storeId:currentStoreData._id,name,phone,email,role,
       branchId:currentBranchId,createdAt:firebase.firestore.FieldValue.serverTimestamp()
@@ -511,7 +1453,7 @@ document.getElementById('userForm').addEventListener('submit',async e=>{
 });
 function renderUsers(){
   const tbody=document.getElementById('usersBody');
-  if(!tbody)return;
+  if(!tbody||!currentStoreData._id)return;
   db.collection('employees').where('storeId','==',currentStoreData._id).get().then(snap=>{
     if(snap.empty){tbody.innerHTML='<tr><td colspan="5"><div class="empty-state"><p>لا يوجد موظفون</p></div></td></tr>';return}
     tbody.innerHTML=snap.docs.map(d=>{
