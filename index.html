@@ -46,6 +46,7 @@ body.dark-mode .card,body.dark-mode .product-card,body.dark-mode .pos-product-ca
 .auth-tabs{display:flex;gap:5px;margin-bottom:20px;background:#f0f2f5;padding:5px;border-radius:10px}
 .auth-tabs button{flex:1;padding:10px;border:none;background:transparent;border-radius:8px;font-weight:700;cursor:pointer;color:#666;transition:.2s;margin:0}
 .auth-tabs button.active{background:#fff;color:#111;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.auth-error{background:#f8d7da;color:#721c24;padding:10px;border-radius:8px;font-size:12px;margin:8px 0;display:none;text-align:right}
 
 #appScreen,#devAdminPanel{display:none}
 header{background:var(--black);padding:15px 25px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 4px 10px rgba(0,0,0,.2);flex-wrap:wrap;gap:10px}
@@ -220,6 +221,7 @@ canvas{max-height:250px}
       <p style="color:#777;font-size:13px;margin-bottom:15px">للمحلات والموظفين</p>
       <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" autocomplete="email">
       <input type="password" id="loginPass" placeholder="كلمة المرور" onkeypress="if(event.key==='Enter')doLogin()" autocomplete="current-password">
+      <div class="auth-error" id="loginError"></div>
       <button onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> دخول</button>
       <button class="link-btn" onclick="signInWithGoogle()"><i class="fab fa-google"></i> الدخول بـ Google (للمالك)</button>
     </div>
@@ -229,6 +231,7 @@ canvas{max-height:250px}
       <input type="text" id="signupName" placeholder="اسم المحل" autocomplete="organization">
       <input type="email" id="signupEmail" placeholder="البريد الإلكتروني" autocomplete="email">
       <input type="password" id="signupPass" placeholder="كلمة المرور (6+ أحرف)" autocomplete="new-password">
+      <div class="auth-error" id="signupError"></div>
       <button onclick="doSignup()"><i class="fas fa-user-plus"></i> إنشاء الحساب</button>
     </div>
     <button class="link-btn" style="color:var(--red);font-weight:700;margin-top:12px;border-top:1px solid #eee;padding-top:12px;width:100%" onclick="showDevLogin()">
@@ -244,6 +247,7 @@ canvas{max-height:250px}
     <p style="color:#777;margin-bottom:15px;font-size:13px">لوحة تحكم المطور</p>
     <input type="email" id="devEmail" placeholder="البريد الإلكتروني" autocomplete="email">
     <input type="password" id="devAdminPass" placeholder="كلمة المرور" onkeypress="if(event.key==='Enter')doDevAdminLogin()" autocomplete="current-password">
+    <div class="auth-error" id="devLoginError"></div>
     <button onclick="doDevAdminLogin()" style="background:var(--gold);color:var(--black);border:none">دخول</button>
     <button class="link-btn" onclick="closeDevLogin()">إغلاق</button>
   </div>
@@ -541,7 +545,11 @@ canvas{max-height:250px}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-/* ========== FIREBASE ========== */
+/* ============================================================
+   EMAA.Tech — Final JS
+   ============================================================ */
+
+/* ---------- Firebase ---------- */
 const firebaseConfig = {
   apiKey: "AIzaSyChgRxNBPBlb41TGSZmdsE03tGkGVFl7GI",
   authDomain: "emaa-core.firebaseapp.com",
@@ -555,7 +563,7 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 const provider = new firebase.auth.GoogleAuthProvider();
 
-/* ========== STATE ========== */
+/* ---------- State ---------- */
 let currentUser=null, currentStoreData={}, currentBranchId='main',
     currentUserRole='owner', currentUserName='', isDevMode=false,
     cart=[], inventory=[], clients=[], cashSales=[], expenses=[],
@@ -571,7 +579,7 @@ const ROLES = {
   developer:{label:'مطور',perms:['*']}
 };
 
-/* ========== HELPERS ========== */
+/* ---------- Helpers ---------- */
 function toast(msg,type='info',duration=3500){
   const c=document.getElementById('toastContainer');if(!c)return;
   const icons={success:'fa-check-circle',error:'fa-times-circle',info:'fa-info-circle',warning:'fa-exclamation-triangle'};
@@ -621,8 +629,33 @@ function downloadCSV(filename,rows){
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   toast('تم التصدير','success');
 }
+function showAuthError(id,msg){
+  const el=document.getElementById(id);
+  if(el){el.textContent=msg;el.style.display='block';setTimeout(()=>{el.style.display='none'},8000)}
+  else toast(msg,'error');
+}
+function firebaseErrorMsg(err){
+  const code=err.code||'';
+  const map={
+    'auth/invalid-credential':'البريد أو كلمة المرور غير صحيحة',
+    'auth/invalid-login-credentials':'البريد أو كلمة المرور غير صحيحة',
+    'auth/user-not-found':'لا يوجد حساب بهذا البريد',
+    'auth/wrong-password':'كلمة المرور غير صحيحة',
+    'auth/invalid-email':'البريد الإلكتروني غير صالح',
+    'auth/user-disabled':'هذا الحساب معطل',
+    'auth/too-many-requests':'محاولات كثيرة، حاول لاحقاً',
+    'auth/email-already-in-use':'البريد مستخدم بالفعل',
+    'auth/weak-password':'كلمة المرور ضعيفة (6 أحرف على الأقل)',
+    'auth/operation-not-allowed':'طريقة الدخول غير مفعّلة في Firebase Console',
+    'auth/popup-closed-by-user':'أغلقت النافذة قبل إكمال الدخول',
+    'auth/popup-blocked':'المتصفح حظر النافذة المنبثقة',
+    'auth/network-request-failed':'خطأ في الاتصال بالشبكة',
+    'auth/unauthorized-domain':'النطاق غير مصرح به في Firebase Console'
+  };
+  return map[code]||('خطأ: '+(err.message||code||'غير معروف'));
+}
 
-/* ========== THEME ========== */
+/* ---------- Theme ---------- */
 if(localStorage.getItem('emaa_Theme')==='dark')document.body.classList.add('dark-mode');
 function toggleTheme(){
   document.body.classList.toggle('dark-mode');
@@ -630,7 +663,7 @@ function toggleTheme(){
   if(document.getElementById('tab-dashboard').classList.contains('active'))renderCharts();
 }
 
-/* ========== AUTH UI ========== */
+/* ---------- Auth UI ---------- */
 function switchAuthTab(tab){
   document.getElementById('tabLoginBtn').classList.toggle('active',tab==='login');
   document.getElementById('tabSignupBtn').classList.toggle('active',tab==='signup');
@@ -640,7 +673,7 @@ function switchAuthTab(tab){
 function showDevLogin(){document.getElementById('developerLogin').style.display='flex'}
 function closeDevLogin(){document.getElementById('developerLogin').style.display='none'}
 
-/* ========== AUTH FLOW ========== */
+/* ---------- Auth Flow ---------- */
 window.addEventListener('load',()=>{
   if(window.location.hash==='#dev-admin'){
     document.getElementById('authScreen').style.display='none';
@@ -708,25 +741,29 @@ async function resolveUserRole(user){
     });
     document.getElementById('authScreen').style.display='none';
     document.getElementById('pendingScreen').style.display='flex';
-  }catch(e){console.error(e);toast('خطأ في الدخول: '+e.message,'error')}
+  }catch(e){console.error(e);toast('خطأ في الدخول: '+firebaseErrorMsg(e),'error')}
   showLoading(false);
 }
 
 async function doLogin(){
   const email=document.getElementById('loginEmail').value.trim();
   const pass=document.getElementById('loginPass').value;
-  if(!email||!pass)return toast('أدخل البريد وكلمة المرور','warning');
+  if(!email||!pass)return showAuthError('loginError','أدخل البريد وكلمة المرور');
   showLoading(true);
-  try{await auth.signInWithEmailAndPassword(email,pass)}
-  catch(e){toast('فشل الدخول: '+e.message,'error')}
+  try{
+    await auth.signInWithEmailAndPassword(email,pass);
+  }catch(e){
+    showAuthError('loginError',firebaseErrorMsg(e));
+    console.error(e);
+  }
   showLoading(false);
 }
 async function doSignup(){
   const name=document.getElementById('signupName').value.trim();
   const email=document.getElementById('signupEmail').value.trim();
   const pass=document.getElementById('signupPass').value;
-  if(!name||!email||!pass)return toast('أكمل البيانات','warning');
-  if(pass.length<6)return toast('كلمة المرور 6 أحرف على الأقل','warning');
+  if(!name||!email||!pass)return showAuthError('signupError','أكمل البيانات');
+  if(pass.length<6)return showAuthError('signupError','كلمة المرور 6 أحرف على الأقل');
   showLoading(true);
   try{
     const {user}=await auth.createUserWithEmailAndPassword(email,pass);
@@ -738,19 +775,23 @@ async function doSignup(){
     });
     document.getElementById('authScreen').style.display='none';
     document.getElementById('pendingScreen').style.display='flex';
-  }catch(e){toast('خطأ: '+e.message,'error')}
+  }catch(e){showAuthError('signupError',firebaseErrorMsg(e));console.error(e)}
   showLoading(false);
 }
 async function signInWithGoogle(){
   showLoading(true);
-  try{await auth.signInWithPopup(provider)}
-  catch(e){toast('فشل: '+e.message,'error')}
+  try{
+    await auth.signInWithPopup(provider);
+  }catch(e){
+    showAuthError('loginError',firebaseErrorMsg(e));
+    console.error(e);
+  }
   showLoading(false);
 }
 async function doDevAdminLogin(){
   const email=document.getElementById('devEmail').value.trim();
   const pass=document.getElementById('devAdminPass').value;
-  if(!email||!pass)return toast('أكمل البيانات','warning');
+  if(!email||!pass)return showAuthError('devLoginError','أكمل البيانات');
   showLoading(true);
   try{
     const {user}=await auth.signInWithEmailAndPassword(email,pass);
@@ -764,7 +805,10 @@ async function doDevAdminLogin(){
     document.getElementById('appScreen').style.display='none';
     document.getElementById('devAdminPanel').style.display='block';
     loadDevPanel();
-  }catch(e){toast('فشل دخول المطور: '+e.message,'error')}
+  }catch(e){
+    showAuthError('devLoginError',e.message.includes('مطور')?e.message:firebaseErrorMsg(e));
+    console.error(e);
+  }
   showLoading(false);
 }
 async function logout(){await auth.signOut();window.location.reload()}
@@ -806,7 +850,7 @@ function attachStoreListener(){
   });
 }
 
-/* ========== DEV PANEL ========== */
+/* ---------- Dev Panel ---------- */
 function loadDevPanel(){
   if(devStoresUnsub)devStoresUnsub();
   devStoresUnsub=db.collection('stores').onSnapshot(snap=>{
@@ -834,7 +878,7 @@ function loadDevPanel(){
   });
   loadDevUsers();
 }
-function approveStore(id){db.collection('stores').doc(id).update({status:'active'}).then(()=>toast('تم تفعيل المحل','success')).catch(e=>toast(e.message,'error'))}
+function approveStore(id){db.collection('stores').doc(id).update({status:'active'}).then(()=>toast('تم تفعيل المحل','success')).catch(e=>toast(firebaseErrorMsg(e),'error'))}
 function deleteStore(id){confirmDialog('حذف هذا المحل نهائياً؟',()=>db.collection('stores').doc(id).delete().then(()=>toast('تم الحذف','success')))}
 function issueBranchCode(storeId,branchId){
   const price=parseFloat(document.getElementById(`pr-${storeId}-${branchId}`).value);
@@ -844,7 +888,7 @@ function issueBranchCode(storeId,branchId){
     const branches=d.data().branches.map(b=>b.id===branchId?{...b,activationCode:code,price,codeIssuedAt:fmtDateTime()}:b);
     return db.collection('stores').doc(storeId).update({branches});
   }).then(()=>toast(`كود الفرع: ${code} — السعر: ${price} ج.م`,'success',8000))
-    .catch(e=>toast(e.message,'error'));
+    .catch(e=>toast(firebaseErrorMsg(e),'error'));
 }
 function loadDevUsers(){
   if(devUsersUnsub)devUsersUnsub();
@@ -878,11 +922,11 @@ document.getElementById('devUserForm').addEventListener('submit',async e=>{
     await secondary.delete();
     toast('تمت إضافة المطور','success');
     e.target.reset();
-  }catch(err){toast('خطأ: '+err.message,'error')}
+  }catch(err){toast(firebaseErrorMsg(err),'error');console.error(err)}
   showLoading(false);
 });
 
-/* ========== TENANT DATA ========== */
+/* ---------- Tenant Data ---------- */
 function loadTenantData(){
   if(inventoryUnsub)inventoryUnsub();if(clientsUnsub)clientsUnsub();
   if(salesUnsub)salesUnsub();if(expensesUnsub)expensesUnsub();
@@ -937,7 +981,7 @@ function switchBranch(id){
   loadTenantData();
 }
 
-/* ========== INVENTORY ========== */
+/* ---------- Inventory ---------- */
 document.getElementById('inventoryForm').addEventListener('submit',async e=>{
   e.preventDefault();
   if(!hasPermission('manage_inventory'))return toast('لا تملك صلاحية','error');
@@ -1010,7 +1054,7 @@ function deleteProduct(id){
   confirmDialog('حذف هذا المنتج؟',()=>db.collection('stores').doc(currentStoreData._id).collection('products').doc(id).delete().then(()=>toast('تم الحذف','success')));
 }
 
-/* ========== POS ========== */
+/* ---------- POS ---------- */
 function togglePaymentForm(){
   const m=document.getElementById('paymentMethodSelect').value;
   document.getElementById('cashFormSection').style.display=m==='cash'?'block':'none';
@@ -1153,7 +1197,7 @@ async function confirmInstallmentSale(){
   });
 }
 
-/* ========== CLIENTS ========== */
+/* ---------- Clients ---------- */
 function renderClients(){
   const tbody=document.getElementById('clientsTableBody');
   const q=(document.getElementById('clientsSearch')?.value||'').trim().toLowerCase();
@@ -1247,7 +1291,7 @@ function renderLatePayments(){
   tbody.innerHTML=rows.length?rows.join(''):'<tr><td colspan="6"><div class="empty-state"><i class="fas fa-check-circle" style="color:var(--green)"></i><p>لا توجد متأخرات 🎉</p></div></td></tr>';
 }
 
-/* ========== CASH SALES LOG ========== */
+/* ---------- Cash Sales Log ---------- */
 function renderCashSales(){
   const tbody=document.getElementById('cashSalesBody');
   if(!cashSales.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state"><i class="fas fa-receipt"></i><p>لا توجد مبيعات نقدية</p></div></td></tr>';return}
@@ -1270,7 +1314,7 @@ function printSale(id){
   `);
 }
 
-/* ========== EXPENSES ========== */
+/* ---------- Expenses ---------- */
 document.getElementById('expenseForm').addEventListener('submit',e=>{
   e.preventDefault();
   if(!hasPermission('manage_expenses'))return toast('لا تملك صلاحية','error');
@@ -1292,7 +1336,7 @@ function renderExpenses(){
 }
 function deleteExpense(id){confirmDialog('حذف المصروف؟',()=>db.collection('stores').doc(currentStoreData._id).collection('expenses').doc(id).delete().then(()=>toast('تم الحذف','success')))}
 
-/* ========== DAILY CASH ========== */
+/* ---------- Daily Cash ---------- */
 function renderDailyCash(){
   const dateEl=document.getElementById('cashDate');
   if(!dateEl)return;
@@ -1309,7 +1353,7 @@ function renderDailyCash(){
   document.getElementById('dailyNet').innerText=formatCurrency(inst+cash-exp);
 }
 
-/* ========== DASHBOARD ========== */
+/* ---------- Dashboard ---------- */
 function updateDashboard(){
   let tSales=0,tCollected=0,tCost=0,tExp=0;
   clients.forEach(c=>{
@@ -1353,7 +1397,7 @@ function renderCharts(){
   expensesChartInstance=new Chart(ec,{type:'bar',data:{labels:labels.length?labels:['—'],datasets:[{label:'المصروفات',data:labels.length?labels.map(l=>byMonth[l]):[0],backgroundColor:'#e74c3c'}]},options:{responsive:true,maintainAspectRatio:false}});
 }
 
-/* ========== SETTINGS ========== */
+/* ---------- Settings ---------- */
 document.getElementById('settingsForm').addEventListener('submit',e=>{
   e.preventDefault();
   db.collection('stores').doc(currentStoreData._id).update({
@@ -1364,7 +1408,7 @@ document.getElementById('settingsForm').addEventListener('submit',e=>{
     .catch(err=>toast('خطأ: '+err.message,'error'));
 });
 
-/* ========== BRANCHES ========== */
+/* ---------- Branches ---------- */
 document.getElementById('branchForm').addEventListener('submit',e=>{
   e.preventDefault();
   const name=document.getElementById('newBranchName').value.trim();
@@ -1425,7 +1469,7 @@ function deactivateBranch(id){
   });
 }
 
-/* ========== EMPLOYEES ========== */
+/* ---------- Employees ---------- */
 document.getElementById('userForm').addEventListener('submit',async e=>{
   e.preventDefault();
   const email=document.getElementById('empEmail').value.trim().toLowerCase();
@@ -1448,7 +1492,8 @@ document.getElementById('userForm').addEventListener('submit',async e=>{
     await secondary.delete();
     toast('تمت إضافة الموظف','success');
     e.target.reset();
-  }catch(err){toast('خطأ: '+err.message,'error')}
+    renderUsers();
+  }catch(err){toast(firebaseErrorMsg(err),'error');console.error(err)}
   showLoading(false);
 });
 function renderUsers(){
@@ -1468,7 +1513,7 @@ function deleteUser(id){
   });
 }
 
-/* ========== CSV EXPORTS ========== */
+/* ---------- CSV Exports ---------- */
 function exportCashSalesCSV(){
   const rows=[['التاريخ','المنتج','السيريال','العميل','الإجمالي']];
   cashSales.forEach(s=>rows.push([formatDate(s.date),s.productName,s.serial,s.client,s.price*(s.qty||1)]));
