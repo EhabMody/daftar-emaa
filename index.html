@@ -163,6 +163,7 @@ tr:hover td { background: var(--surface-hover); }
 .category-btn:hover { background: var(--surface-hover); }
 .category-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 .license-key-display { font-family: 'Courier New', monospace; letter-spacing: 2px; font-weight: 800; color: var(--accent); background: var(--bg); padding: 12px; border-radius: 8px; text-align: center; font-size: 16px; word-break: break-all; }
+.lifetime-badge { background: linear-gradient(135deg, #10b981, #3b82f6); color: white; padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
 @media print {
   body * { visibility: hidden; }
   .modal-content, .modal-content * { visibility: visible; }
@@ -254,23 +255,23 @@ tr:hover td { background: var(--surface-hover); }
     <i class="fas fa-key" style="font-size:60px;color:var(--gold);margin-bottom:20px"></i>
     <h2 style="margin-bottom:10px" id="licenseTitle">انتهت الفترة التجريبية</h2>
     <p style="color:var(--text-muted);margin-bottom:20px;line-height:1.7" id="licenseSubtitle">
-      انتهت فترة التجربة (14 يوم). للحصول على مفتاح الترخيص يرجى إرسال طلبك للمطور.
+      انتهت فترة التجربة (14 يوم). للحصول على ترخيص مدى الحياة يرجى إرسال طلبك للمطور ثم إدخال المفتاح هنا.
     </p>
     <div id="licenseWaiting" style="display:none;background:rgba(245,158,11,0.1);padding:16px;border-radius:8px;margin-bottom:16px">
       <i class="fas fa-hourglass-half" style="color:var(--warning);font-size:24px;margin-bottom:8px"></i>
       <p style="font-weight:700;margin-bottom:4px">طلبك قيد المراجعة من قبل المطور</p>
-      <p style="font-size:12px;color:var(--text-muted)">سيتم إرسال مفتاح التفعيل بعد الموافقة</p>
+      <p style="font-size:12px;color:var(--text-muted)">سيتم إرسال مفتاح التفعيل بعد الموافقة — ثم أدخله هنا</p>
     </div>
     <div id="licenseInputSection">
       <div class="form-group">
-        <label>مفتاح الترخيص</label>
-        <input type="text" id="licenseKeyInput" class="form-input" placeholder="EMA-LIC-XXXXXXXX-XXXX" style="text-align:center;font-weight:700;letter-spacing:1px;font-family:monospace">
+        <label>مفتاح الترخيص (مدى الحياة)</label>
+        <input type="text" id="licenseKeyInput" class="form-input" placeholder="EMA-LIFE-XXXXXXXX-XXXX" style="text-align:center;font-weight:700;letter-spacing:1px;font-family:monospace">
       </div>
       <button class="btn btn-primary" style="background:var(--gold);color:black" onclick="activateLicense()">
-        <i class="fas fa-check"></i> تفعيل الترخيص
+        <i class="fas fa-infinity"></i> تفعيل الترخيص مدى الحياة
       </button>
       <button class="btn btn-accent" style="margin-top:10px" onclick="requestLicense()">
-        <i class="fas fa-paper-plane"></i> طلب مفتاح ترخيص جديد
+        <i class="fas fa-paper-plane"></i> طلب مفتاح ترخيص من المطور
       </button>
     </div>
     <button class="btn btn-outline" style="margin-top:16px;font-size:12px" onclick="logout()">
@@ -288,7 +289,6 @@ tr:hover td { background: var(--surface-hover); }
     <button class="btn btn-danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
   </div>
 </div>
-
 <!-- MAIN APP -->
 <div id="appScreen">
   <div id="trialBannerContainer"></div>
@@ -606,7 +606,7 @@ tr:hover td { background: var(--surface-hover); }
   <div class="container">
     <div class="dashboard-grid" style="margin-bottom:24px">
       <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-store"></i></div><div class="stat-info"><h3>إجمالي المحلات</h3><p id="devStatStores">0</p></div></div>
-      <div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-info"><h3>محلات نشطة</h3><p id="devStatActive">0</p></div></div>
+      <div class="stat-card"><div class="stat-icon green"><i class="fas fa-infinity"></i></div><div class="stat-info"><h3>تراخيص مدى الحياة</h3><p id="devStatActive">0</p></div></div>
       <div class="stat-card"><div class="stat-icon gold"><i class="fas fa-hourglass-half"></i></div><div class="stat-info"><h3>في التجربة</h3><p id="devStatTrial">0</p></div></div>
       <div class="stat-card"><div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-info"><h3>منتهية / معلقة</h3><p id="devStatExpired">0</p></div></div>
       <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-money-bill-wave"></i></div><div class="stat-info"><h3>إيرادات التراخيص</h3><p id="devStatRevenue">0 ج.م</p></div></div>
@@ -640,7 +640,6 @@ tr:hover td { background: var(--surface-hover); }
       </div>
     </div>
 
-    <!-- طلبات الفروع المعلقة - جديد -->
     <div class="card" style="border-right:4px solid var(--warning)">
       <div class="section-title"><span><i class="fas fa-code-branch"></i> طلبات الفروع المعلقة</span></div>
       <div class="table-wrapper">
@@ -654,7 +653,7 @@ tr:hover td { background: var(--surface-hover); }
     </div>
 
     <div class="card" style="border-right:4px solid var(--success)">
-      <div class="section-title"><span><i class="fas fa-key"></i> مفاتيح الترخيص</span></div>
+      <div class="section-title"><span><i class="fas fa-key"></i> مفاتيح الترخيص (مدى الحياة)</span></div>
       <form id="devLicenseForm" style="margin-bottom:16px;padding:16px;background:var(--bg);border-radius:8px">
         <div class="form-grid" style="grid-template-columns:2fr 1fr">
           <div class="form-group"><label>المحل (اختياري)</label>
@@ -663,12 +662,12 @@ tr:hover td { background: var(--surface-hover); }
           <div class="form-group"><label>السعر (ج.م)</label><input type="number" id="devLicPrice" class="form-input" value="0" min="0"></div>
         </div>
         <div style="background:rgba(16,185,129,0.1);padding:10px;border-radius:8px;margin-top:8px;font-size:12px;color:var(--success);font-weight:600">
-          <i class="fas fa-infinity"></i> جميع المفاتيح الجديدة = ترخيص مدى الحياة (لا ينتهي)
+          <i class="fas fa-infinity"></i> جميع المفاتيح الجديدة = ترخيص مدى الحياة (لا ينتهي أبداً)
         </div>
         <button type="submit" class="btn btn-accent" style="margin-top:12px"><i class="fas fa-key"></i> توليد مفتاح مدى الحياة</button>
       </form>
       <div class="table-wrapper">
-        <thead><tr><th>المفتاح</th><th>المحل</th><th>النوع</th><th>السعر</th><th>الحالة</th><th>حذف</th></tr></thead>
+        <table><thead><tr><th>المفتاح</th><th>المحل</th><th>النوع</th><th>السعر</th><th>الحالة</th><th>حذف</th></tr></thead>
         <tbody id="devLicenseKeysBody"></tbody></table>
       </div>
     </div>
@@ -896,14 +895,11 @@ async function resolveUserRole(user) {
       const now = new Date();
       const trialEnd = data.trialEndsAt ? new Date(data.trialEndsAt) : null;
       const licEnd = data.licenseExpiresAt ? new Date(data.licenseExpiresAt) : null;
+      const isLifetime = data.licenseType === 'lifetime' || data.licenseStatus === 'lifetime';
       
       // التحقق من انتهاء الترخيص (فقط إذا لم يكن مدى الحياة)
-      const isLifetime = data.licenseType === 'lifetime' || data.licenseStatus === 'lifetime';
       if (status === 'active' && licEnd && now > licEnd && !isLifetime) {
-        await db.collection('stores').doc(user.uid).update({
-          status: 'expired',
-          licenseStatus: 'expired'
-        });
+        await db.collection('stores').doc(user.uid).update({ status: 'expired', licenseStatus: 'expired' });
         currentStoreData.status = 'expired';
         currentStoreData.licenseStatus = 'expired';
         showExpiredScreen(currentStoreData);
@@ -911,6 +907,7 @@ async function resolveUserRole(user) {
         return;
       }
       
+      // التحقق من انتهاء التجربة
       if (status === 'trial' && trialEnd && now > trialEnd) {
         await db.collection('stores').doc(user.uid).update({ status: 'expired', licenseStatus: 'expired' });
         currentStoreData.status = 'expired';
@@ -1045,12 +1042,12 @@ function showExpiredScreen(storeData) {
     document.getElementById('licenseWaiting').style.display = 'block';
     document.getElementById('licenseInputSection').style.display = 'none';
     document.getElementById('licenseTitle').innerText = 'طلبك قيد المراجعة';
-    document.getElementById('licenseSubtitle').innerText = 'طلب الترخيص الخاص بك قيد المراجعة من قبل المطور.';
+    document.getElementById('licenseSubtitle').innerText = 'طلب الترخيص الخاص بك قيد المراجعة من قبل المطور. سيتم إرسال المفتاح إليك ثم تدخله هنا.';
   } else {
     document.getElementById('licenseWaiting').style.display = 'none';
     document.getElementById('licenseInputSection').style.display = 'block';
     document.getElementById('licenseTitle').innerText = 'انتهت الفترة التجريبية';
-    document.getElementById('licenseSubtitle').innerText = 'انتهت فترة التجربة (14 يوم). للحصول على مفتاح الترخيص يرجى إرسال طلبك للمطور أو إدخال مفتاح التفعيل.';
+    document.getElementById('licenseSubtitle').innerText = 'انتهت فترة التجربة (14 يوم). اطلب مفتاح ترخيص مدى الحياة من المطور ثم أدخله هنا.';
   }
 }
 
@@ -1079,6 +1076,10 @@ async function requestLicense() {
   }
   showLoading(false);
 }
+
+// ==========================================================
+// تفعيل الترخيص مدى الحياة
+// ==========================================================
 async function activateLicense() {
   const user = auth.currentUser;
   if (!user) return toast('يجب تسجيل الدخول أولاً', 'error');
@@ -1094,18 +1095,17 @@ async function activateLicense() {
     if (keyData.used) { showLoading(false); return toast('هذا المفتاح مستخدم بالفعل', 'error'); }
     if (keyData.storeId && keyData.storeId !== user.uid) { showLoading(false); return toast('هذا المفتاح مخصص لمحل آخر', 'error'); }
     
-    // ← تعديل: تفعيل مدى الحياة
     const batch = db.batch();
     batch.update(db.collection('license_keys').doc(key), {
       used: true, usedAt: new Date().toISOString(), usedBy: user.uid
     });
     batch.update(db.collection('stores').doc(user.uid), {
       status: 'active',
-      licenseStatus: 'lifetime',           // ← مدى الحياة
-      licenseType: 'lifetime',             // ← مدى الحياة
+      licenseStatus: 'lifetime',
+      licenseType: 'lifetime',
       licenseKey: key,
       licenseActivatedAt: new Date().toISOString(),
-      licenseExpiresAt: null               // ← لا ينتهي أبداً
+      licenseExpiresAt: null
     });
     await batch.commit();
     
@@ -1159,6 +1159,13 @@ function renderTrialBanner() {
   const cont = document.getElementById('trialBannerContainer');
   if (!cont) return;
   
+  const isLifetime = currentStoreData.licenseType === 'lifetime' || currentStoreData.licenseStatus === 'lifetime';
+  
+  if (isLifetime) {
+    cont.innerHTML = '';
+    return;
+  }
+  
   if (currentStoreData.status === 'trial' && currentStoreData.trialEndsAt) {
     const end = new Date(currentStoreData.trialEndsAt);
     const daysLeft = Math.ceil((end - new Date()) / 86400000);
@@ -1172,15 +1179,6 @@ function renderTrialBanner() {
         </button>
       </div>`;
     }
-  } else if (currentStoreData.status === 'active' && currentStoreData.licenseExpiresAt) {
-    const end = new Date(currentStoreData.licenseExpiresAt);
-    const daysLeft = Math.ceil((end - new Date()) / 86400000);
-    if (daysLeft <= 30) {
-      cont.innerHTML = `<div class="trial-banner" style="background:linear-gradient(90deg,var(--warning),var(--danger))">
-        <i class="fas fa-exclamation-triangle"></i>
-        <span>ينتهي ترخيصك خلال ${daysLeft} يوم — يرجى التجديد</span>
-      </div>`;
-    } else { cont.innerHTML = ''; }
   } else { cont.innerHTML = ''; }
 }
 
@@ -1228,6 +1226,7 @@ function renderLicenseInfo() {
     ${!isLifetime && status !== 'active' ? `<button class="btn btn-primary" style="margin-top:16px;background:var(--gold);color:black" onclick="requestLicenseFromSettings()"><i class="fas fa-key"></i> طلب ترخيص جديد</button>` : ''}
   `;
 }
+
 async function requestLicenseFromSettings() {
   if (!confirm('إرسال طلب ترخيص للمطور؟')) return;
   const user = auth.currentUser;
@@ -1337,7 +1336,6 @@ function deleteCategory(id) {
       .catch(err => toast('خطأ: ' + err.message, 'error'));
   });
 }
-
 // ==========================================================
 // لوحة المطور الكاملة
 // ==========================================================
@@ -1358,20 +1356,19 @@ function loadDevPanel() {
 
 function updateDevStats() {
   const total = devStoresCache.length;
-  const active = devStoresCache.filter(s => s.status === 'active').length;
+  const lifetime = devStoresCache.filter(s => s.licenseType === 'lifetime' || s.licenseStatus === 'lifetime').length;
   const trial = devStoresCache.filter(s => s.status === 'trial').length;
   const expired = devStoresCache.filter(s => s.status === 'expired' || s.status === 'pending_license' || s.status === 'pending').length;
   const branches = devStoresCache.reduce((sum, s) => sum + (s.branches || []).length, 0);
   
   document.getElementById('devStatStores').innerText = total;
-  document.getElementById('devStatActive').innerText = active;
+  document.getElementById('devStatActive').innerText = lifetime;
   document.getElementById('devStatTrial').innerText = trial;
   document.getElementById('devStatExpired').innerText = expired;
   document.getElementById('devStatBranches').innerText = branches;
   
   db.collection('license_keys').where('used', '==', true).get().then(snap => {
     let revenue = snap.docs.reduce((s, d) => s + (d.data().price || 0), 0);
-    // إضافة إيرادات الفروع المدفوعة
     devStoresCache.forEach(store => {
       (store.branches || []).forEach(b => {
         if (b.status === 'active' && b.price > 0 && b.id !== 'main') revenue += b.price;
@@ -1394,21 +1391,22 @@ function renderDevStores() {
   }
   
   tbody.innerHTML = list.map(s => {
+    const isLifetime = s.licenseType === 'lifetime' || s.licenseStatus === 'lifetime';
     let statusBadge = '<span class="badge b-yellow">قيد المراجعة</span>';
-    if (s.status === 'active') statusBadge = '<span class="badge b-green">نشط</span>';
+    if (isLifetime) statusBadge = '<span class="badge b-green"><i class="fas fa-infinity"></i> مدى الحياة</span>';
+    else if (s.status === 'active') statusBadge = '<span class="badge b-green">نشط</span>';
     else if (s.status === 'trial') statusBadge = '<span class="badge b-blue">تجربة</span>';
     else if (s.status === 'expired') statusBadge = '<span class="badge b-red">منتهي</span>';
     else if (s.status === 'pending_license') statusBadge = '<span class="badge b-yellow">بانتظار الترخيص</span>';
     
     let trialInfo = '—';
-    if (s.status === 'trial' && s.trialEndsAt) {
+    if (isLifetime) {
+      trialInfo = `<b style="color:var(--success)"><i class="fas fa-infinity"></i> دائم</b>`;
+    } else if (s.status === 'trial' && s.trialEndsAt) {
       const end = new Date(s.trialEndsAt);
       const daysLeft = Math.ceil((end - new Date()) / 86400000);
       if (daysLeft > 0) trialInfo = `<b style="color:var(--warning)">${daysLeft} يوم متبقي</b>`;
       else trialInfo = `<small style="color:var(--danger)">انتهت</small>`;
-    } else if (s.status === 'active' && s.licenseExpiresAt) {
-      const licDays = Math.ceil((new Date(s.licenseExpiresAt) - new Date()) / 86400000);
-      trialInfo = `<b style="color:var(--success)">${licDays} يوم</b>`;
     }
     
     const branchesCount = (s.branches || []).length;
@@ -1419,7 +1417,7 @@ function renderDevStores() {
     if (s.status === 'pending' || s.status === 'trial' || s.status === 'pending_license') {
       actions += `<button class="btn-icon success" title="تفعيل" onclick="approveStore('${s.id}')"><i class="fas fa-check"></i></button>`;
     }
-    if (s.status === 'active') {
+    if (s.status === 'active' && !isLifetime) {
       actions += `<button class="btn-icon danger" title="تعطيل" onclick="deactivateStore('${s.id}')"><i class="fas fa-ban"></i></button>`;
     }
     actions += `<button class="btn-icon danger" title="حذف" onclick="deleteStore('${s.id}')"><i class="fas fa-trash"></i></button>`;
@@ -1480,9 +1478,6 @@ function rejectLicenseRequest(storeId) {
   );
 }
 
-// ==========================================================
-// عرض طلبات الفروع المعلقة
-// ==========================================================
 function renderPendingBranches() {
   const tbody = document.getElementById('devBranchesRequestsBody');
   if (!tbody) return;
@@ -1548,19 +1543,21 @@ function renderPendingBranches() {
   }).join('');
 }
 
+// ==========================================================
+// توليد مفتاح ترخيص مدى الحياة
+// ==========================================================
 async function generateKeyForStore(storeId) {
   const price = prompt('سعر الترخيص (ج.م):', '1000');
   if (price === null) return;
   
-  // ← لا نسأل عن المدة (مدى الحياة)
   const key = 'EMA-LIFE-' + Math.random().toString(36).substring(2, 8).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
   
   try {
     await db.collection('license_keys').doc(key).set({
       key, 
       storeId, 
-      type: 'lifetime',                    // ← مدى الحياة
-      durationDays: null,                  // ← لا مدة
+      type: 'lifetime',
+      durationDays: null,
       price: parseFloat(price) || 0,
       used: false, 
       createdAt: new Date().toISOString(), 
@@ -1570,7 +1567,8 @@ async function generateKeyForStore(storeId) {
     const store = devStoresCache.find(s => s.id === storeId);
     openModal(`
       <h3 style="margin-bottom:16px;color:var(--success)"><i class="fas fa-infinity"></i> مفتاح ترخيص مدى الحياة</h3>
-      <div style="background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(59,130,246,0.15));padding:20px;border-radius:8px;text-align:center;margin-bottom:16px">
+      <div style="background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(59,130,246,0.15));padding:20px;border-radius:8px;text-align:center;margin-bottom:16px;border:1px solid rgba(16,185,129,0.3)">
+        <div style="font-size:32px;margin-bottom:8px">🎉</div>
         <div class="license-key-display" style="font-size:18px">${key}</div>
       </div>
       <div style="background:rgba(59,130,246,0.08);padding:12px;border-radius:8px;margin-bottom:16px;font-size:13px">
@@ -1578,8 +1576,9 @@ async function generateKeyForStore(storeId) {
         <p><b>النوع:</b> <span style="color:var(--success);font-weight:700">مدى الحياة ♾️</span></p>
         <p><b>السعر:</b> ${formatCurrency(price)}</p>
       </div>
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">
-        <i class="fas fa-info-circle"></i> أرسل هذا المفتاح للعميل. سيدخله بنفسه في شاشة الترخيص لتفعيل حسابه مدى الحياة.
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;background:rgba(245,158,11,0.1);padding:10px;border-radius:8px">
+        <i class="fas fa-info-circle" style="color:var(--warning)"></i>
+        <b>مهم:</b> أرسل هذا المفتاح للعميل عبر واتساب أو إيميل. سيدخله بنفسه في شاشة الترخيص لتفعيل حسابه مدى الحياة.
       </p>
       <button class="btn btn-primary" onclick="navigator.clipboard.writeText('${key}');toast('تم النسخ','success')">
         <i class="fas fa-copy"></i> نسخ المفتاح
@@ -1587,9 +1586,7 @@ async function generateKeyForStore(storeId) {
     `);
   } catch (e) { toast('خطأ: ' + e.message, 'error'); }
 }
-// ==========================================================
-// توليد كود تفعيل الفرع
-// ==========================================================
+
 async function issueBranchCode(storeId, branchId) {
   const priceInput = document.getElementById(`price-${storeId}-${branchId}`);
   const price = parseFloat(priceInput?.value);
@@ -1658,7 +1655,7 @@ function loadDevLicenseKeys() {
     const tbody = document.getElementById('devLicenseKeysBody');
     if (!tbody) return;
     if (snap.empty) {
-      tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><p>لا توجد مفاتيح</p></div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><p>لا توجد مفاتيح</p></div></td></tr>';
       return;
     }
     tbody.innerHTML = snap.docs.map(d => {
@@ -1679,6 +1676,7 @@ function loadDevLicenseKeys() {
     }).join('');
   });
 }
+
 function updateLicenseStoreSelect() {
   const sel = document.getElementById('devLicStoreId');
   if (!sel) return;
@@ -1691,7 +1689,6 @@ document.getElementById('devLicenseForm')?.addEventListener('submit', async e =>
   const storeId = document.getElementById('devLicStoreId').value;
   const price = parseFloat(document.getElementById('devLicPrice').value) || 0;
   
-  // ← لا نأخذ المدة (مدى الحياة)
   const key = 'EMA-LIFE-' + Math.random().toString(36).substring(2, 8).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
   
   try {
@@ -1707,7 +1704,8 @@ document.getElementById('devLicenseForm')?.addEventListener('submit', async e =>
     });
     openModal(`
       <h3 style="margin-bottom:16px;color:var(--success)"><i class="fas fa-infinity"></i> مفتاح ترخيص مدى الحياة</h3>
-      <div style="background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(59,130,246,0.15));padding:20px;border-radius:8px;text-align:center;margin-bottom:16px">
+      <div style="background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(59,130,246,0.15));padding:20px;border-radius:8px;text-align:center;margin-bottom:16px;border:1px solid rgba(16,185,129,0.3)">
+        <div style="font-size:32px;margin-bottom:8px">🎉</div>
         <div class="license-key-display" style="font-size:18px">${key}</div>
       </div>
       <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">
@@ -1734,7 +1732,7 @@ function renderDevCharts() {
   if (!statusChartEl || !growthChartEl) return;
   
   const statusCounts = {
-    'نشط': devStoresCache.filter(s => s.status === 'active').length,
+    'مدى الحياة': devStoresCache.filter(s => s.licenseType === 'lifetime' || s.licenseStatus === 'lifetime').length,
     'تجربة': devStoresCache.filter(s => s.status === 'trial').length,
     'منتهي': devStoresCache.filter(s => s.status === 'expired').length,
     'معلق': devStoresCache.filter(s => s.status === 'pending' || s.status === 'pending_license').length
@@ -1790,7 +1788,6 @@ async function viewStoreDetails(storeId) {
     const totalSales = salesSnap.docs.reduce((s, d) => s + (d.data().price || 0) * (d.data().qty || 1), 0);
     const totalClients = clientsSnap.size;
     const totalProducts = productsSnap.size;
-    const totalExpenses = expensesSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
     const installmentTotal = clientsSnap.docs.reduce((s, d) => s + (d.data().totalPrice || 0), 0);
     
     const branchDetails = (store.branches || []).map(b => {
@@ -1805,8 +1802,10 @@ async function viewStoreDetails(storeId) {
       </tr>`;
     }).join('') || '<tr><td colspan="4" style="text-align:center">لا توجد فروع</td></tr>';
     
+    const isLifetime = store.licenseType === 'lifetime' || store.licenseStatus === 'lifetime';
     let statusText = 'قيد المراجعة';
-    if (store.status === 'active') statusText = 'نشط (ترخيص)';
+    if (isLifetime) statusText = '♾️ ترخيص مدى الحياة';
+    else if (store.status === 'active') statusText = 'نشط';
     else if (store.status === 'trial') statusText = 'فترة تجريبية';
     else if (store.status === 'expired') statusText = 'منتهي';
     else if (store.status === 'pending_license') statusText = 'بانتظار الترخيص';
@@ -1820,8 +1819,8 @@ async function viewStoreDetails(storeId) {
           <div><span style="color:var(--text-muted)">الهاتف:</span><br><b>${escapeHtml(store.phone || '—')}</b></div>
           <div><span style="color:var(--text-muted)">العنوان:</span><br><b>${escapeHtml(store.address || '—')}</b></div>
           ${store.licenseKey ? `<div style="grid-column:span 2"><span style="color:var(--text-muted)">مفتاح الترخيص:</span><br><code style="font-size:11px">${escapeHtml(store.licenseKey)}</code></div>` : ''}
-          ${store.licenseExpiresAt ? `<div style="grid-column:span 2"><span style="color:var(--text-muted)">ينتهي الترخيص:</span><br><b>${new Date(store.licenseExpiresAt).toLocaleDateString('ar-EG')}</b></div>` : ''}
-          ${store.trialEndsAt ? `<div style="grid-column:span 2"><span style="color:var(--text-muted)">تنتهي التجربة:</span><br><b>${new Date(store.trialEndsAt).toLocaleDateString('ar-EG')}</b></div>` : ''}
+          ${store.licenseActivatedAt ? `<div style="grid-column:span 2"><span style="color:var(--text-muted)">تاريخ التفعيل:</span><br><b>${new Date(store.licenseActivatedAt).toLocaleDateString('ar-EG')}</b></div>` : ''}
+          ${store.trialEndsAt && !isLifetime ? `<div style="grid-column:span 2"><span style="color:var(--text-muted)">تنتهي التجربة:</span><br><b>${new Date(store.trialEndsAt).toLocaleDateString('ar-EG')}</b></div>` : ''}
         </div>
       </div>
       <div class="dashboard-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:16px">
@@ -1906,10 +1905,6 @@ document.getElementById('devUserForm').addEventListener('submit', async e => {
   } catch (err) { toast(firebaseErrorMsg(err), 'error'); }
   showLoading(false);
 });
-
-// ==========================================================
-// تحميل بيانات المحل
-// ==========================================================
 function loadTenantData() {
   if (inventoryUnsub) inventoryUnsub(); 
   if (clientsUnsub) clientsUnsub();
@@ -1992,7 +1987,7 @@ document.getElementById('inventoryForm').addEventListener('submit', async e => {
     
     const ref = db.collection('stores').doc(currentStoreData._id).collection('products');
     if (id) { await ref.doc(id).update(data); toast('تم تحديث المنتج', 'success'); }
-    else { data.createdAt = getLocalDateTimeStr();       await ref.add(data); toast('تمت إضافة المنتج', 'success'); }
+    else { data.createdAt = getLocalDateTimeStr(); await ref.add(data); toast('تمت إضافة المنتج', 'success'); }
     e.target.reset();
     document.getElementById('invEditId').value = '';
     document.getElementById('invSubmitBtn').innerHTML = '<i class="fas fa-plus"></i> إضافة المنتج';
@@ -2332,10 +2327,6 @@ async function confirmInstallmentSale() {
     }
   });
 }
-
-// ==========================================================
-// العملاء والمتأخرات
-// ==========================================================
 function renderClients() {
   const tbody = document.getElementById('clientsTableBody');
   const q = (document.getElementById('clientsSearch')?.value || '').trim().toLowerCase();
