@@ -47,8 +47,8 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; transition:
 #loadingOverlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 99999; flex-direction: column; }
 .spinner { width: 48px; height: 48px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
 
-#authScreen, #developerLogin, #pendingScreen { position: fixed; inset: 0; background: linear-gradient(135deg, var(--primary) 0%, #1e1b4b 100%); display: flex; justify-content: center; align-items: center; z-index: 9998; padding: 20px; }
-.auth-box { background: var(--surface); padding: 40px; border-radius: 20px; width: 100%; max-width: 440px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); animation: fadeIn 0.5s ease-out; border: 1px solid var(--border); }
+#authScreen, #developerLogin, #pendingScreen, #expiredScreen { position: fixed; inset: 0; background: linear-gradient(135deg, var(--primary) 0%, #1e1b4b 100%); display: flex; justify-content: center; align-items: center; z-index: 9998; padding: 20px; }
+.auth-box { background: var(--surface); padding: 40px; border-radius: 20px; width: 100%; max-width: 440px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); animation: fadeIn 0.5s ease-out; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
 .dev-brand { text-align: center; margin-bottom: 30px; color: white; }
 .dev-brand h2 { font-size: 36px; font-weight: 800; letter-spacing: -1px; }
 .dev-brand h2 span { color: var(--accent); }
@@ -82,6 +82,8 @@ body.dark-mode header { background: rgba(30, 41, 59, 0.9); }
 .header-info { text-align: left; }
 .header-info h4 { font-size: 15px; font-weight: 700; color: var(--text); }
 .header-info small { font-size: 12px; color: var(--text-muted); display: block; }
+
+.trial-banner { background: linear-gradient(90deg, var(--warning), #f97316); color: white; padding: 10px 24px; text-align: center; font-weight: 700; font-size: 13px; display: flex; justify-content: center; align-items: center; gap: 10px; }
 
 .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
 
@@ -190,6 +192,8 @@ tr:hover td { background: var(--surface-hover); }
 .category-btn:hover { background: var(--surface-hover); }
 .category-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
+.license-key-display { font-family: 'Courier New', monospace; letter-spacing: 2px; font-weight: 800; color: var(--accent); background: var(--bg); padding: 12px; border-radius: 8px; text-align: center; font-size: 16px; word-break: break-all; }
+
 @media print {
   body * { visibility: hidden; }
   .modal-content, .modal-content * { visibility: visible; }
@@ -210,6 +214,9 @@ tr:hover td { background: var(--surface-hover); }
       <i class="fas fa-shield-halved shield-icon"></i>
       <h2>EMAA<span>.Tech</span></h2>
       <p style="color:var(--text-muted);font-size:13px;margin-top:8px">نظام إدارة المحلات المتكامل والآمن</p>
+      <div style="margin-top:12px;background:rgba(59,130,246,0.1);padding:8px 12px;border-radius:20px;display:inline-block;font-size:11px;color:var(--accent);font-weight:700">
+        <i class="fas fa-gift"></i> جرب مجاناً لمدة 14 يوم
+      </div>
     </div>
     <div class="auth-tabs">
       <button class="active" onclick="switchAuthTab('login')">تسجيل الدخول</button>
@@ -243,6 +250,10 @@ tr:hover td { background: var(--surface-hover); }
         <label>كلمة المرور</label>
         <input type="password" id="signupPass" class="form-input" placeholder="6 أحرف على الأقل">
       </div>
+      <div style="background:rgba(16,185,129,0.1);padding:12px;border-radius:8px;margin-bottom:16px;font-size:12px;color:var(--text)">
+        <i class="fas fa-info-circle" style="color:var(--success)"></i>
+        ستحصل على فترة تجريبية مجانية 14 يوم تشمل جميع المميزات.
+      </div>
       <div id="signupError" style="color:var(--danger);font-size:12px;margin-bottom:12px;display:none"></div>
       <button class="btn btn-accent" onclick="doSignup()"><i class="fas fa-user-plus"></i> إنشاء الحساب</button>
     </div>
@@ -274,18 +285,53 @@ tr:hover td { background: var(--surface-hover); }
   </div>
 </div>
 
-<!-- PENDING SCREEN -->
+<!-- EXPIRED / LICENSE SCREEN -->
+<div id="expiredScreen" style="display:none">
+  <div class="auth-box" style="text-align:center;max-width:500px">
+    <i class="fas fa-key" style="font-size:60px;color:var(--gold);margin-bottom:20px"></i>
+    <h2 style="margin-bottom:10px" id="licenseTitle">انتهت الفترة التجريبية</h2>
+    <p style="color:var(--text-muted);margin-bottom:20px;line-height:1.7" id="licenseSubtitle">
+      انتهت فترة التجربة (14 يوم). للحصول على مفتاح الترخيص يرجى إرسال طلبك للمطور.
+    </p>
+    
+    <div id="licenseWaiting" style="display:none;background:rgba(245,158,11,0.1);padding:16px;border-radius:8px;margin-bottom:16px">
+      <i class="fas fa-hourglass-half" style="color:var(--warning);font-size:24px;margin-bottom:8px"></i>
+      <p style="font-weight:700;margin-bottom:4px">طلبك قيد المراجعة من قبل المطور</p>
+      <p style="font-size:12px;color:var(--text-muted)">سيتم إرسال مفتاح التفعيل بعد الموافقة</p>
+    </div>
+    
+    <div id="licenseInputSection">
+      <div class="form-group">
+        <label>مفتاح الترخيص</label>
+        <input type="text" id="licenseKeyInput" class="form-input" placeholder="EMA-LIC-XXXXXXXX-XXXX" style="text-align:center;font-weight:700;letter-spacing:1px;font-family:monospace">
+      </div>
+      <button class="btn btn-primary" style="background:var(--gold);color:black" onclick="activateLicense()">
+        <i class="fas fa-check"></i> تفعيل الترخيص
+      </button>
+      <button class="btn btn-accent" style="margin-top:10px" onclick="requestLicense()">
+        <i class="fas fa-paper-plane"></i> طلب مفتاح ترخيص جديد
+      </button>
+    </div>
+    
+    <button class="btn btn-outline" style="margin-top:16px;font-size:12px" onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+    </button>
+  </div>
+</div>
+
+<!-- PENDING SCREEN (للتوافق القديم) -->
 <div id="pendingScreen" style="display:none">
   <div class="auth-box" style="text-align:center">
     <i class="fas fa-clock" style="font-size:60px;color:var(--warning);margin-bottom:20px"></i>
     <h2 style="margin-bottom:10px">حسابك قيد المراجعة</h2>
-    <p style="color:var(--text-muted);margin-bottom:24px;line-height:1.7">شكراً لتسجيلك في EMAA.Tech. يرجى التواصل مع فريق الدعم لتفعيل حسابك وإتمام إعدادات الاشتراك.</p>
+    <p style="color:var(--text-muted);margin-bottom:24px;line-height:1.7">يرجى التواصل مع فريق الدعم لتفعيل حسابك.</p>
     <button class="btn btn-danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
   </div>
 </div>
 
 <!-- MAIN APP -->
 <div id="appScreen">
+  <div id="trialBannerContainer"></div>
   <header>
     <div class="logo" id="headerLogo">
       <i class="fas fa-shield-halved"></i>
@@ -302,7 +348,6 @@ tr:hover td { background: var(--surface-hover); }
       <button class="btn-icon danger" onclick="logout()" title="تسجيل الخروج"><i class="fas fa-sign-out-alt"></i></button>
     </div>
   </header>
-
   <div class="container">
     <div class="tabs" id="mainTabs">
       <button class="tab-btn active" onclick="switchTab('dashboard',this)" data-perm="view_dashboard"><i class="fas fa-chart-pie"></i> لوحة التحكم</button>
@@ -349,9 +394,7 @@ tr:hover td { background: var(--surface-hover); }
           <div class="form-grid">
             <div class="form-group"><label>اسم المنتج <span style="color:var(--danger)">*</span></label><input type="text" id="invName" class="form-input" required></div>
             <div class="form-group"><label>القسم <span style="color:var(--danger)">*</span></label>
-              <select id="invCategory" class="form-input" required>
-                <option value="">اختر القسم</option>
-              </select>
+              <select id="invCategory" class="form-input" required><option value="">اختر القسم</option></select>
             </div>
             <div class="form-group"><label>الرقم التسلسلي / الباركود <span style="color:var(--danger)">*</span></label><input type="text" id="invSerial" class="form-input" required></div>
             <div class="form-group"><label>الكمية <span style="color:var(--danger)">*</span></label><input type="number" id="invQty" class="form-input" required min="1" value="1"></div>
@@ -512,6 +555,11 @@ tr:hover td { background: var(--surface-hover); }
 
     <!-- SETTINGS -->
     <div id="tab-settings" class="tab-content">
+      <div class="card" style="border-right:4px solid var(--gold)">
+        <div class="section-title"><span><i class="fas fa-key"></i> معلومات الترخيص</span></div>
+        <div id="licenseInfoBox"></div>
+      </div>
+
       <div class="card">
         <div class="section-title"><span><i class="fas fa-store"></i> إعدادات المحل الأساسية</span></div>
         <form id="settingsForm">
@@ -588,17 +636,86 @@ tr:hover td { background: var(--surface-hover); }
   </div>
 </div>
 
-<!-- DEV PANEL -->
+<!-- DEV PANEL - نسخة مطورة كاملة -->
 <div id="devAdminPanel" style="display:none;padding:20px;min-height:100vh;background:var(--bg)">
   <header style="border-radius:var(--radius);margin-bottom:20px;border-right:4px solid var(--gold)">
     <div class="logo" style="color:var(--gold)"><i class="fas fa-crown"></i><span>EMAA.Tech Admin</span></div>
-    <button class="btn btn-outline danger" style="width:auto" onclick="logoutDevAdmin()"><i class="fas fa-sign-out-alt"></i> خروج</button>
+    <button class="btn btn-outline danger" style="width:auto" onclick="logoutDevAdmin()">
+      <i class="fas fa-sign-out-alt"></i> خروج
+    </button>
   </header>
+  
   <div class="container">
-    <div class="card">
-      <div class="section-title"><span><i class="fas fa-building"></i> إدارة المحلات والفروع</span></div>
-      <div class="table-wrapper"><table><thead><tr><th>المحل</th><th>الإيميل</th><th>الحالة</th><th>فروع معلقة</th><th>إجراء</th></tr></thead><tbody id="devStoresBody"></tbody></table></div>
+    <!-- إحصائيات سريعة -->
+    <div class="dashboard-grid" style="margin-bottom:24px">
+      <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-store"></i></div><div class="stat-info"><h3>إجمالي المحلات</h3><p id="devStatStores">0</p></div></div>
+      <div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-info"><h3>محلات نشطة</h3><p id="devStatActive">0</p></div></div>
+      <div class="stat-card"><div class="stat-icon gold"><i class="fas fa-hourglass-half"></i></div><div class="stat-info"><h3>في التجربة</h3><p id="devStatTrial">0</p></div></div>
+      <div class="stat-card"><div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-info"><h3>منتهية / معلقة</h3><p id="devStatExpired">0</p></div></div>
+      <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-money-bill-wave"></i></div><div class="stat-info"><h3>إيرادات التراخيص</h3><p id="devStatRevenue">0 ج.م</p></div></div>
+      <div class="stat-card"><div class="stat-icon green"><i class="fas fa-code-branch"></i></div><div class="stat-info"><h3>إجمالي الفروع</h3><p id="devStatBranches">0</p></div></div>
     </div>
+
+    <!-- رسوم بيانية -->
+    <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+      <div class="card"><div class="section-title" style="font-size:14px"><span>توزيع حالة المحلات</span></div><canvas id="devStatusChart" style="max-height:250px"></canvas></div>
+      <div class="card"><div class="section-title" style="font-size:14px"><span>المحلات الجديدة (آخر 6 أشهر)</span></div><canvas id="devGrowthChart" style="max-height:250px"></canvas></div>
+    </div>
+
+    <!-- إدارة المحلات -->
+    <div class="card">
+      <div class="section-title">
+        <span><i class="fas fa-building"></i> إدارة المحلات</span>
+        <div class="search-box" style="margin:0;width:250px">
+          <input type="text" id="devStoreSearch" placeholder="بحث بالاسم أو الإيميل..." oninput="renderDevStores()">
+          <i class="fas fa-search"></i>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr>
+            <th>المحل</th><th>الإيميل</th><th>الحالة</th><th>التجربة</th><th>الفروع</th><th>تفاصيل</th><th>إجراءات</th>
+          </tr></thead>
+          <tbody id="devStoresBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- طلبات التراخيص -->
+    <div class="card" style="border-right:4px solid var(--warning)">
+      <div class="section-title"><span><i class="fas fa-key"></i> طلبات التراخيص المعلقة</span></div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>المحل</th><th>الإيميل</th><th>تاريخ الطلب</th><th>إجراء</th></tr></thead>
+          <tbody id="devLicenseRequestsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- مفاتيح الترخيص المُصدرة -->
+    <div class="card" style="border-right:4px solid var(--success)">
+      <div class="section-title"><span><i class="fas fa-key"></i> مفاتيح الترخيص</span></div>
+      <form id="devLicenseForm" style="margin-bottom:16px;padding:16px;background:var(--bg);border-radius:8px">
+        <div class="form-grid">
+          <div class="form-group"><label>المحل (اختياري - لكي يكون المفتاح مخصص)</label>
+            <select id="devLicStoreId" class="form-input"><option value="">مفتاح عام</option></select>
+          </div>
+          <div class="form-group"><label>المدة (يوم)</label><input type="number" id="devLicDays" class="form-input" value="365" min="1"></div>
+          <div class="form-group"><label>السعر (ج.م)</label><input type="number" id="devLicPrice" class="form-input" value="0" min="0"></div>
+        </div>
+        <button type="submit" class="btn btn-accent" style="margin-top:12px">
+          <i class="fas fa-plus"></i> توليد مفتاح ترخيص
+        </button>
+      </form>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>المفتاح</th><th>المحل</th><th>المدة</th><th>السعر</th><th>الحالة</th><th>حذف</th></tr></thead>
+          <tbody id="devLicenseKeysBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- مستخدمو المطور -->
     <div class="card">
       <div class="section-title"><span><i class="fas fa-user-shield"></i> مستخدمو المطور</span></div>
       <form id="devUserForm" style="margin-bottom:20px">
@@ -642,10 +759,14 @@ const provider = new firebase.auth.GoogleAuthProvider();
 
 let currentUser=null, currentStoreData={}, currentBranchId='main', currentUserRole='owner', currentUserName='', isDevMode=false;
 let cart=[], inventory=[], clients=[], cashSales=[], expenses=[], categories=[];
-let inventoryUnsub=null, clientsUnsub=null, salesUnsub=null, expensesUnsub=null, storeUnsub=null, devStoresUnsub=null, devUsersUnsub=null, categoriesUnsub=null;
+let inventoryUnsub=null, clientsUnsub=null, salesUnsub=null, expensesUnsub=null, storeUnsub=null, devStoresUnsub=null, devUsersUnsub=null, devLicenseKeysUnsub=null, categoriesUnsub=null;
 let salesChartInstance=null, expensesChartInstance=null, dailySalesChartInstance=null, html5QrcodeScanner=null;
+let devStatusChartInstance=null, devGrowthChartInstance=null;
 let installmentRate = 0, selectedCategory = 'all';
-let isSaleProcessing = false;   // قفل عام لمنع تنفيذ عمليتي بيع في نفس الوقت
+let isSaleProcessing = false;
+let devStoresCache = [];
+
+const TRIAL_DAYS = 14;
 
 const ROLES = {
   owner:{label:'مالك',perms:['*']},
@@ -680,9 +801,6 @@ function hasPermission(perm) {
   return r ? (r.perms.includes('*') || r.perms.includes(perm)) : false;
 }
 
-// ==========================================================
-// نافذة تأكيد محسّنة: تمنع النقر المزدوج وتُغلق فقط بعد انتهاء التنفيذ
-// ==========================================================
 function confirmDialog(msg, onConfirm) {
   const o = document.createElement('div');
   o.className = 'modal-overlay';
@@ -697,27 +815,19 @@ function confirmDialog(msg, onConfirm) {
     </div>
   </div>`;
   document.body.appendChild(o);
-
   const confirmBtn = o.querySelector('#confirmBtn');
   const cancelBtn = o.querySelector('#confirmCancelBtn');
   let busy = false;
-
   cancelBtn.onclick = () => { if (!busy) o.remove(); };
-
   confirmBtn.onclick = async () => {
     if (busy) return;
     busy = true;
     confirmBtn.disabled = true;
     cancelBtn.disabled = true;
     confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التنفيذ...';
-    try {
-      await onConfirm();
-    } catch (e) {
-      console.error("Dialog Error:", e);
-      toast('فشل في التنفيذ: ' + (e.message || 'خطأ غير معروف'), 'error');
-    } finally {
-      if (o.parentNode) o.remove();
-    }
+    try { await onConfirm(); }
+    catch (e) { console.error("Dialog Error:", e); toast('فشل في التنفيذ: ' + (e.message || 'خطأ غير معروف'), 'error'); }
+    finally { if (o.parentNode) o.remove(); }
   };
 }
 
@@ -781,54 +891,146 @@ window.addEventListener('load', () => {
       document.getElementById('appScreen').style.display = 'none';
       document.getElementById('devAdminPanel').style.display = 'none';
       document.getElementById('pendingScreen').style.display = 'none';
+      document.getElementById('expiredScreen').style.display = 'none';
       showLoading(false);
     }
   });
 });
 
+// ==========================================================
+// resolveUserRole - مع دعم كامل للترخيص والفترة التجريبية
+// ==========================================================
 async function resolveUserRole(user) {
   showLoading(true);
   try {
+    // 1. التحقق من حساب مطور
     const pu = await db.collection('platform_users').doc(user.uid).get();
     if (pu.exists && pu.data().role === 'developer') {
       isDevMode = true;
       document.getElementById('authScreen').style.display = 'none';
       document.getElementById('appScreen').style.display = 'none';
       document.getElementById('pendingScreen').style.display = 'none';
+      document.getElementById('expiredScreen').style.display = 'none';
       document.getElementById('devAdminPanel').style.display = 'block';
       loadDevPanel();
       showLoading(false); return;
     }
+    
+    // 2. التحقق من حساب موظف
     const empSnap = await db.collection('employees').where('authUid', '==', user.uid).limit(1).get();
     if (!empSnap.empty) {
       const emp = empSnap.docs[0].data();
       const storeDoc = await db.collection('stores').doc(emp.storeId).get();
-      if (storeDoc.exists && storeDoc.data().status === 'active') {
-        currentStoreData = { ...storeDoc.data(), _id: emp.storeId };
-        currentUserRole = emp.role || 'cashier';
-        currentUserName = emp.name || user.email;
-        return loginSuccess(emp.branchId || 'main');
+      if (storeDoc.exists) {
+        const storeData = storeDoc.data();
+        if (storeData.status === 'active') {
+          currentStoreData = { ...storeData, _id: emp.storeId };
+          currentUserRole = emp.role || 'cashier';
+          currentUserName = emp.name || user.email;
+          return loginSuccess(emp.branchId || 'main');
+        } else {
+          toast('المحل غير نشط حالياً. يرجى التواصل مع المالك.', 'error');
+          await auth.signOut();
+          showLoading(false);
+          return;
+        }
       }
     }
+    
+    // 3. التحقق من صاحب المحل
     const storeDoc = await db.collection('stores').doc(user.uid).get();
     if (storeDoc.exists) {
-      currentStoreData = { ...storeDoc.data(), _id: user.uid };
-      if (currentStoreData.status === 'active') {
+      const data = storeDoc.data();
+      currentStoreData = { ...data, _id: user.uid };
+      
+      const status = data.status;
+      const now = new Date();
+      const trialEnd = data.trialEndsAt ? new Date(data.trialEndsAt) : null;
+      const licEnd = data.licenseExpiresAt ? new Date(data.licenseExpiresAt) : null;
+      
+      // التحقق من انتهاء الترخيص
+      if (status === 'active' && licEnd && now > licEnd) {
+        await db.collection('stores').doc(user.uid).update({
+          status: 'expired',
+          licenseStatus: 'expired'
+        });
+        currentStoreData.status = 'expired';
+        currentStoreData.licenseStatus = 'expired';
+        showExpiredScreen(currentStoreData);
+        showLoading(false);
+        return;
+      }
+      
+      // التحقق من انتهاء التجربة
+      if (status === 'trial' && trialEnd && now > trialEnd) {
+        await db.collection('stores').doc(user.uid).update({
+          status: 'expired',
+          licenseStatus: 'expired'
+        });
+        currentStoreData.status = 'expired';
+        currentStoreData.licenseStatus = 'expired';
+        showExpiredScreen(currentStoreData);
+        showLoading(false);
+        return;
+      }
+      
+      // إذا كان في انتظار الترخيص
+      if (status === 'pending_license' || data.licenseStatus === 'pending_license') {
+        showExpiredScreen(currentStoreData);
+        showLoading(false);
+        return;
+      }
+      
+      // إذا كان منتهي
+      if (status === 'expired') {
+        showExpiredScreen(currentStoreData);
+        showLoading(false);
+        return;
+      }
+      
+      // نشط أو تجريبي
+      if (status === 'active' || status === 'trial') {
         currentUserRole = 'owner';
         currentUserName = user.displayName || user.email;
         return loginSuccess('main');
       }
     }
+    
+    // 4. إنشاء حساب جديد (تجربة 14 يوم)
+    const now = new Date();
+    const trialEnd = new Date(now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
+    
     await db.collection('stores').doc(user.uid).set({
-      storeName: user.displayName || 'محل جديد', email: user.email, status: 'pending',
+      storeName: user.displayName || 'محل جديد',
+      email: user.email,
+      status: 'trial',
+      licenseStatus: 'trial',
+      trialStartedAt: now.toISOString(),
+      trialEndsAt: trialEnd.toISOString(),
       branches: [{ id: 'main', name: 'الفرع الرئيسي', address: '', status: 'active' }],
       users: [], installmentRate: 0, categories: ['عام'],
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
     
-    document.getElementById('authScreen').style.display = 'none';
-    document.getElementById('pendingScreen').style.display = 'flex';
-  } catch (e) { toast('خطأ في الدخول: ' + firebaseErrorMsg(e), 'error'); console.error(e); }
+    currentStoreData = {
+      storeName: user.displayName || 'محل جديد',
+      email: user.email,
+      status: 'trial',
+      licenseStatus: 'trial',
+      trialStartedAt: now.toISOString(),
+      trialEndsAt: trialEnd.toISOString(),
+      branches: [{ id: 'main', name: 'الفرع الرئيسي', address: '', status: 'active' }],
+      installmentRate: 0,
+      _id: user.uid
+    };
+    currentUserRole = 'owner';
+    currentUserName = user.displayName || user.email;
+    return loginSuccess('main');
+    
+  } catch (e) { 
+    console.error('resolveUserRole error:', e);
+    toast('خطأ في الدخول: ' + firebaseErrorMsg(e), 'error'); 
+  }
   showLoading(false);
 }
 
@@ -851,14 +1053,18 @@ async function doSignup() {
   try {
     const { user } = await auth.createUserWithEmailAndPassword(email, pass);
     await user.updateProfile({ displayName: name });
+    const now = new Date();
+    const trialEnd = new Date(now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
     await db.collection('stores').doc(user.uid).set({
-      storeName: name, email, status: 'pending',
+      storeName: name, email,
+      status: 'trial',
+      licenseStatus: 'trial',
+      trialStartedAt: now.toISOString(),
+      trialEndsAt: trialEnd.toISOString(),
       branches: [{ id: 'main', name: 'الفرع الرئيسي', address: '', status: 'active' }],
       users: [], installmentRate: 0, categories: ['عام'],
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-    document.getElementById('authScreen').style.display = 'none';
-    document.getElementById('pendingScreen').style.display = 'flex';
   } catch (e) { toast(firebaseErrorMsg(e), 'error'); }
   showLoading(false);
 }
@@ -893,10 +1099,109 @@ async function doDevAdminLogin() {
 async function logout() { await auth.signOut(); window.location.reload(); }
 async function logoutDevAdmin() { isDevMode = false; window.location.hash = ''; await auth.signOut(); window.location.reload(); }
 
+// ==========================================================
+// شاشة انتهاء الترخيص
+// ==========================================================
+function showExpiredScreen(storeData) {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'none';
+  document.getElementById('pendingScreen').style.display = 'none';
+  document.getElementById('expiredScreen').style.display = 'flex';
+  
+  const licenseStatus = storeData.licenseStatus || 'expired';
+  
+  if (licenseStatus === 'pending_license' || licenseStatus === 'pending_payment') {
+    document.getElementById('licenseWaiting').style.display = 'block';
+    document.getElementById('licenseInputSection').style.display = 'none';
+    document.getElementById('licenseTitle').innerText = 'طلبك قيد المراجعة';
+    document.getElementById('licenseSubtitle').innerText = 'طلب الترخيص الخاص بك قيد المراجعة من قبل المطور. سيتم إعلامك عند الموافقة.';
+  } else {
+    document.getElementById('licenseWaiting').style.display = 'none';
+    document.getElementById('licenseInputSection').style.display = 'block';
+    document.getElementById('licenseTitle').innerText = 'انتهت الفترة التجريبية';
+    document.getElementById('licenseSubtitle').innerText = 'انتهت فترة التجربة (14 يوم). للحصول على مفتاح الترخيص يرجى إرسال طلبك للمطور أو إدخال مفتاح التفعيل.';
+  }
+}
+
+async function requestLicense() {
+  if (!currentUser) return toast('يجب تسجيل الدخول أولاً', 'error');
+  showLoading(true);
+  try {
+    await db.collection('stores').doc(currentUser.uid).update({
+      licenseStatus: 'pending_license',
+      status: 'pending_license',
+      licenseRequestedAt: new Date().toISOString(),
+      licenseRequestNote: 'طلب من صاحب المحل بعد انتهاء الفترة التجريبية'
+    });
+    toast('تم إرسال الطلب للمطور ✅', 'success');
+    document.getElementById('licenseWaiting').style.display = 'block';
+    document.getElementById('licenseInputSection').style.display = 'none';
+    document.getElementById('licenseTitle').innerText = 'طلبك قيد المراجعة';
+  } catch (e) { toast('خطأ: ' + e.message, 'error'); }
+  showLoading(false);
+}
+
+async function activateLicense() {
+  if (!currentUser) return toast('يجب تسجيل الدخول أولاً', 'error');
+  const key = document.getElementById('licenseKeyInput').value.trim().toUpperCase();
+  if (!key) return toast('أدخل مفتاح الترخيص', 'warning');
+  
+  showLoading(true);
+  try {
+    const keyDoc = await db.collection('license_keys').doc(key).get();
+    
+    if (!keyDoc.exists) {
+      showLoading(false);
+      return toast('مفتاح غير موجود. تحقق من المفتاح وحاول مجدداً.', 'error');
+    }
+    
+    const keyData = keyDoc.data();
+    
+    if (keyData.used) {
+      showLoading(false);
+      return toast('هذا المفتاح مستخدم بالفعل', 'error');
+    }
+    
+    if (keyData.storeId && keyData.storeId !== currentUser.uid) {
+      showLoading(false);
+      return toast('هذا المفتاح مخصص لمحل آخر', 'error');
+    }
+    
+    const days = keyData.durationDays || 365;
+    const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+    
+    const batch = db.batch();
+    batch.update(db.collection('license_keys').doc(key), {
+      used: true,
+      usedAt: new Date().toISOString(),
+      usedBy: currentUser.uid
+    });
+    batch.update(db.collection('stores').doc(currentUser.uid), {
+      status: 'active',
+      licenseStatus: 'active',
+      licenseKey: key,
+      licenseActivatedAt: new Date().toISOString(),
+      licenseExpiresAt: expiresAt.toISOString()
+    });
+    await batch.commit();
+    
+    toast('تم تفعيل الترخيص بنجاح ✅', 'success');
+    setTimeout(() => window.location.reload(), 1500);
+  } catch (e) { 
+    console.error(e);
+    toast('خطأ: ' + e.message, 'error'); 
+  }
+  showLoading(false);
+}
+
+// ==========================================================
+// loginSuccess - يدخل النظام ويرندر كل شيء
+// ==========================================================
 function loginSuccess(startBranch) {
   currentBranchId = startBranch || 'main';
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('pendingScreen').style.display = 'none';
+  document.getElementById('expiredScreen').style.display = 'none';
   document.getElementById('devAdminPanel').style.display = 'none';
   document.getElementById('appScreen').style.display = 'block';
   
@@ -913,6 +1218,8 @@ function loginSuccess(startBranch) {
     document.getElementById('headerLogo').innerHTML = `<img src="${currentStoreData.logo}" alt="Logo"><span>${escapeHtml(currentStoreData.storeName || 'EMAA.Tech')}</span>`;
   }
   
+  renderTrialBanner();
+  renderLicenseInfo();
   applyPermissions();
   renderBranchSwitcher();
   renderBranches();
@@ -924,6 +1231,95 @@ function loginSuccess(startBranch) {
   document.getElementById('cashDate').value = getLocalDateStr();
   document.getElementById('expDate').value = getLocalDateStr();
   document.getElementById('startDate').value = getLocalDateStr();
+  showLoading(false);
+}
+
+// عرض بانر التجربة أعلى الصفحة
+function renderTrialBanner() {
+  const cont = document.getElementById('trialBannerContainer');
+  if (!cont) return;
+  
+  if (currentStoreData.status === 'trial' && currentStoreData.trialEndsAt) {
+    const end = new Date(currentStoreData.trialEndsAt);
+    const daysLeft = Math.ceil((end - new Date()) / 86400000);
+    
+    if (daysLeft > 0) {
+      cont.innerHTML = `<div class="trial-banner">
+        <i class="fas fa-gift"></i>
+        <span>أنت في الفترة التجريبية — متبقي ${daysLeft} يوم</span>
+        <button onclick="switchTab('settings');document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelector('[data-perm=manage_settings]').classList.add('active')" 
+                style="background:rgba(255,255,255,0.2);border:none;color:white;padding:4px 12px;border-radius:20px;cursor:pointer;font-weight:700;font-size:12px">
+          ترقية الآن
+        </button>
+      </div>`;
+    }
+  } else if (currentStoreData.status === 'active' && currentStoreData.licenseExpiresAt) {
+    const end = new Date(currentStoreData.licenseExpiresAt);
+    const daysLeft = Math.ceil((end - new Date()) / 86400000);
+    if (daysLeft <= 30) {
+      cont.innerHTML = `<div class="trial-banner" style="background:linear-gradient(90deg,var(--warning),var(--danger))">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>ينتهي ترخيصك خلال ${daysLeft} يوم — يرجى التجديد</span>
+      </div>`;
+    } else {
+      cont.innerHTML = '';
+    }
+  } else {
+    cont.innerHTML = '';
+  }
+}
+
+// عرض معلومات الترخيص في الإعدادات
+function renderLicenseInfo() {
+  const box = document.getElementById('licenseInfoBox');
+  if (!box) return;
+  
+  const status = currentStoreData.status;
+  const licenseStatus = currentStoreData.licenseStatus || status;
+  
+  let statusBadge = '<span class="badge b-yellow">تجربة</span>';
+  let statusText = 'فترة تجريبية';
+  let extra = '';
+  
+  if (status === 'active' && currentStoreData.licenseExpiresAt) {
+    statusBadge = '<span class="badge b-green">نشط</span>';
+    statusText = 'ترخيص مفعل';
+    const end = new Date(currentStoreData.licenseExpiresAt);
+    const daysLeft = Math.ceil((end - new Date()) / 86400000);
+    extra = `<div style="margin-top:8px;font-size:13px"><b>المفتاح:</b> <code style="font-size:11px">${escapeHtml(currentStoreData.licenseKey || '—')}</code></div>
+             <div style="margin-top:4px;font-size:13px"><b>ينتهي في:</b> ${end.toLocaleDateString('ar-EG')} (متبقي ${daysLeft} يوم)</div>`;
+  } else if (status === 'trial' && currentStoreData.trialEndsAt) {
+    const end = new Date(currentStoreData.trialEndsAt);
+    const daysLeft = Math.ceil((end - new Date()) / 86400000);
+    extra = `<div style="margin-top:8px;font-size:13px"><b>ينتهي التجربة في:</b> ${end.toLocaleDateString('ar-EG')} (متبقي ${daysLeft} يوم)</div>`;
+  } else if (status === 'expired' || licenseStatus === 'expired') {
+    statusBadge = '<span class="badge b-red">منتهي</span>';
+    statusText = 'منتهي - يحتاج تجديد';
+  } else if (status === 'pending_license') {
+    statusBadge = '<span class="badge b-yellow">بانتظار الموافقة</span>';
+    statusText = 'طلب ترخيص قيد المراجعة';
+  }
+  
+  box.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div><b>الحالة:</b> ${statusBadge} — ${statusText}</div>
+    </div>
+    ${extra}
+    ${status !== 'active' ? `<button class="btn btn-primary" style="margin-top:16px;background:var(--gold);color:black" onclick="requestLicenseFromSettings()"><i class="fas fa-key"></i> طلب ترخيص جديد</button>` : ''}
+  `;
+}
+
+async function requestLicenseFromSettings() {
+  if (!confirm('إرسال طلب ترخيص للمطور؟')) return;
+  showLoading(true);
+  try {
+    await db.collection('stores').doc(currentStoreData._id).update({
+      licenseStatus: 'pending_license',
+      status: 'pending_license',
+      licenseRequestedAt: new Date().toISOString()
+    });
+    toast('تم إرسال الطلب للمطور', 'success');
+  } catch (e) { toast('خطأ: ' + e.message, 'error'); }
   showLoading(false);
 }
 
@@ -954,6 +1350,8 @@ function attachStoreListener() {
       document.getElementById('headerLogo').innerHTML = `<img src="${currentStoreData.logo}" alt="Logo"><span>${escapeHtml(currentStoreData.storeName || 'EMAA.Tech')}</span>`;
     }
     
+    renderTrialBanner();
+    renderLicenseInfo();
     renderBranches(); renderUsers(); renderBranchSwitcher();
   });
 }
@@ -983,7 +1381,7 @@ function renderCategories() {
 
 function renderCategoryFilters() {
   const filters = ['all', ...categories.map(c => c.name)];
-  const html = filters.map(f => `<button class="category-btn ${selectedCategory === f ? 'active' : ''}" onclick="filterByCategory('${f}')">${f === 'all' ? 'الكل' : escapeHtml(f)}</button>`).join('');
+  const html = filters.map(f => `<button class="category-btn ${selectedCategory === f ? 'active' : ''}" onclick="filterByCategory('${escapeHtml(f)}')">${f === 'all' ? 'الكل' : escapeHtml(f)}</button>`).join('');
   document.getElementById('categoryFilter').innerHTML = html;
   document.getElementById('posCategoryFilter').innerHTML = html;
 }
@@ -1022,46 +1420,410 @@ function deleteCategory(id) {
   });
 }
 
+// ==========================================================
+// لوحة المطور الكاملة
+// ==========================================================
 function loadDevPanel() {
   if (devStoresUnsub) devStoresUnsub();
+  
   devStoresUnsub = db.collection('stores').onSnapshot(snap => {
-    const tbody = document.getElementById('devStoresBody'); if (!tbody) return;
-    tbody.innerHTML = '';
-    snap.forEach(doc => {
-      const s = doc.data();
-      const statusBadge = s.status === 'active' ? '<span class="badge b-green">نشط</span>' : '<span class="badge b-yellow">قيد المراجعة</span>';
-      const actionBtn = s.status === 'active' 
-        ? `<button class="btn-icon danger" onclick="deleteStore('${doc.id}')"><i class="fas fa-trash"></i></button>`
-        : `<button class="btn-icon success" onclick="approveStore('${doc.id}')"><i class="fas fa-check"></i></button>`;
-      
-      const pending = (s.branches || []).filter(b => b.status === 'pending');
-      let branchHtml = '<span style="color:var(--text-muted);font-size:12px">لا يوجد</span>';
-      if (pending.length) {
-        branchHtml = pending.map(b => `
-          <div style="margin:8px 0;padding:12px;background:rgba(245,158,11,0.1);border-radius:8px;font-size:12px;border:1px solid rgba(245,158,11,0.3)">
-            <b>${escapeHtml(b.name)}</b> — <span style="color:var(--text-muted)">${escapeHtml(b.address || '')}</span><br>
-            <input type="number" id="pr-${doc.id}-${b.id}" placeholder="سعر التفعيل" style="width:100px;padding:6px;margin:8px 5px 0 0;border:1px solid var(--border);border-radius:6px">
-            <button class="btn-icon success" style="padding:6px;font-size:11px" onclick="issueBranchCode('${doc.id}','${b.id}')">توليد كود</button>
-            ${b.activationCode ? `<div style="margin-top:8px;color:var(--success);font-weight:700">الكود: ${b.activationCode} (${b.price || 0} ج.م)</div>` : ''}
-          </div>`).join('');
-      }
-      tbody.innerHTML += `<tr><td>${escapeHtml(s.storeName || '—')}</td><td>${escapeHtml(s.email || '—')}</td><td>${statusBadge}</td><td>${branchHtml}</td><td>${actionBtn}</td></tr>`;
-    });
+    devStoresCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    updateDevStats();
+    renderDevStores();
+    renderLicenseRequests();
+    updateLicenseStoreSelect();
+    renderDevCharts();
   });
+  
+  loadDevLicenseKeys();
   loadDevUsers();
 }
 
-function approveStore(id) { db.collection('stores').doc(id).update({ status: 'active' }).then(() => toast('تم تفعيل المحل', 'success')); }
-function deleteStore(id) { confirmDialog('حذف هذا المحل نهائياً؟', () => db.collection('stores').doc(id).delete().then(() => toast('تم الحذف', 'success'))); }
+function updateDevStats() {
+  const total = devStoresCache.length;
+  const active = devStoresCache.filter(s => s.status === 'active').length;
+  const trial = devStoresCache.filter(s => s.status === 'trial').length;
+  const expired = devStoresCache.filter(s => s.status === 'expired' || s.status === 'pending_license' || s.status === 'pending').length;
+  const branches = devStoresCache.reduce((sum, s) => sum + (s.branches || []).length, 0);
+  
+  document.getElementById('devStatStores').innerText = total;
+  document.getElementById('devStatActive').innerText = active;
+  document.getElementById('devStatTrial').innerText = trial;
+  document.getElementById('devStatExpired').innerText = expired;
+  document.getElementById('devStatBranches').innerText = branches;
+  
+  db.collection('license_keys').where('used', '==', true).get().then(snap => {
+    const revenue = snap.docs.reduce((s, d) => s + (d.data().price || 0), 0);
+    document.getElementById('devStatRevenue').innerText = formatCurrency(revenue);
+  }).catch(() => {});
+}
 
-function issueBranchCode(storeId, branchId) {
-  const price = parseFloat(document.getElementById(`pr-${storeId}-${branchId}`).value);
-  if (!price || price <= 0) return toast('أدخل سعر التفعيل', 'warning');
-  const code = 'EMA-' + Math.random().toString(36).substring(2, 10).toUpperCase();
-  db.collection('stores').doc(storeId).get().then(d => {
-    const branches = d.data().branches.map(b => b.id === branchId ? { ...b, activationCode: code, price, codeIssuedAt: getLocalDateTimeStr() } : b);
-    return db.collection('stores').doc(storeId).update({ branches });
-  }).then(() => toast(`تم توليد الكود: ${code}`, 'success', 5000));
+function renderDevStores() {
+  const tbody = document.getElementById('devStoresBody');
+  if (!tbody) return;
+  
+  const q = (document.getElementById('devStoreSearch')?.value || '').trim().toLowerCase();
+  let list = devStoresCache;
+  if (q) list = list.filter(s => 
+    (s.storeName || '').toLowerCase().includes(q) || 
+    (s.email || '').toLowerCase().includes(q)
+  );
+  
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><p>لا توجد محلات</p></div></td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = list.map(s => {
+    let statusBadge = '<span class="badge b-yellow">قيد المراجعة</span>';
+    if (s.status === 'active') statusBadge = '<span class="badge b-green">نشط</span>';
+    else if (s.status === 'trial') statusBadge = '<span class="badge b-blue">تجربة</span>';
+    else if (s.status === 'expired') statusBadge = '<span class="badge b-red">منتهي</span>';
+    else if (s.status === 'pending_license') statusBadge = '<span class="badge b-yellow">بانتظار الترخيص</span>';
+    
+    let trialInfo = '—';
+    if (s.status === 'trial' && s.trialEndsAt) {
+      const end = new Date(s.trialEndsAt);
+      const daysLeft = Math.ceil((end - new Date()) / 86400000);
+      if (daysLeft > 0) trialInfo = `<b style="color:var(--warning)">${daysLeft} يوم متبقي</b>`;
+      else trialInfo = `<small style="color:var(--danger)">انتهت</small>`;
+    } else if (s.status === 'active' && s.licenseExpiresAt) {
+      const licDays = Math.ceil((new Date(s.licenseExpiresAt) - new Date()) / 86400000);
+      trialInfo = `<b style="color:var(--success)">${licDays} يوم</b>`;
+    }
+    
+    const branchesCount = (s.branches || []).length;
+    const pendingBranches = (s.branches || []).filter(b => b.status === 'pending').length;
+    const branchesHtml = `${branchesCount}${pendingBranches ? ` <span class="badge b-yellow">${pendingBranches} معلقة</span>` : ''}`;
+    
+    let actions = '';
+    if (s.status === 'pending' || s.status === 'trial' || s.status === 'pending_license') {
+      actions += `<button class="btn-icon success" title="تفعيل" onclick="approveStore('${s.id}')"><i class="fas fa-check"></i></button>`;
+    }
+    if (s.status === 'active') {
+      actions += `<button class="btn-icon danger" title="تعطيل" onclick="deactivateStore('${s.id}')"><i class="fas fa-ban"></i></button>`;
+    }
+    actions += `<button class="btn-icon danger" title="حذف" onclick="deleteStore('${s.id}')"><i class="fas fa-trash"></i></button>`;
+    
+    return `<tr>
+      <td><b>${escapeHtml(s.storeName || '—')}</b></td>
+      <td>${escapeHtml(s.email || '—')}</td>
+      <td>${statusBadge}</td>
+      <td>${trialInfo}</td>
+      <td>${branchesHtml}</td>
+      <td><button class="btn-icon" title="عرض التفاصيل" onclick="viewStoreDetails('${s.id}')"><i class="fas fa-eye"></i></button></td>
+      <td><div style="display:flex;gap:4px;flex-wrap:wrap">${actions}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderLicenseRequests() {
+  const tbody = document.getElementById('devLicenseRequestsBody');
+  if (!tbody) return;
+  
+  const pending = devStoresCache.filter(s => 
+    s.status === 'pending_license' || s.licenseStatus === 'pending_license'
+  );
+  
+  if (!pending.length) {
+    tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><i class="fas fa-check-circle" style="color:var(--success)"></i><p>لا توجد طلبات معلقة</p></div></td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = pending.map(s => {
+    const reqDate = s.licenseRequestedAt ? new Date(s.licenseRequestedAt).toLocaleDateString('ar-EG') : '—';
+    return `<tr>
+      <td><b>${escapeHtml(s.storeName)}</b></td>
+      <td>${escapeHtml(s.email)}</td>
+      <td>${reqDate}</td>
+      <td>
+        <button class="btn-icon success" title="توليد مفتاح وإرسال" onclick="generateKeyForStore('${s.id}')">
+          <i class="fas fa-key"></i> توليد مفتاح
+        </button>
+        <button class="btn-icon" title="عرض التفاصيل" onclick="viewStoreDetails('${s.id}')">
+          <i class="fas fa-eye"></i>
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function generateKeyForStore(storeId) {
+  const price = prompt('سعر الترخيص (ج.م):', '1000');
+  if (price === null) return;
+  const days = prompt('مدة الترخيص (يوم):', '365');
+  if (days === null) return;
+  
+  const key = 'EMA-LIC-' + Math.random().toString(36).substring(2, 8).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+  
+  try {
+    await db.collection('license_keys').doc(key).set({
+      key,
+      storeId: storeId,
+      durationDays: parseInt(days) || 365,
+      price: parseFloat(price) || 0,
+      used: false,
+      createdAt: new Date().toISOString(),
+      createdBy: currentUser.uid
+    });
+    
+    const store = devStoresCache.find(s => s.id === storeId);
+    openModal(`
+      <h3 style="margin-bottom:16px;color:var(--success)"><i class="fas fa-check-circle"></i> تم توليد مفتاح الترخيص</h3>
+      <div style="background:var(--bg);padding:20px;border-radius:8px;text-align:center;margin-bottom:16px">
+        <p style="color:var(--text-muted);margin-bottom:8px">المفتاح:</p>
+        <div class="license-key-display">${key}</div>
+      </div>
+      <div style="background:rgba(59,130,246,0.08);padding:12px;border-radius:8px;margin-bottom:16px;font-size:12px">
+        <p><b>المحل:</b> ${escapeHtml(store?.storeName || '')}</p>
+        <p><b>المدة:</b> ${days} يوم</p>
+        <p><b>السعر:</b> ${formatCurrency(price)}</p>
+      </div>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">
+        <i class="fas fa-info-circle"></i> أرسل هذا المفتاح للمحل عبر الإيميل أو الواتساب. سيتمكن من تفعيل حسابه بإدخاله في شاشة الترخيص.
+      </p>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="navigator.clipboard.writeText('${key}');toast('تم النسخ','success')">
+          <i class="fas fa-copy"></i> نسخ المفتاح
+        </button>
+        <button class="btn btn-outline" onclick="approveStore('${storeId}');closeModal()">
+          <i class="fas fa-check"></i> تفعيل المحل مباشرة
+        </button>
+      </div>
+    `);
+  } catch (e) {
+    toast('خطأ: ' + e.message, 'error');
+  }
+}
+
+function loadDevLicenseKeys() {
+  if (devLicenseKeysUnsub) devLicenseKeysUnsub();
+  devLicenseKeysUnsub = db.collection('license_keys').onSnapshot(snap => {
+    const tbody = document.getElementById('devLicenseKeysBody');
+    if (!tbody) return;
+    
+    if (snap.empty) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><p>لا توجد مفاتيح</p></div></td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = snap.docs.map(d => {
+      const k = d.data();
+      const store = devStoresCache.find(s => s.id === k.storeId);
+      const usedBadge = k.used ? '<span class="badge b-red">مستخدم</span>' : '<span class="badge b-green">متاح</span>';
+      return `<tr>
+        <td><b style="font-family:monospace;font-size:12px">${escapeHtml(k.key)}</b></td>
+        <td>${escapeHtml(store?.storeName || 'عام')}</td>
+        <td>${k.durationDays || 365} يوم</td>
+        <td>${formatCurrency(k.price || 0)}</td>
+        <td>${usedBadge}</td>
+        <td><button class="btn-icon danger" onclick="deleteLicenseKey('${k.key}')"><i class="fas fa-trash"></i></button></td>
+      </tr>`;
+    }).join('');
+  });
+}
+
+function updateLicenseStoreSelect() {
+  const sel = document.getElementById('devLicStoreId');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">مفتاح عام</option>' + 
+    devStoresCache.map(s => `<option value="${s.id}">${escapeHtml(s.storeName)}</option>`).join('');
+}
+
+document.getElementById('devLicenseForm')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const storeId = document.getElementById('devLicStoreId').value;
+  const days = parseInt(document.getElementById('devLicDays').value) || 365;
+  const price = parseFloat(document.getElementById('devLicPrice').value) || 0;
+  
+  const key = 'EMA-LIC-' + Math.random().toString(36).substring(2, 8).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+  
+  try {
+    await db.collection('license_keys').doc(key).set({
+      key, storeId: storeId || null, durationDays: days, price,
+      used: false, createdAt: new Date().toISOString(), createdBy: currentUser.uid
+    });
+    openModal(`
+      <h3 style="margin-bottom:16px;color:var(--success)"><i class="fas fa-check-circle"></i> تم توليد مفتاح الترخيص</h3>
+      <div style="background:var(--bg);padding:20px;border-radius:8px;text-align:center;margin-bottom:16px">
+        <div class="license-key-display">${key}</div>
+      </div>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">
+        ${storeId ? 'هذا المفتاح مخصص لمحل محدد.' : 'هذا مفتاح عام يمكن استخدامه لأي محل.'}
+      </p>
+      <button class="btn btn-primary" onclick="navigator.clipboard.writeText('${key}');toast('تم النسخ','success')">
+        <i class="fas fa-copy"></i> نسخ المفتاح
+      </button>
+    `);
+    e.target.reset();
+    document.getElementById('devLicDays').value = '365';
+  } catch (err) {
+    toast('خطأ: ' + err.message, 'error');
+  }
+});
+
+function deleteLicenseKey(key) {
+  confirmDialog('حذف هذا المفتاح؟', () => 
+    db.collection('license_keys').doc(key).delete().then(() => toast('تم الحذف', 'success'))
+  );
+}
+
+function renderDevCharts() {
+  const statusChartEl = document.getElementById('devStatusChart');
+  const growthChartEl = document.getElementById('devGrowthChart');
+  if (!statusChartEl || !growthChartEl) return;
+  
+  const statusCounts = {
+    'نشط': devStoresCache.filter(s => s.status === 'active').length,
+    'تجربة': devStoresCache.filter(s => s.status === 'trial').length,
+    'منتهي': devStoresCache.filter(s => s.status === 'expired').length,
+    'معلق': devStoresCache.filter(s => s.status === 'pending' || s.status === 'pending_license').length
+  };
+  
+  if (devStatusChartInstance) devStatusChartInstance.destroy();
+  devStatusChartInstance = new Chart(statusChartEl, {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(statusCounts),
+      datasets: [{ 
+        data: Object.values(statusCounts), 
+        backgroundColor: ['#10b981', '#3b82f6', '#ef4444', '#f59e0b'],
+        borderWidth: 0 
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+  });
+  
+  const byMonth = {};
+  devStoresCache.forEach(s => {
+    if (s.createdAt) {
+      let d;
+      if (s.createdAt.toDate) d = s.createdAt.toDate();
+      else if (typeof s.createdAt === 'string') d = new Date(s.createdAt);
+      else if (s.createdAt.seconds) d = new Date(s.createdAt.seconds * 1000);
+      else return;
+      const key = d.toLocaleDateString('en-CA').slice(0, 7);
+      byMonth[key] = (byMonth[key] || 0) + 1;
+    }
+  });
+  const labels = Object.keys(byMonth).sort().slice(-6);
+  
+  if (devGrowthChartInstance) devGrowthChartInstance.destroy();
+  devGrowthChartInstance = new Chart(growthChartEl, {
+    type: 'bar',
+    data: {
+      labels: labels.length ? labels : ['لا توجد بيانات'],
+      datasets: [{
+        label: 'محلات جديدة',
+        data: labels.length ? labels.map(l => byMonth[l]) : [0],
+        backgroundColor: '#fbbf24',
+        borderRadius: 6
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+  });
+}
+
+async function viewStoreDetails(storeId) {
+  const store = devStoresCache.find(s => s.id === storeId);
+  if (!store) return;
+  
+  showLoading(true);
+  try {
+    const [productsSnap, clientsSnap, salesSnap, expensesSnap] = await Promise.all([
+      db.collection('stores').doc(storeId).collection('products').get(),
+      db.collection('stores').doc(storeId).collection('clients').get(),
+      db.collection('stores').doc(storeId).collection('sales').get(),
+      db.collection('stores').doc(storeId).collection('expenses').get()
+    ]);
+    
+    const totalSales = salesSnap.docs.reduce((s, d) => s + (d.data().price || 0) * (d.data().qty || 1), 0);
+    const totalClients = clientsSnap.size;
+    const totalProducts = productsSnap.size;
+    const totalExpenses = expensesSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
+    const installmentTotal = clientsSnap.docs.reduce((s, d) => s + (d.data().totalPrice || 0), 0);
+    
+    const branchDetails = (store.branches || []).map(b => {
+      const statusBadge = b.status === 'active' ? '<span class="badge b-green">نشط</span>' : 
+                          b.status === 'pending' ? '<span class="badge b-yellow">معلق</span>' : 
+                          '<span class="badge b-red">موقوف</span>';
+      return `<tr>
+        <td>${escapeHtml(b.name)}</td>
+        <td>${escapeHtml(b.address || '—')}</td>
+        <td>${statusBadge}</td>
+        <td>${b.activationCode ? `<code style="font-size:11px">${b.activationCode}</code>` : '—'}</td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="4" style="text-align:center">لا توجد فروع</td></tr>';
+    
+    let statusText = 'قيد المراجعة';
+    if (store.status === 'active') statusText = 'نشط (ترخيص)';
+    else if (store.status === 'trial') statusText = 'فترة تجريبية';
+    else if (store.status === 'expired') statusText = 'منتهي';
+    else if (store.status === 'pending_license') statusText = 'بانتظار الترخيص';
+    
+    openModal(`
+      <h2 style="margin-bottom:16px"><i class="fas fa-store" style="color:var(--accent)"></i> ${escapeHtml(store.storeName)}</h2>
+      
+      <div style="background:var(--bg);padding:16px;border-radius:8px;margin-bottom:16px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px">
+          <div><span style="color:var(--text-muted)">الإيميل:</span><br><b>${escapeHtml(store.email || '—')}</b></div>
+          <div><span style="color:var(--text-muted)">الحالة:</span><br><b>${statusText}</b></div>
+          <div><span style="color:var(--text-muted)">الهاتف:</span><br><b>${escapeHtml(store.phone || '—')}</b></div>
+          <div><span style="color:var(--text-muted)">العنوان:</span><br><b>${escapeHtml(store.address || '—')}</b></div>
+          ${store.licenseKey ? `<div style="grid-column:span 2"><span style="color:var(--text-muted)">مفتاح الترخيص:</span><br><code style="font-size:11px">${escapeHtml(store.licenseKey)}</code></div>` : ''}
+          ${store.licenseExpiresAt ? `<div style="grid-column:span 2"><span style="color:var(--text-muted)">ينتهي الترخيص:</span><br><b>${new Date(store.licenseExpiresAt).toLocaleDateString('ar-EG')}</b></div>` : ''}
+          ${store.trialEndsAt ? `<div style="grid-column:span 2"><span style="color:var(--text-muted)">تنتهي التجربة:</span><br><b>${new Date(store.trialEndsAt).toLocaleDateString('ar-EG')}</b></div>` : ''}
+        </div>
+      </div>
+      
+      <div class="dashboard-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:16px">
+        <div style="background:rgba(59,130,246,0.08);padding:12px;border-radius:8px;text-align:center">
+          <div style="font-size:11px;color:var(--text-muted)">المنتجات</div>
+          <div style="font-size:20px;font-weight:800;color:var(--accent)">${totalProducts}</div>
+        </div>
+        <div style="background:rgba(16,185,129,0.08);padding:12px;border-radius:8px;text-align:center">
+          <div style="font-size:11px;color:var(--text-muted)">العملاء</div>
+          <div style="font-size:20px;font-weight:800;color:var(--success)">${totalClients}</div>
+        </div>
+        <div style="background:rgba(245,158,11,0.08);padding:12px;border-radius:8px;text-align:center">
+          <div style="font-size:11px;color:var(--text-muted)">المبيعات النقدية</div>
+          <div style="font-size:16px;font-weight:800;color:var(--warning)">${formatCurrency(totalSales)}</div>
+        </div>
+        <div style="background:rgba(239,68,68,0.08);padding:12px;border-radius:8px;text-align:center">
+          <div style="font-size:11px;color:var(--text-muted)">إجمالي التقسيط</div>
+          <div style="font-size:16px;font-weight:800;color:var(--danger)">${formatCurrency(installmentTotal)}</div>
+        </div>
+      </div>
+      
+      <h3 style="margin-bottom:10px;font-size:15px"><i class="fas fa-code-branch"></i> الفروع</h3>
+      <div class="table-wrapper"><table><thead><tr><th>الاسم</th><th>العنوان</th><th>الحالة</th><th>كود التفعيل</th></tr></thead><tbody>${branchDetails}</tbody></table></div>
+    `);
+  } catch (e) {
+    console.error(e);
+    toast('خطأ في تحميل البيانات: ' + e.message, 'error');
+  }
+  showLoading(false);
+}
+
+function approveStore(id) { 
+  db.collection('stores').doc(id).update({ 
+    status: 'active', 
+    licenseStatus: 'active',
+    approvedAt: new Date().toISOString()
+  }).then(() => toast('تم تفعيل المحل', 'success')); 
+}
+
+function deactivateStore(id) {
+  confirmDialog('إيقاف هذا المحل؟', () => 
+    db.collection('stores').doc(id).update({ status: 'expired', licenseStatus: 'expired' })
+      .then(() => toast('تم الإيقاف', 'success'))
+  );
+}
+
+function deleteStore(id) { 
+  confirmDialog('حذف هذا المحل نهائياً؟ (لن يتم حذف بياناته الفرعية)', () => 
+    db.collection('stores').doc(id).delete().then(() => toast('تم الحذف', 'success'))
+  ); 
 }
 
 function loadDevUsers() {
@@ -1075,7 +1837,12 @@ function loadDevUsers() {
     });
   });
 }
-function removeDeveloper(id) { confirmDialog('حذف مستخدم المطور؟', () => db.collection('platform_users').doc(id).delete().then(() => toast('تم الحذف', 'success'))); }
+
+function removeDeveloper(id) { 
+  confirmDialog('حذف مستخدم المطور؟', () => 
+    db.collection('platform_users').doc(id).delete().then(() => toast('تم الحذف', 'success'))
+  ); 
+}
 
 document.getElementById('devUserForm').addEventListener('submit', async e => {
   e.preventDefault();
@@ -1087,7 +1854,10 @@ document.getElementById('devUserForm').addEventListener('submit', async e => {
     const secondary = firebase.initializeApp(firebaseConfig, 'sec-' + Date.now());
     const { user } = await secondary.auth().createUserWithEmailAndPassword(email, pass);
     await user.updateProfile({ displayName: name });
-    await db.collection('platform_users').doc(user.uid).set({ name, email, role: 'developer', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    await db.collection('platform_users').doc(user.uid).set({ 
+      name, email, role: 'developer', 
+      createdAt: firebase.firestore.FieldValue.serverTimestamp() 
+    });
     await secondary.auth().signOut();
     await secondary.delete();
     toast('تمت إضافة المطور', 'success');
@@ -1096,30 +1866,35 @@ document.getElementById('devUserForm').addEventListener('submit', async e => {
   showLoading(false);
 });
 
+// ==========================================================
+// تحميل بيانات المحل (المنتجات، العملاء، المبيعات...)
+// ==========================================================
 function loadTenantData() {
-  if (inventoryUnsub) inventoryUnsub(); if (clientsUnsub) clientsUnsub();
-  if (salesUnsub) salesUnsub(); if (expensesUnsub) expensesUnsub();
+  if (inventoryUnsub) inventoryUnsub(); 
+  if (clientsUnsub) clientsUnsub();
+  if (salesUnsub) salesUnsub(); 
+  if (expensesUnsub) expensesUnsub();
   const sid = currentStoreData._id;
 
   inventoryUnsub = db.collection('stores').doc(sid).collection('products').where('branchId', '==', currentBranchId).onSnapshot(snap => {
     inventory = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderProducts(); renderPosProducts(); updateDashboard(); renderCategories();
-  }, err => { console.error('Inventory error:', err); toast('خطأ في تحميل المنتجات', 'error'); });
+  }, err => { console.error('Inventory error:', err); });
 
   clientsUnsub = db.collection('stores').doc(sid).collection('clients').where('branchId', '==', currentBranchId).onSnapshot(snap => {
     clients = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderClients(); renderLatePayments(); updateDashboard(); renderDailyCash();
-  }, err => { console.error('Clients error:', err); toast('خطأ في تحميل العملاء', 'error'); });
+  }, err => { console.error('Clients error:', err); });
 
   salesUnsub = db.collection('stores').doc(sid).collection('sales').where('branchId', '==', currentBranchId).limit(200).onSnapshot(snap => {
     cashSales = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderCashSales(); updateDashboard(); renderDailyCash();
-  }, err => { console.error('Sales error:', err); toast('خطأ في تحميل المبيعات', 'error'); });
+  }, err => { console.error('Sales error:', err); });
 
   expensesUnsub = db.collection('stores').doc(sid).collection('expenses').where('branchId', '==', currentBranchId).limit(200).onSnapshot(snap => {
     expenses = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderExpenses(); updateDashboard(); renderDailyCash();
-  }, err => { console.error('Expenses error:', err); toast('خطأ في تحميل المصروفات', 'error'); });
+  }, err => { console.error('Expenses error:', err); });
 }
 
 function switchTab(tabId, btn) {
@@ -1129,6 +1904,7 @@ function switchTab(tabId, btn) {
   if (btn) btn.classList.add('active');
   if (tabId === 'dashboard') renderCharts();
   if (tabId === 'daily-cash') renderDailyCash();
+  if (tabId === 'settings') renderLicenseInfo();
 }
 
 function renderBranchSwitcher() {
@@ -1148,6 +1924,9 @@ function switchBranch(id) {
   loadTenantData();
 }
 
+// ==========================================================
+// بقية الدوال (منتجات، بيع، عملاء، إلخ) - نسخة محسنة
+// ==========================================================
 document.getElementById('inventoryForm').addEventListener('submit', async e => {
   e.preventDefault();
   if (!hasPermission('manage_inventory')) return toast('لا تملك صلاحية', 'error');
@@ -1182,7 +1961,7 @@ document.getElementById('inventoryForm').addEventListener('submit', async e => {
     e.target.reset();
     document.getElementById('invEditId').value = '';
     document.getElementById('invSubmitBtn').innerHTML = '<i class="fas fa-plus"></i> إضافة المنتج';
-  } catch (err) { toast('خطأ: ' + err.message, 'error'); console.error(err); }
+  } catch (err) { toast('خطأ: ' + err.message, 'error'); }
   showLoading(false);
 });
 
@@ -1257,11 +2036,7 @@ function renderPosProducts() {
   }
   grid.innerHTML = avail.map(item => {
     const img = item.image ? `<img src="${item.image}" alt="${escapeHtml(item.name)}">` : `<div style="height:80px;display:flex;align-items:center;justify-content:center;background:var(--bg);border-radius:6px;margin-bottom:8px;color:var(--text-muted);font-size:24px"><i class="fas fa-mobile-screen"></i></div>`;
-    return `<div class="pos-item" onclick="addToCart('${item.id}')">
-      ${img}
-      <div class="nm">${escapeHtml(item.name)}</div>
-      <div class="pr">${formatCurrency(item.price)}</div>
-    </div>`;
+    return `<div class="pos-item" onclick="addToCart('${item.id}')">${img}<div class="nm">${escapeHtml(item.name)}</div><div class="pr">${formatCurrency(item.price)}</div></div>`;
   }).join('');
 }
 
@@ -1353,16 +2128,15 @@ function stopBarcodeScanner() {
 }
 
 // ==========================================================
-// تأكيد البيع النقدي — نسخة آمنة ضد التكرار والمخزون السالب
+// البيع النقدي — آمن ضد التكرار
 // ==========================================================
 async function confirmCashSale() {
   if (isSaleProcessing) return toast('عملية بيع أخرى قيد التنفيذ', 'warning');
   if (!hasPermission('sell')) return toast('لا تملك صلاحية البيع', 'error');
   if (!cart.length) return toast('السلة فارغة', 'warning');
-  if (!currentStoreData || !currentStoreData._id) return toast('خطأ: بيانات المتجر غير محملة، يرجى إعادة تحميل الصفحة', 'error');
+  if (!currentStoreData || !currentStoreData._id) return toast('خطأ: بيانات المتجر غير محملة', 'error');
   if (!currentUser || !currentUser.uid) return toast('خطأ: يجب تسجيل الدخول أولاً', 'error');
 
-  // تحقق مبكر من توفر المخزون
   for (const item of cart) {
     const p = inventory.find(x => x.id === item.id);
     if (!p) return toast(`المنتج "${item.name}" لم يعد موجوداً في المخزون`, 'error');
@@ -1373,7 +2147,6 @@ async function confirmCashSale() {
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
   
   confirmDialog(`تأكيد بيع نقدي بإجمالي ${formatCurrency(total)}؟`, async () => {
-    // فتح نافذة الطباعة داخل سياق النقر لتجنب حجب النوافذ المنبثقة
     let printWindow = null;
     try { printWindow = window.open('', '', 'width=300,height=600'); } catch (e) { printWindow = null; }
 
@@ -1405,7 +2178,6 @@ async function confirmCashSale() {
           createdBy: currentUser.uid
         });
 
-        // increment آمن ضد التزامن بدلاً من القيمة الثابتة
         batch.update(storeRef.collection('products').doc(item.id), {
           qty: firebase.firestore.FieldValue.increment(-item.qty)
         });
@@ -1413,7 +2185,6 @@ async function confirmCashSale() {
 
       await batch.commit();
 
-      // كتابة الإيصال في النافذة المفتوحة مسبقاً
       if (printWindow) {
         writeReceiptToWindow(printWindow, {
           storeName: currentStoreData.storeName,
@@ -1433,8 +2204,8 @@ async function confirmCashSale() {
       document.getElementById('cashClientName').value = '';
     } catch (e) {
       if (printWindow) { try { printWindow.close(); } catch(_) {} }
-      console.error("Sale Error Details:", e);
-      toast('فشل في إتمام البيع: ' + (e.message || 'تحقق من اتصال الإنترنت أو صلاحيات قاعدة البيانات'), 'error');
+      console.error("Sale Error:", e);
+      toast('فشل في إتمام البيع: ' + (e.message || 'خطأ غير معروف'), 'error');
     } finally {
       showLoading(false);
       isSaleProcessing = false;
@@ -1458,7 +2229,7 @@ function calcInstallment() {
 }
 
 // ==========================================================
-// تأكيد بيع التقسيط — نسخة آمنة ضد التكرار والمخزون السالب
+// البيع بالتقسيط — آمن ضد التكرار
 // ==========================================================
 async function confirmInstallmentSale() {
   if (isSaleProcessing) return toast('عملية بيع أخرى قيد التنفيذ', 'warning');
@@ -1484,7 +2255,6 @@ async function confirmInstallmentSale() {
   if (!gName || !gPhone || !gNid) return toast('أكمل بيانات الضامن', 'warning');
   if (!startVal) return toast('اختر تاريخ أول قسط', 'warning');
 
-  // تحقق مبكر من توفر المخزون
   for (const item of cart) {
     const p = inventory.find(x => x.id === item.id);
     if (!p) return toast(`المنتج "${item.name}" لم يعد موجوداً في المخزون`, 'error');
@@ -1512,7 +2282,6 @@ async function confirmInstallmentSale() {
       const storeRef = db.collection('stores').doc(currentStoreData._id);
       const saleItems = cart.map(i => ({ ...i }));
 
-      // حفظ عقد التقسيط أولاً
       await storeRef.collection('clients').add({
         name, phone, nid, address: addr, gName, gPhone, gNid,
         products: saleItems.map(i => ({
@@ -1534,7 +2303,6 @@ async function confirmInstallmentSale() {
         createdBy: currentUser.uid
       });
 
-      // خصم المخزون باستخدام increment (آمن ضد التزامن)
       const batch = db.batch();
       for (const item of saleItems) {
         batch.update(storeRef.collection('products').doc(item.id), {
@@ -1549,7 +2317,7 @@ async function confirmInstallmentSale() {
       document.getElementById('paymentMethodSelect').value = 'cash';
       togglePaymentForm();
     } catch (e) {
-      console.error("Installment Sale Error Details:", e);
+      console.error("Installment Sale Error:", e);
       toast('فشل في حفظ العقد: ' + (e.message || 'خطأ غير معروف'), 'error');
     } finally {
       showLoading(false);
@@ -1708,7 +2476,7 @@ function renderCashSales() {
 function reprintSale(id) {
   const s = cashSales.find(x => x.id === id); if (!s) return;
   const printWindow = window.open('', '', 'width=300,height=600');
-  if (!printWindow) return toast('تم حجب نافذة الطباعة من المتصفح', 'warning');
+  if (!printWindow) return toast('تم حجب نافذة الطباعة', 'warning');
   writeReceiptToWindow(printWindow, {
     storeName: currentStoreData.storeName,
     logo: currentStoreData.logo,
@@ -1719,9 +2487,6 @@ function reprintSale(id) {
   });
 }
 
-// ==========================================================
-// دالة كتابة الإيصال في نافذة مفتوحة مسبقاً (تجنب حجب المتصفح)
-// ==========================================================
 function writeReceiptToWindow(win, data) {
   const logoHtml = data.logo ? `<img src="${data.logo}" style="max-width:80px;max-height:80px;margin-bottom:10px">` : '';
   win.document.write(`
@@ -1747,13 +2512,6 @@ function writeReceiptToWindow(win, data) {
     </body></html>
   `);
   win.document.close();
-}
-
-// احتفظ بالدالة القديمة للتوافق مع أي استدعاء آخر
-function printThermalReceipt(data) {
-  const win = window.open('', '', 'width=300,height=600');
-  if (!win) return toast('تم حجب نافذة الطباعة من المتصفح', 'warning');
-  writeReceiptToWindow(win, data);
 }
 
 document.getElementById('expenseForm').addEventListener('submit', e => {
@@ -1878,12 +2636,7 @@ function renderCharts() {
     type: 'bar',
     data: {
       labels: labels.length ? labels : ['لا توجد بيانات'],
-      datasets: [{
-        label: 'المصروفات',
-        data: labels.length ? labels.map(l => byMonth[l]) : [0],
-        backgroundColor: '#ef4444',
-        borderRadius: 6
-      }]
+      datasets: [{ label: 'المصروفات', data: labels.length ? labels.map(l => byMonth[l]) : [0], backgroundColor: '#ef4444', borderRadius: 6 }]
     },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
   });
@@ -1895,23 +2648,14 @@ function renderCharts() {
       d.setDate(d.getDate() - i);
       last7Days.push(d.toLocaleDateString('en-CA'));
     }
-    const dailyData = last7Days.map(date => {
-      return cashSales.filter(s => (s.date || '').startsWith(date)).reduce((sum, s) => sum + (s.price * (s.qty || 1)), 0);
-    });
+    const dailyData = last7Days.map(date => cashSales.filter(s => (s.date || '').startsWith(date)).reduce((sum, s) => sum + (s.price * (s.qty || 1)), 0));
     
     if (dailySalesChartInstance) dailySalesChartInstance.destroy();
     dailySalesChartInstance = new Chart(dsc, {
       type: 'line',
       data: {
         labels: last7Days,
-        datasets: [{
-          label: 'المبيعات اليومية',
-          data: dailyData,
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          tension: 0.4,
-          fill: true
-        }]
+        datasets: [{ label: 'المبيعات اليومية', data: dailyData, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', tension: 0.4, fill: true }]
       },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
     });
