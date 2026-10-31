@@ -1322,8 +1322,14 @@ function stopBarcodeScanner() {
   }
 }
 
+// ==========================================
+// تم تحسين دوال البيع لتكون أكثر قوة وأماناً
+// ==========================================
 async function confirmCashSale() {
   if (!cart.length) return toast('السلة فارغة', 'warning');
+  if (!currentStoreData || !currentStoreData._id) return toast('خطأ: بيانات المتجر غير محملة', 'error');
+  if (!currentUser || !currentUser.uid) return toast('خطأ: يجب تسجيل الدخول أولاً', 'error');
+  
   const client = document.getElementById('cashClientName').value.trim() || 'عميل نقدي';
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
   
@@ -1333,17 +1339,29 @@ async function confirmCashSale() {
       const batch = db.batch();
       const storeRef = db.collection('stores').doc(currentStoreData._id);
       
-      cart.forEach(item => {
+      for (const item of cart) {
         const s = storeRef.collection('sales').doc();
         batch.set(s, {
-          productName: item.name, serial: item.serial, price: item.price, cost: item.cost,
-          qty: item.qty, image: item.image, category: item.category, client, date: getLocalDateTimeStr(), branchId: currentBranchId,
-          saleType: 'cash', createdBy: currentUser.uid
+          productName: item.name, 
+          serial: item.serial, 
+          price: item.price, 
+          cost: item.cost,
+          qty: item.qty, 
+          image: item.image || null, 
+          category: item.category || 'عام', 
+          client: client, 
+          date: getLocalDateTimeStr(), 
+          branchId: currentBranchId,
+          saleType: 'cash', 
+          createdBy: currentUser.uid
         });
         const pRef = storeRef.collection('products').doc(item.id);
         const p = inventory.find(x => x.id === item.id);
-        batch.update(pRef, { qty: p.qty - item.qty });
-      });
+        if (p) {
+            batch.update(pRef, { qty: p.qty - item.qty });
+        }
+      }
+      
       await batch.commit();
       
       printThermalReceipt({
@@ -1356,8 +1374,13 @@ async function confirmCashSale() {
       });
       
       toast('تم البيع النقدي بنجاح', 'success');
-      cart = []; renderCart(); document.getElementById('cashClientName').value = '';
-    } catch (e) { toast('خطأ: ' + e.message, 'error'); console.error(e); }
+      cart = []; 
+      renderCart(); 
+      document.getElementById('cashClientName').value = '';
+    } catch (e) { 
+      console.error("Sale Error:", e);
+      toast('فشل في إتمام البيع: ' + e.message, 'error'); 
+    }
     showLoading(false);
   });
 }
@@ -1379,6 +1402,9 @@ function calcInstallment() {
 
 async function confirmInstallmentSale() {
   if (!cart.length) return toast('السلة فارغة', 'warning');
+  if (!currentStoreData || !currentStoreData._id) return toast('خطأ: بيانات المتجر غير محملة', 'error');
+  if (!currentUser || !currentUser.uid) return toast('خطأ: يجب تسجيل الدخول أولاً', 'error');
+
   const name = document.getElementById('clientName').value.trim();
   const phone = document.getElementById('clientPhone').value.trim();
   const nid = document.getElementById('clientNid').value.trim();
@@ -1431,10 +1457,12 @@ async function confirmInstallmentSale() {
       });
       
       const batch = db.batch();
-      cart.forEach(item => {
+      for (const item of cart) {
         const p = inventory.find(x => x.id === item.id);
-        batch.update(storeRef.collection('products').doc(item.id), { qty: p.qty - item.qty });
-      });
+        if (p) {
+          batch.update(storeRef.collection('products').doc(item.id), { qty: p.qty - item.qty });
+        }
+      }
       await batch.commit();
       
       toast('تم حفظ عقد التقسيط', 'success');
@@ -1442,7 +1470,10 @@ async function confirmInstallmentSale() {
       ['clientName','clientPhone','clientNid','clientAddress','guarantorName','guarantorPhone','guarantorNid','downPayment','installmentsCount','startDate','instValueDisplay'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('paymentMethodSelect').value = 'cash';
       togglePaymentForm();
-    } catch (e) { toast('خطأ: ' + e.message, 'error'); console.error(e); }
+    } catch (e) { 
+      console.error("Installment Sale Error:", e);
+      toast('فشل في حفظ العقد: ' + e.message, 'error'); 
+    }
     showLoading(false);
   });
 }
@@ -1766,7 +1797,6 @@ function renderCharts() {
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
   });
   
-  // Daily sales chart
   if (dsc) {
     const last7Days = [];
     for (let i = 6; i >= 0; i--) {
