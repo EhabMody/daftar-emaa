@@ -76,6 +76,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; transition:
 header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); background: rgba(255,255,255,0.9); }
 body.dark-mode header { background: rgba(30, 41, 59, 0.9); }
 .logo { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; color: var(--primary); }
+.logo img { width: 40px; height: 40px; object-fit: contain; border-radius: 8px; }
 .logo i { color: var(--accent); font-size: 24px; }
 .header-info { text-align: left; }
 .header-info h4 { font-size: 15px; font-weight: 700; color: var(--text); }
@@ -177,12 +178,16 @@ tr:hover td { background: var(--surface-hover); }
 .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
 .empty-state i { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
 
-/* --- Installment Rate Info Box --- */
 .rate-info-box { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1)); border: 1px solid var(--accent); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
 .rate-info-box i { font-size: 22px; color: var(--accent); }
 .rate-info-box .rate-text { flex: 1; }
 .rate-info-box .rate-text .label { font-size: 12px; color: var(--text-muted); }
 .rate-info-box .rate-text .value { font-size: 18px; font-weight: 800; color: var(--accent); }
+
+.category-filter { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.category-btn { padding: 6px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; color: var(--text-muted); }
+.category-btn:hover { background: var(--surface-hover); }
+.category-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
 @media print {
   body * { visibility: hidden; }
@@ -281,7 +286,10 @@ tr:hover td { background: var(--surface-hover); }
 <!-- MAIN APP -->
 <div id="appScreen">
   <header>
-    <div class="logo"><i class="fas fa-shield-halved"></i><span>EMAA.Tech</span></div>
+    <div class="logo" id="headerLogo">
+      <i class="fas fa-shield-halved"></i>
+      <span>EMAA.Tech</span>
+    </div>
     <div class="header-info">
       <h4 id="storeNameDisplay">اسم المحل</h4>
       <small id="branchDisplay">الفرع الرئيسي</small>
@@ -314,6 +322,8 @@ tr:hover td { background: var(--surface-hover); }
         <div class="stat-card"><div class="stat-icon green"><i class="fas fa-money-bill-wave"></i></div><div class="stat-info"><h3>إجمالي المحصل</h3><p id="statCollected">0 ج.م</p></div></div>
         <div class="stat-card"><div class="stat-icon red"><i class="fas fa-hourglass-half"></i></div><div class="stat-info"><h3>المتبقي في السوق</h3><p id="statRemaining">0 ج.م</p></div></div>
         <div class="stat-card"><div class="stat-icon gold"><i class="fas fa-chart-line"></i></div><div class="stat-info"><h3>صافي الربح</h3><p id="statProfit">0 ج.م</p></div></div>
+        <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-box"></i></div><div class="stat-info"><h3>عدد المنتجات</h3><p id="statProducts">0</p></div></div>
+        <div class="stat-card"><div class="stat-icon green"><i class="fas fa-users"></i></div><div class="stat-info"><h3>عدد العملاء</h3><p id="statClients">0</p></div></div>
       </div>
       <div class="card">
         <div class="section-title"><span><i class="fas fa-bell"></i> تنبيهات الأقساط القادمة (5 أيام)</span></div>
@@ -322,6 +332,10 @@ tr:hover td { background: var(--surface-hover); }
       <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap:24px">
         <div class="card"><div class="section-title" style="font-size:14px"><span>المبيعات (كاش vs تقسيط)</span></div><canvas id="salesChart" style="max-height:250px"></canvas></div>
         <div class="card"><div class="section-title" style="font-size:14px"><span>المصروفات (آخر 6 أشهر)</span></div><canvas id="expensesChart" style="max-height:250px"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="section-title" style="font-size:14px"><span>المبيعات اليومية (آخر 7 أيام)</span></div>
+        <canvas id="dailySalesChart" style="max-height:250px"></canvas>
       </div>
     </div>
 
@@ -333,6 +347,11 @@ tr:hover td { background: var(--surface-hover); }
           <input type="hidden" id="invEditId">
           <div class="form-grid">
             <div class="form-group"><label>اسم المنتج <span style="color:var(--danger)">*</span></label><input type="text" id="invName" class="form-input" required></div>
+            <div class="form-group"><label>القسم <span style="color:var(--danger)">*</span></label>
+              <select id="invCategory" class="form-input" required>
+                <option value="">اختر القسم</option>
+              </select>
+            </div>
             <div class="form-group"><label>الرقم التسلسلي / الباركود <span style="color:var(--danger)">*</span></label><input type="text" id="invSerial" class="form-input" required></div>
             <div class="form-group"><label>الكمية <span style="color:var(--danger)">*</span></label><input type="number" id="invQty" class="form-input" required min="1" value="1"></div>
             <div class="form-group"><label>سعر الشراء <span style="color:var(--danger)">*</span></label><input type="number" id="invCost" class="form-input" required min="0" step="0.01"></div>
@@ -346,8 +365,12 @@ tr:hover td { background: var(--surface-hover); }
       <div class="card">
         <div class="section-title">
           <span><i class="fas fa-store"></i> أرض المنتجات</span>
-          <div class="search-box" style="margin:0;width:300px"><input type="text" id="invSearch" placeholder="بحث بالاسم أو السيريال..." oninput="renderProducts()"><i class="fas fa-search"></i></div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div class="search-box" style="margin:0;width:300px"><input type="text" id="invSearch" placeholder="بحث بالاسم أو السيريال..." oninput="renderProducts()"><i class="fas fa-search"></i></div>
+            <button class="btn btn-outline" style="width:auto;padding:8px 16px" onclick="exportCSV('products')"><i class="fas fa-file-csv"></i> تصدير</button>
+          </div>
         </div>
+        <div class="category-filter" id="categoryFilter"></div>
         <div class="products-grid" id="productsGrid"></div>
       </div>
     </div>
@@ -369,6 +392,7 @@ tr:hover td { background: var(--surface-hover); }
               <i class="fas fa-search"></i>
               <button class="btn-icon" style="position:absolute;left:40px;top:50%;transform:translateY(-50%);border:none" onclick="startBarcodeScanner()" title="مسح باركود"><i class="fas fa-barcode"></i></button>
             </div>
+            <div class="category-filter" id="posCategoryFilter"></div>
             <div class="pos-products" id="posProducts"></div>
           </div>
 
@@ -378,7 +402,6 @@ tr:hover td { background: var(--surface-hover); }
           </div>
 
           <div id="installmentFormSection" class="card" style="display:none;margin-top:20px">
-            <!-- عرض نسبة التقسيط الحالية -->
             <div class="rate-info-box" id="rateInfoBox">
               <i class="fas fa-percentage"></i>
               <div class="rate-text">
@@ -464,7 +487,10 @@ tr:hover td { background: var(--surface-hover); }
         </form>
       </div>
       <div class="card">
-        <div class="section-title"><span>سجل المصروفات</span></div>
+        <div class="section-title">
+          <span>سجل المصروفات</span>
+          <button class="btn btn-outline" style="width:auto;padding:8px 16px" onclick="exportCSV('expenses')"><i class="fas fa-file-csv"></i> تصدير CSV</button>
+        </div>
         <div class="table-wrapper"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>التصنيف</th><th>المبلغ</th><th>حذف</th></tr></thead><tbody id="expensesBody"></tbody></table></div>
       </div>
     </div>
@@ -492,47 +518,34 @@ tr:hover td { background: var(--surface-hover); }
             <div class="form-group"><label>اسم المحل</label><input type="text" id="settingsStoreName" class="form-input"></div>
             <div class="form-group"><label>رقم الهاتف</label><input type="text" id="settingsPhone" class="form-input"></div>
             <div class="form-group span-2"><label>العنوان</label><input type="text" id="settingsAddress" class="form-input"></div>
+            <div class="form-group span-2"><label>لوجو المحل (يظهر في الفواتير)</label><input type="file" id="settingsLogo" class="form-input" accept="image/*"></div>
           </div>
           <button type="submit" class="btn btn-primary" style="margin-top:16px">حفظ الإعدادات</button>
         </form>
       </div>
 
-      <!-- بطاقة إعدادات التقسيط الجديدة -->
+      <div class="card" style="border-right: 4px solid var(--accent);">
+        <div class="section-title"><span><i class="fas fa-folder"></i> إدارة أقسام المنتجات</span></div>
+        <form id="categoryForm">
+          <div class="form-grid">
+            <div class="form-group"><label>اسم القسم <span style="color:var(--danger)">*</span></label><input type="text" id="categoryName" class="form-input" required placeholder="مثال: هواتف، لابتوب، إكسسوارات"></div>
+          </div>
+          <button type="submit" class="btn btn-accent" style="margin-top:16px"><i class="fas fa-plus"></i> إضافة قسم</button>
+        </form>
+        <div class="table-wrapper" style="margin-top:20px"><table><thead><tr><th>القسم</th><th>عدد المنتجات</th><th>حذف</th></tr></thead><tbody id="categoriesBody"></tbody></table></div>
+      </div>
+
       <div class="card" style="border-right: 4px solid var(--accent);">
         <div class="section-title"><span><i class="fas fa-percentage"></i> إعدادات التقسيط</span></div>
         <div style="background:rgba(59,130,246,0.08);padding:14px;border-radius:8px;font-size:13px;margin-bottom:16px;color:var(--text)">
           <i class="fas fa-info-circle" style="color:var(--accent)"></i>
-          حدد النسبة المئوية التي سيتم إضافتها على سعر المنتج عند البيع بالتقسيط. هذه النسبة ستُطبق تلقائياً على جميع عقود التقسيط الجديدة.
+          حدد النسبة المئوية التي سيتم إضافتها على سعر المنتج عند البيع بالتقسيط.
         </div>
         <form id="installmentRateForm">
           <div class="form-grid">
             <div class="form-group">
               <label>نسبة التقسيط (%) <span style="color:var(--danger)">*</span></label>
               <input type="number" id="settingsInstallmentRate" class="form-input" min="0" max="100" step="0.1" value="0" placeholder="مثال: 10">
-              <small style="color:var(--text-muted);font-size:11px;margin-top:4px;display:block">
-                مثال: إذا كانت النسبة 10% وسعر المنتج 1000 ج.م، يصبح سعر التقسيط 1100 ج.م
-              </small>
-            </div>
-            <div class="form-group">
-              <label>معاينة الحساب</label>
-              <div id="ratePreview" style="background:var(--bg);padding:14px;border-radius:8px;font-size:13px;border:1px solid var(--border)">
-                <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-                  <span style="color:var(--text-muted)">سعر المنتج:</span>
-                  <b>1,000.00 ج.م</b>
-                </div>
-                <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-                  <span style="color:var(--text-muted)">نسبة التقسيط:</span>
-                  <b id="previewRate" style="color:var(--accent)">0%</b>
-                </div>
-                <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-                  <span style="color:var(--text-muted)">قيمة الإضافة:</span>
-                  <b id="previewAdd" style="color:var(--warning)">0.00 ج.م</b>
-                </div>
-                <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px dashed var(--border)">
-                  <span style="font-weight:700">سعر التقسيط النهائي:</span>
-                  <b id="previewTotal" style="color:var(--success);font-size:15px">1,000.00 ج.م</b>
-                </div>
-              </div>
             </div>
           </div>
           <button type="submit" class="btn btn-accent" style="margin-top:16px"><i class="fas fa-save"></i> حفظ نسبة التقسيط</button>
@@ -541,7 +554,6 @@ tr:hover td { background: var(--surface-hover); }
 
       <div class="card" style="border-right: 4px solid var(--warning);">
         <div class="section-title"><span><i class="fas fa-code-branch"></i> إدارة الفروع</span></div>
-        <div style="background:rgba(245,158,11,0.1);color:var(--warning);padding:12px;border-radius:8px;font-size:13px;margin-bottom:16px"><i class="fas fa-info-circle"></i> إضافة فرع تتطلب موافقة المطور وسداد الاشتراك. أرسل الطلب وسيتم تزويدك بكود التفعيل.</div>
         <form id="branchForm">
           <div class="form-grid">
             <div class="form-group"><label>اسم الفرع <span style="color:var(--danger)">*</span></label><input type="text" id="newBranchName" class="form-input" required></div>
@@ -563,10 +575,13 @@ tr:hover td { background: var(--surface-hover); }
             <div class="form-group"><label>الصلاحية</label>
               <select id="empRole" class="form-input"><option value="cashier">كاشير</option><option value="inventory">مخزون</option><option value="manager">مدير</option></select>
             </div>
+            <div class="form-group"><label>الفرع <span style="color:var(--danger)">*</span></label>
+              <select id="empBranch" class="form-input" required></select>
+            </div>
           </div>
           <button type="submit" class="btn btn-accent" style="margin-top:16px">إضافة موظف</button>
         </form>
-        <div class="table-wrapper" style="margin-top:20px"><table><thead><tr><th>الاسم</th><th>الموبايل</th><th>الإيميل</th><th>الصلاحية</th><th>حذف</th></tr></thead><tbody id="usersBody"></tbody></table></div>
+        <div class="table-wrapper" style="margin-top:20px"><table><thead><tr><th>الاسم</th><th>الموبايل</th><th>الإيميل</th><th>الصلاحية</th><th>الفرع</th><th>حذف</th></tr></thead><tbody id="usersBody"></tbody></table></div>
       </div>
     </div>
   </div>
@@ -611,10 +626,6 @@ tr:hover td { background: var(--surface-hover); }
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-/* ============================================================
-   EMAA.Tech — Professional Store Management System
-   ============================================================ */
-
 const firebaseConfig = {
   apiKey: "AIzaSyChgRxNBPBlb41TGSZmdsE03tGkGVFl7GI",
   authDomain: "emaa-core.firebaseapp.com",
@@ -629,10 +640,10 @@ const auth = firebase.auth();
 const provider = new firebase.auth.GoogleAuthProvider();
 
 let currentUser=null, currentStoreData={}, currentBranchId='main', currentUserRole='owner', currentUserName='', isDevMode=false;
-let cart=[], inventory=[], clients=[], cashSales=[], expenses=[];
-let inventoryUnsub=null, clientsUnsub=null, salesUnsub=null, expensesUnsub=null, storeUnsub=null, devStoresUnsub=null, devUsersUnsub=null;
-let salesChartInstance=null, expensesChartInstance=null, html5QrcodeScanner=null;
-let installmentRate = 0; // نسبة التقسيط الحالية
+let cart=[], inventory=[], clients=[], cashSales=[], expenses=[], categories=[];
+let inventoryUnsub=null, clientsUnsub=null, salesUnsub=null, expensesUnsub=null, storeUnsub=null, devStoresUnsub=null, devUsersUnsub=null, categoriesUnsub=null;
+let salesChartInstance=null, expensesChartInstance=null, dailySalesChartInstance=null, html5QrcodeScanner=null;
+let installmentRate = 0, selectedCategory = 'all';
 
 const ROLES = {
   owner:{label:'مالك',perms:['*']},
@@ -708,9 +719,7 @@ function firebaseErrorMsg(err) {
     'auth/invalid-email': 'البريد الإلكتروني غير صالح',
     'auth/email-already-in-use': 'البريد مستخدم بالفعل',
     'auth/weak-password': 'كلمة المرور ضعيفة (6 أحرف على الأقل)',
-    'auth/network-request-failed': 'خطأ في الاتصال بالشبكة',
-    'auth/too-many-requests': 'محاولات كثيرة. انتظر قليلاً وحاول مجدداً.',
-    'auth/operation-not-allowed': 'طريقة الدخول غير مفعّلة في Firebase Console'
+    'auth/network-request-failed': 'خطأ في الاتصال بالشبكة'
   };
   return map[code] || ('خطأ: ' + (err.message || 'غير معروف'));
 }
@@ -784,7 +793,7 @@ async function resolveUserRole(user) {
     await db.collection('stores').doc(user.uid).set({
       storeName: user.displayName || 'محل جديد', email: user.email, status: 'pending',
       branches: [{ id: 'main', name: 'الفرع الرئيسي', address: '', status: 'active' }],
-      users: [], installmentRate: 0,
+      users: [], installmentRate: 0, categories: ['عام'],
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
     
@@ -816,7 +825,7 @@ async function doSignup() {
     await db.collection('stores').doc(user.uid).set({
       storeName: name, email, status: 'pending',
       branches: [{ id: 'main', name: 'الفرع الرئيسي', address: '', status: 'active' }],
-      users: [], installmentRate: 0,
+      users: [], installmentRate: 0, categories: ['عام'],
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     document.getElementById('authScreen').style.display = 'none';
@@ -868,15 +877,18 @@ function loginSuccess(startBranch) {
   document.getElementById('settingsPhone').value = currentStoreData.phone || '';
   document.getElementById('settingsAddress').value = currentStoreData.address || '';
   
-  // تحميل نسبة التقسيط
   installmentRate = parseFloat(currentStoreData.installmentRate) || 0;
   document.getElementById('settingsInstallmentRate').value = installmentRate;
-  updateRatePreview();
+  
+  if (currentStoreData.logo) {
+    document.getElementById('headerLogo').innerHTML = `<img src="${currentStoreData.logo}" alt="Logo"><span>${escapeHtml(currentStoreData.storeName || 'EMAA.Tech')}</span>`;
+  }
   
   applyPermissions();
   renderBranchSwitcher();
   renderBranches();
   renderUsers();
+  loadCategories();
   attachStoreListener();
   loadTenantData();
   
@@ -899,58 +911,87 @@ function attachStoreListener() {
     currentStoreData = { ...doc.data(), _id: doc.id };
     document.getElementById('storeNameDisplay').innerText = currentStoreData.storeName || '';
     
-    // تحديث نسبة التقسيط عند تغييرها
     const newRate = parseFloat(currentStoreData.installmentRate) || 0;
     if (newRate !== installmentRate) {
       installmentRate = newRate;
       document.getElementById('settingsInstallmentRate').value = installmentRate;
-      updateRatePreview();
-      // تحديث عرض النسبة في نموذج التقسيط إذا كان مفتوحاً
       if (document.getElementById('installmentFormSection').style.display === 'block') {
         document.getElementById('currentRateDisplay').innerText = installmentRate + '%';
         calcInstallment();
       }
     }
     
+    if (currentStoreData.logo) {
+      document.getElementById('headerLogo').innerHTML = `<img src="${currentStoreData.logo}" alt="Logo"><span>${escapeHtml(currentStoreData.storeName || 'EMAA.Tech')}</span>`;
+    }
+    
     renderBranches(); renderUsers(); renderBranchSwitcher();
   });
 }
 
-// --- دوال نسبة التقسيط ---
-function updateRatePreview() {
-  const rate = parseFloat(document.getElementById('settingsInstallmentRate').value) || 0;
-  const basePrice = 1000; // سعر افتراضي للمعاينة
-  const addition = basePrice * (rate / 100);
-  const total = basePrice + addition;
-  
-  document.getElementById('previewRate').innerText = rate + '%';
-  document.getElementById('previewAdd').innerText = formatCurrency(addition);
-  document.getElementById('previewTotal').innerText = formatCurrency(total);
+function loadCategories() {
+  if (categoriesUnsub) categoriesUnsub();
+  categoriesUnsub = db.collection('stores').doc(currentStoreData._id).collection('categories').onSnapshot(snap => {
+    categories = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderCategories();
+    renderCategoryFilters();
+    updateCategorySelect();
+  });
 }
 
-document.getElementById('settingsInstallmentRate').addEventListener('input', updateRatePreview);
-
-document.getElementById('installmentRateForm').addEventListener('submit', e => {
-  e.preventDefault();
-  if (!hasPermission('manage_settings')) return toast('لا تملك صلاحية', 'error');
-  
-  const rate = parseFloat(document.getElementById('settingsInstallmentRate').value);
-  if (isNaN(rate) || rate < 0 || rate > 100) {
-    return toast('النسبة يجب أن تكون بين 0 و 100', 'warning');
+function renderCategories() {
+  const tbody = document.getElementById('categoriesBody');
+  if (!tbody) return;
+  if (!categories.length) {
+    tbody.innerHTML = '<tr><td colspan="3"><div class="empty-state"><p>لا توجد أقسام</p></div></td></tr>';
+    return;
   }
+  tbody.innerHTML = categories.map(cat => {
+    const count = inventory.filter(p => p.category === cat.name).length;
+    return `<tr><td><b>${escapeHtml(cat.name)}</b></td><td>${count}</td><td><button class="btn-icon danger" onclick="deleteCategory('${cat.id}')"><i class="fas fa-trash"></i></button></td></tr>`;
+  }).join('');
+}
+
+function renderCategoryFilters() {
+  const filters = ['all', ...categories.map(c => c.name)];
+  const html = filters.map(f => `<button class="category-btn ${selectedCategory === f ? 'active' : ''}" onclick="filterByCategory('${f}')">${f === 'all' ? 'الكل' : escapeHtml(f)}</button>`).join('');
+  document.getElementById('categoryFilter').innerHTML = html;
+  document.getElementById('posCategoryFilter').innerHTML = html;
+}
+
+function updateCategorySelect() {
+  const select = document.getElementById('invCategory');
+  select.innerHTML = '<option value="">اختر القسم</option>' + categories.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('');
+}
+
+function filterByCategory(cat) {
+  selectedCategory = cat;
+  renderCategoryFilters();
+  renderProducts();
+  renderPosProducts();
+}
+
+document.getElementById('categoryForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = document.getElementById('categoryName').value.trim();
+  if (!name) return toast('أدخل اسم القسم', 'warning');
+  if (categories.some(c => c.name === name)) return toast('القسم موجود بالفعل', 'warning');
   
-  db.collection('stores').doc(currentStoreData._id).update({
-    installmentRate: rate
+  db.collection('stores').doc(currentStoreData._id).collection('categories').add({
+    name, createdAt: getLocalDateTimeStr()
   }).then(() => {
-    installmentRate = rate;
-    toast('تم حفظ نسبة التقسيط بنجاح', 'success');
-    // تحديث العرض في نموذج التقسيط
-    document.getElementById('currentRateDisplay').innerText = rate + '%';
-    if (document.getElementById('installmentFormSection').style.display === 'block') {
-      calcInstallment();
-    }
+    toast('تمت إضافة القسم', 'success');
+    e.target.reset();
   }).catch(err => toast('خطأ: ' + err.message, 'error'));
 });
+
+function deleteCategory(id) {
+  confirmDialog('حذف هذا القسم؟', () => {
+    db.collection('stores').doc(currentStoreData._id).collection('categories').doc(id).delete()
+      .then(() => toast('تم الحذف', 'success'))
+      .catch(err => toast('خطأ: ' + err.message, 'error'));
+  });
+}
 
 function loadDevPanel() {
   if (devStoresUnsub) devStoresUnsub();
@@ -982,11 +1023,11 @@ function loadDevPanel() {
 }
 
 function approveStore(id) { db.collection('stores').doc(id).update({ status: 'active' }).then(() => toast('تم تفعيل المحل', 'success')); }
-function deleteStore(id) { confirmDialog('حذف هذا المحل وجميع بياناته نهائياً؟', () => db.collection('stores').doc(id).delete().then(() => toast('تم الحذف', 'success'))); }
+function deleteStore(id) { confirmDialog('حذف هذا المحل نهائياً؟', () => db.collection('stores').doc(id).delete().then(() => toast('تم الحذف', 'success'))); }
 
 function issueBranchCode(storeId, branchId) {
   const price = parseFloat(document.getElementById(`pr-${storeId}-${branchId}`).value);
-  if (!price || price <= 0) return toast('أدخل سعر التفعيل أولاً', 'warning');
+  if (!price || price <= 0) return toast('أدخل سعر التفعيل', 'warning');
   const code = 'EMA-' + Math.random().toString(36).substring(2, 10).toUpperCase();
   db.collection('stores').doc(storeId).get().then(d => {
     const branches = d.data().branches.map(b => b.id === branchId ? { ...b, activationCode: code, price, codeIssuedAt: getLocalDateTimeStr() } : b);
@@ -998,7 +1039,7 @@ function loadDevUsers() {
   if (devUsersUnsub) devUsersUnsub();
   devUsersUnsub = db.collection('platform_users').where('role', '==', 'developer').onSnapshot(snap => {
     const tbody = document.getElementById('devUsersBody'); if (!tbody) return;
-    tbody.innerHTML = snap.empty ? '<tr><td colspan="4" class="empty-state">لا يوجد مستخدمين</td></tr>' : '';
+    tbody.innerHTML = snap.empty ? '<tr><td colspan="4" class="empty-state">لا يوجد</td></tr>' : '';
     snap.forEach(doc => {
       const u = doc.data();
       tbody.innerHTML += `<tr><td>${escapeHtml(u.name || '—')}</td><td>${escapeHtml(u.email)}</td><td><span class="badge b-blue">مطور</span></td><td><button class="btn-icon danger" onclick="removeDeveloper('${doc.id}')"><i class="fas fa-trash"></i></button></td></tr>`;
@@ -1020,7 +1061,7 @@ document.getElementById('devUserForm').addEventListener('submit', async e => {
     await db.collection('platform_users').doc(user.uid).set({ name, email, role: 'developer', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
     await secondary.auth().signOut();
     await secondary.delete();
-    toast('تمت إضافة المطور بنجاح', 'success');
+    toast('تمت إضافة المطور', 'success');
     e.target.reset();
   } catch (err) { toast(firebaseErrorMsg(err), 'error'); }
   showLoading(false);
@@ -1034,22 +1075,22 @@ function loadTenantData() {
   inventoryUnsub = db.collection('stores').doc(sid).collection('products').where('branchId', '==', currentBranchId).onSnapshot(snap => {
     inventory = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderProducts(); renderPosProducts(); updateDashboard();
-  });
+  }, err => { console.error('Inventory error:', err); toast('خطأ في تحميل المنتجات', 'error'); });
 
   clientsUnsub = db.collection('stores').doc(sid).collection('clients').where('branchId', '==', currentBranchId).onSnapshot(snap => {
     clients = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderClients(); renderLatePayments(); updateDashboard(); renderDailyCash();
-  });
+  }, err => { console.error('Clients error:', err); toast('خطأ في تحميل العملاء', 'error'); });
 
   salesUnsub = db.collection('stores').doc(sid).collection('sales').where('branchId', '==', currentBranchId).limit(200).onSnapshot(snap => {
     cashSales = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderCashSales(); updateDashboard(); renderDailyCash();
-  });
+  }, err => { console.error('Sales error:', err); toast('خطأ في تحميل المبيعات', 'error'); });
 
   expensesUnsub = db.collection('stores').doc(sid).collection('expenses').where('branchId', '==', currentBranchId).limit(200).onSnapshot(snap => {
     expenses = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderExpenses(); updateDashboard(); renderDailyCash();
-  });
+  }, err => { console.error('Expenses error:', err); toast('خطأ في تحميل المصروفات', 'error'); });
 }
 
 function switchTab(tabId, btn) {
@@ -1089,6 +1130,7 @@ document.getElementById('inventoryForm').addEventListener('submit', async e => {
     
     const data = {
       name: document.getElementById('invName').value.trim(),
+      category: document.getElementById('invCategory').value,
       serial: document.getElementById('invSerial').value.trim(),
       qty: parseInt(document.getElementById('invQty').value),
       cost: parseFloat(document.getElementById('invCost').value),
@@ -1110,14 +1152,16 @@ document.getElementById('inventoryForm').addEventListener('submit', async e => {
     e.target.reset();
     document.getElementById('invEditId').value = '';
     document.getElementById('invSubmitBtn').innerHTML = '<i class="fas fa-plus"></i> إضافة المنتج';
-  } catch (err) { toast('خطأ: ' + err.message, 'error'); }
+  } catch (err) { toast('خطأ: ' + err.message, 'error'); console.error(err); }
   showLoading(false);
 });
 
 function renderProducts() {
   const grid = document.getElementById('productsGrid');
   const q = (document.getElementById('invSearch')?.value || '').trim().toLowerCase();
-  const list = q ? inventory.filter(i => (i.name || '').toLowerCase().includes(q) || (i.serial || '').toLowerCase().includes(q)) : inventory;
+  let list = inventory;
+  if (selectedCategory !== 'all') list = list.filter(i => i.category === selectedCategory);
+  if (q) list = list.filter(i => (i.name || '').toLowerCase().includes(q) || (i.serial || '').toLowerCase().includes(q));
   
   if (!list.length) {
     grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="fas fa-box-open"></i><p>لا توجد منتجات</p></div>';
@@ -1130,6 +1174,7 @@ function renderProducts() {
       <div class="product-img">${img}<span class="qty-badge ${lowQty}">${item.qty}</span></div>
       <div class="product-info">
         <div class="product-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">${escapeHtml(item.category || '—')}</div>
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">${escapeHtml(item.serial)}</div>
         <div class="product-price">${formatCurrency(item.price)}</div>
         <div class="product-actions">
@@ -1145,6 +1190,7 @@ function editProduct(id) {
   const p = inventory.find(x => x.id === id); if (!p) return;
   document.getElementById('invEditId').value = id;
   document.getElementById('invName').value = p.name || '';
+  document.getElementById('invCategory').value = p.category || '';
   document.getElementById('invSerial').value = p.serial || '';
   document.getElementById('invQty').value = p.qty || 1;
   document.getElementById('invCost').value = p.cost || 0;
@@ -1155,7 +1201,7 @@ function editProduct(id) {
 }
 
 function deleteProduct(id) {
-  confirmDialog('حذف هذا المنتج نهائياً؟', () => db.collection('stores').doc(currentStoreData._id).collection('products').doc(id).delete().then(() => toast('تم الحذف', 'success')));
+  confirmDialog('حذف هذا المنتج؟', () => db.collection('stores').doc(currentStoreData._id).collection('products').doc(id).delete().then(() => toast('تم الحذف', 'success')));
 }
 
 function togglePaymentForm() {
@@ -1171,10 +1217,12 @@ function togglePaymentForm() {
 function renderPosProducts() {
   const grid = document.getElementById('posProducts');
   const q = (document.getElementById('posSearch')?.value || '').trim().toLowerCase();
-  const avail = inventory.filter(i => i.qty > 0 && (!q || (i.name || '').toLowerCase().includes(q) || (i.serial || '').toLowerCase().includes(q)));
+  let avail = inventory.filter(i => i.qty > 0);
+  if (selectedCategory !== 'all') avail = avail.filter(i => i.category === selectedCategory);
+  if (q) avail = avail.filter(i => (i.name || '').toLowerCase().includes(q) || (i.serial || '').toLowerCase().includes(q));
   
   if (!avail.length) {
-    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="fas fa-box-open"></i><p>لا توجد منتجات متاحة</p></div>';
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="fas fa-box-open"></i><p>لا توجد منتجات</p></div>';
     return;
   }
   grid.innerHTML = avail.map(item => {
@@ -1191,11 +1239,11 @@ function addToCart(id) {
   const p = inventory.find(x => x.id === id); if (!p) return;
   const existing = cart.find(c => c.id === id);
   if (existing) {
-    if (existing.qty >= p.qty) return toast('الكمية المتاحة في المخزون لا تكفي', 'warning');
+    if (existing.qty >= p.qty) return toast('الكمية المتاحة لا تكفي', 'warning');
     existing.qty++;
   } else {
-    if (p.qty < 1) return toast('المنتج غير متوفر في المخزون', 'warning');
-    cart.push({ id, name: p.name, price: p.price, cost: p.cost, serial: p.serial, image: p.image || null, qty: 1 });
+    if (p.qty < 1) return toast('المنتج غير متوفر', 'warning');
+    cart.push({ id, name: p.name, price: p.price, cost: p.cost, serial: p.serial, image: p.image || null, category: p.category, qty: 1 });
   }
   renderCart(); calcInstallment();
 }
@@ -1244,7 +1292,7 @@ function removeFromCart(i) { cart.splice(i, 1); renderCart(); calcInstallment();
 
 function startBarcodeScanner() {
   openModal(`
-    <h3 style="text-align:center;margin-bottom:15px"><i class="fas fa-barcode"></i> مسح باركود المنتج</h3>
+    <h3 style="text-align:center;margin-bottom:15px"><i class="fas fa-barcode"></i> مسح باركود</h3>
     <div id="reader" style="width:100%;max-width:400px;margin:0 auto;border-radius:12px;overflow:hidden"></div>
     <button class="btn btn-outline" style="margin-top:15px" onclick="stopBarcodeScanner(); closeModal()">إلغاء</button>
   `);
@@ -1261,11 +1309,11 @@ function startBarcodeScanner() {
         stopBarcodeScanner();
         closeModal();
       } else {
-        toast('المنتج غير موجود في المخزون', 'error');
+        toast('المنتج غير موجود', 'error');
       }
     },
-    () => { /* Ignore continuous scan errors */ }
-  ).catch(err => toast('فشل تشغيل الكاميرا: تأكد من منح الصلاحيات', 'error'));
+    () => {}
+  ).catch(err => toast('فشل تشغيل الكاميرا', 'error'));
 }
 
 function stopBarcodeScanner() {
@@ -1289,7 +1337,7 @@ async function confirmCashSale() {
         const s = storeRef.collection('sales').doc();
         batch.set(s, {
           productName: item.name, serial: item.serial, price: item.price, cost: item.cost,
-          qty: item.qty, image: item.image, client, date: getLocalDateTimeStr(), branchId: currentBranchId,
+          qty: item.qty, image: item.image, category: item.category, client, date: getLocalDateTimeStr(), branchId: currentBranchId,
           saleType: 'cash', createdBy: currentUser.uid
         });
         const pRef = storeRef.collection('products').doc(item.id);
@@ -1300,6 +1348,7 @@ async function confirmCashSale() {
       
       printThermalReceipt({
         storeName: currentStoreData.storeName,
+        logo: currentStoreData.logo,
         phone: currentStoreData.phone,
         date: new Date().toLocaleString('ar-EG'),
         items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price })),
@@ -1308,18 +1357,16 @@ async function confirmCashSale() {
       
       toast('تم البيع النقدي بنجاح', 'success');
       cart = []; renderCart(); document.getElementById('cashClientName').value = '';
-    } catch (e) { toast('خطأ: ' + e.message, 'error'); }
+    } catch (e) { toast('خطأ: ' + e.message, 'error'); console.error(e); }
     showLoading(false);
   });
 }
 
-// دالة محسّنة لحساب الأقساط مع تطبيق نسبة التقسيط
 function calcInstallment() {
   const baseTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const d = parseFloat(document.getElementById('downPayment').value) || 0;
   const c = parseInt(document.getElementById('installmentsCount').value) || 1;
   
-  // تطبيق نسبة التقسيط على الإجمالي
   const rateAddition = baseTotal * (installmentRate / 100);
   const finalTotal = baseTotal + rateAddition;
   
@@ -1343,19 +1390,17 @@ async function confirmInstallmentSale() {
   const count = parseInt(document.getElementById('installmentsCount').value);
   const startVal = document.getElementById('startDate').value;
 
-  if (!name || !phone || !nid || !addr) return toast('أكمل بيانات العميل الأساسية', 'warning');
-  if (!/^01[0125][0-9]{8}$/.test(phone)) return toast('رقم موبايل العميل غير صحيح', 'warning');
+  if (!name || !phone || !nid || !addr) return toast('أكمل بيانات العميل', 'warning');
+  if (!/^01[0125][0-9]{8}$/.test(phone)) return toast('رقم موبايل غير صحيح', 'warning');
   if (!/^[0-9]{14}$/.test(nid)) return toast('الرقم القومي يجب أن يكون 14 رقماً', 'warning');
-  if (!gName || !gPhone || !gNid) return toast('أكمل بيانات الضامن الأساسية', 'warning');
+  if (!gName || !gPhone || !gNid) return toast('أكمل بيانات الضامن', 'warning');
   if (!startVal) return toast('اختر تاريخ أول قسط', 'warning');
   
   const baseTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  
-  // تطبيق نسبة التقسيط
   const rateAddition = baseTotal * (installmentRate / 100);
   const finalTotal = baseTotal + rateAddition;
   
-  if (down >= finalTotal) return toast('المقدم يجب أن يكون أقل من الإجمالي بعد إضافة نسبة التقسيط', 'warning');
+  if (down >= finalTotal) return toast('المقدم يجب أن يكون أقل من الإجمالي', 'warning');
   if (count < 1) return toast('عدد الأقساط غير صحيح', 'warning');
 
   const start = new Date(startVal);
@@ -1365,20 +1410,20 @@ async function confirmInstallmentSale() {
     return { id: i + 1, dueDate: d.toLocaleDateString('en-CA'), amount: perInst, paid: 0, isPaid: false, payments: [] };
   });
 
-  confirmDialog(`تأكيد عقد تقسيط ${count} أقساط بقيمة ${formatCurrency(perInst)} شهرياً؟\n\nالإجمالي الأساسي: ${formatCurrency(baseTotal)}\nنسبة التقسيط: ${installmentRate}%\nالإجمالي النهائي: ${formatCurrency(finalTotal)}`, async () => {
+  confirmDialog(`تأكيد عقد تقسيط ${count} أقساط؟`, async () => {
     showLoading(true);
     try {
       const storeRef = db.collection('stores').doc(currentStoreData._id);
       await storeRef.collection('clients').add({
         name, phone, nid, address: addr, gName, gPhone, gNid,
-        products: cart.map(i => ({ name: i.name, serial: i.serial, price: i.price, cost: i.cost, image: i.image, qty: i.qty })),
+        products: cart.map(i => ({ name: i.name, serial: i.serial, price: i.price, cost: i.cost, image: i.image, qty: i.qty, category: i.category })),
         product: cart.map(i => i.name).join(', '),
         serial: cart.map(i => i.serial).join(', '),
         productImage: cart[0]?.image || null,
-        basePrice: baseTotal,              // السعر الأساسي قبل النسبة
-        installmentRate: installmentRate,  // حفظ النسبة المستخدمة وقت العقد
-        rateAddition: rateAddition,        // قيمة الإضافة
-        totalPrice: finalTotal,            // الإجمالي النهائي بعد النسبة
+        basePrice: baseTotal,
+        installmentRate: installmentRate,
+        rateAddition: rateAddition,
+        totalPrice: finalTotal,
         costPrice: cart.reduce((s, i) => s + i.cost * i.qty, 0),
         downPayment: down,
         installments, purchaseDate: getLocalDateTimeStr(), branchId: currentBranchId,
@@ -1392,12 +1437,12 @@ async function confirmInstallmentSale() {
       });
       await batch.commit();
       
-      toast('تم حفظ عقد التقسيط بنجاح', 'success');
+      toast('تم حفظ عقد التقسيط', 'success');
       cart = []; renderCart();
       ['clientName','clientPhone','clientNid','clientAddress','guarantorName','guarantorPhone','guarantorNid','downPayment','installmentsCount','startDate','instValueDisplay'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('paymentMethodSelect').value = 'cash';
       togglePaymentForm();
-    } catch (e) { toast('خطأ: ' + e.message, 'error'); }
+    } catch (e) { toast('خطأ: ' + e.message, 'error'); console.error(e); }
     showLoading(false);
   });
 }
@@ -1432,7 +1477,6 @@ function viewClient(id) {
   const rem = c.totalPrice - paid;
   const img = c.productImage ? `<img src="${c.productImage}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;margin-bottom:10px">` : '';
   
-  // عرض تفاصيل النسبة إذا كانت موجودة
   const rateInfo = c.installmentRate ? `
     <div style="grid-column:span 2;background:rgba(59,130,246,0.08);padding:12px;border-radius:8px;margin-bottom:10px;border:1px solid rgba(59,130,246,0.2)">
       <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px"><i class="fas fa-percentage"></i> تفاصيل التقسيط</div>
@@ -1470,7 +1514,7 @@ function viewClient(id) {
 function openPayModal(id) {
   const c = clients.find(x => x.id === id); if (!c) return;
   const idx = c.installments.findIndex(i => !i.isPaid);
-  if (idx === -1) return toast('تم سداد جميع الأقساط لهذا العميل 🎉', 'info');
+  if (idx === -1) return toast('تم سداد جميع الأقساط 🎉', 'info');
   
   const inst = c.installments[idx];
   const remaining = inst.amount - inst.paid;
@@ -1496,7 +1540,7 @@ function doPay(clientId, idx) {
   const remaining = inst.amount - inst.paid;
   
   if (!amt || amt <= 0) return toast('أدخل مبلغاً صحيحاً', 'warning');
-  if (amt > remaining + 0.01) return toast('المبلغ أكبر من المتبقي المستحق', 'warning');
+  if (amt > remaining + 0.01) return toast('المبلغ أكبر من المتبقي', 'warning');
   
   inst.paid += amt;
   if (!inst.payments) inst.payments = [];
@@ -1505,7 +1549,7 @@ function doPay(clientId, idx) {
   
   db.collection('stores').doc(currentStoreData._id).collection('clients').doc(clientId)
     .update({ installments: c.installments })
-    .then(() => { toast('تم تسجيل الدفعة بنجاح', 'success'); closeModal(); })
+    .then(() => { toast('تم تسجيل الدفعة', 'success'); closeModal(); })
     .catch(e => toast('خطأ: ' + e.message, 'error'));
 }
 
@@ -1532,13 +1576,13 @@ function renderLatePayments() {
   }));
   
   document.getElementById('lateCount').innerText = lateCount;
-  tbody.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-check-circle" style="color:var(--success)"></i><p>لا توجد متأخرات، عمل ممتاز! 🎉</p></div></td></tr>';
+  tbody.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-check-circle" style="color:var(--success)"></i><p>لا توجد متأخرات 🎉</p></div></td></tr>';
 }
 
 function renderCashSales() {
   const tbody = document.getElementById('cashSalesBody');
   if (!cashSales.length) {
-    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-receipt"></i><p>لا توجد مبيعات نقدية</p></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-receipt"></i><p>لا توجد مبيعات</p></div></td></tr>';
     return;
   }
   const sorted = [...cashSales].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
@@ -1554,6 +1598,7 @@ function reprintSale(id) {
   const s = cashSales.find(x => x.id === id); if (!s) return;
   printThermalReceipt({
     storeName: currentStoreData.storeName,
+    logo: currentStoreData.logo,
     phone: currentStoreData.phone,
     date: s.date ? s.date.replace('T', ' ') : getLocalDateTimeStr(),
     items: [{ name: s.productName, qty: s.qty || 1, price: s.price }],
@@ -1563,6 +1608,7 @@ function reprintSale(id) {
 
 function printThermalReceipt(data) {
   const printWindow = window.open('', '', 'width=300,height=600');
+  const logoHtml = data.logo ? `<img src="${data.logo}" style="max-width:80px;max-height:80px;margin-bottom:10px">` : '';
   printWindow.document.write(`
     <html dir="rtl"><head><style>
       body { font-family: 'Cairo', sans-serif; width: 75mm; margin: 0 auto; font-size: 12px; color: #000; }
@@ -1572,6 +1618,7 @@ function printThermalReceipt(data) {
       .footer { text-align: center; margin-top: 15px; font-size: 10px; }
     </style></head><body>
       <div class="header">
+        ${logoHtml}
         <h3 style="margin:0 0 5px 0">${escapeHtml(data.storeName || 'EMAA.Tech')}</h3>
         <p style="margin:0">${escapeHtml(data.phone || '')}</p>
         <p style="margin:5px 0 0 0;font-size:11px">${data.date}</p>
@@ -1654,14 +1701,13 @@ function updateDashboard() {
   expenses.forEach(e => tExp += e.amount || 0);
   
   const rem = clients.reduce((a, c) => a + (c.totalPrice - (c.downPayment || 0) - c.installments.reduce((s, i) => s + (i.paid || 0), 0)), 0);
-  const monthStr = getLocalDateStr().slice(0, 7);
-  const monthExp = expenses.filter(e => (e.date || '').startsWith(monthStr)).reduce((s, x) => s + x.amount, 0);
   
   document.getElementById('statSales').innerText = formatCurrency(tSales);
   document.getElementById('statCollected').innerText = formatCurrency(tCollected);
   document.getElementById('statRemaining').innerText = formatCurrency(rem);
   document.getElementById('statProfit').innerText = formatCurrency(tCollected - tCost - tExp);
-  document.getElementById('statMonthExp').innerText = formatCurrency(monthExp);
+  document.getElementById('statProducts').innerText = inventory.length;
+  document.getElementById('statClients').innerText = clients.length;
   
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const soon = new Date(today); soon.setDate(soon.getDate() + 5);
@@ -1682,7 +1728,7 @@ function updateDashboard() {
 }
 
 function renderCharts() {
-  const sc = document.getElementById('salesChart'), ec = document.getElementById('expensesChart');
+  const sc = document.getElementById('salesChart'), ec = document.getElementById('expensesChart'), dsc = document.getElementById('dailySalesChart');
   if (!sc || !ec) return;
   
   const cashTotal = cashSales.reduce((s, x) => s + x.price * (x.qty || 1), 0);
@@ -1719,15 +1765,76 @@ function renderCharts() {
     },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
   });
+  
+  // Daily sales chart
+  if (dsc) {
+    const last7Days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      last7Days.push(d.toLocaleDateString('en-CA'));
+    }
+    const dailyData = last7Days.map(date => {
+      return cashSales.filter(s => (s.date || '').startsWith(date)).reduce((sum, s) => sum + (s.price * (s.qty || 1)), 0);
+    });
+    
+    if (dailySalesChartInstance) dailySalesChartInstance.destroy();
+    dailySalesChartInstance = new Chart(dsc, {
+      type: 'line',
+      data: {
+        labels: last7Days,
+        datasets: [{
+          label: 'المبيعات اليومية',
+          data: dailyData,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+  }
 }
 
-document.getElementById('settingsForm').addEventListener('submit', e => {
+document.getElementById('settingsForm').addEventListener('submit', async e => {
   e.preventDefault();
-  db.collection('stores').doc(currentStoreData._id).update({
-    storeName: document.getElementById('settingsStoreName').value.trim(),
-    phone: document.getElementById('settingsPhone').value.trim(),
-    address: document.getElementById('settingsAddress').value.trim()
-  }).then(() => toast('تم حفظ إعدادات المحل', 'success'))
+  showLoading(true);
+  try {
+    const logoFile = document.getElementById('settingsLogo').files[0];
+    let logo = currentStoreData.logo || null;
+    if (logoFile) logo = await compressImage(logoFile, 200, 0.8);
+    
+    await db.collection('stores').doc(currentStoreData._id).update({
+      storeName: document.getElementById('settingsStoreName').value.trim(),
+      phone: document.getElementById('settingsPhone').value.trim(),
+      address: document.getElementById('settingsAddress').value.trim(),
+      logo: logo
+    });
+    
+    if (logo) {
+      document.getElementById('headerLogo').innerHTML = `<img src="${logo}" alt="Logo"><span>${escapeHtml(document.getElementById('settingsStoreName').value)}</span>`;
+    }
+    
+    toast('تم حفظ الإعدادات', 'success');
+  } catch (err) { toast('خطأ: ' + err.message, 'error'); }
+  showLoading(false);
+});
+
+document.getElementById('installmentRateForm').addEventListener('submit', e => {
+  e.preventDefault();
+  if (!hasPermission('manage_settings')) return toast('لا تملك صلاحية', 'error');
+  
+  const rate = parseFloat(document.getElementById('settingsInstallmentRate').value);
+  if (isNaN(rate) || rate < 0 || rate > 100) return toast('النسبة يجب أن تكون بين 0 و 100', 'warning');
+  
+  db.collection('stores').doc(currentStoreData._id).update({ installmentRate: rate })
+    .then(() => {
+      installmentRate = rate;
+      toast('تم حفظ نسبة التقسيط', 'success');
+      document.getElementById('currentRateDisplay').innerText = rate + '%';
+      if (document.getElementById('installmentFormSection').style.display === 'block') calcInstallment();
+    })
     .catch(err => toast('خطأ: ' + err.message, 'error'));
 });
 
@@ -1735,14 +1842,14 @@ document.getElementById('branchForm').addEventListener('submit', e => {
   e.preventDefault();
   const name = document.getElementById('newBranchName').value.trim();
   const address = document.getElementById('newBranchAddress').value.trim();
-  if ((currentStoreData.branches || []).some(b => b.name === name)) return toast('اسم الفرع مستخدم بالفعل', 'warning');
+  if ((currentStoreData.branches || []).some(b => b.name === name)) return toast('اسم الفرع مستخدم', 'warning');
   
   db.collection('stores').doc(currentStoreData._id).update({
     branches: firebase.firestore.FieldValue.arrayUnion({
       id: 'BR-' + Date.now(), name, address, status: 'pending', activationCode: null, price: 0, requestedAt: getLocalDateTimeStr()
     })
   }).then(() => {
-    toast('تم إرسال طلب الفرع بنجاح. تواصل مع المطور لسداد الاشتراك', 'success');
+    toast('تم إرسال طلب الفرع', 'success');
     e.target.reset();
   }).catch(err => toast('خطأ: ' + err.message, 'error'));
 });
@@ -1768,7 +1875,7 @@ function renderBranches() {
         <button class="btn-icon success" onclick="activateBranch('${b.id}')"><i class="fas fa-check"></i></button>
       </div>`;
     } else if (b.status === 'pending') {
-      action = '<small style="color:var(--warning)">بانتظار مراجعة المطور</small>';
+      action = '<small style="color:var(--warning)">بانتظار المطور</small>';
     } else if (b.status === 'active' && b.id !== 'main') {
       action = `<button class="btn-icon danger" onclick="deactivateBranch('${b.id}')"><i class="fas fa-ban"></i></button>`;
     } else if (b.status === 'inactive') {
@@ -1785,24 +1892,30 @@ function activateBranch(id, force) {
       if (b.id === id) {
         if (!force) {
           const code = (document.getElementById(`code-${id}`)?.value || '').trim().toUpperCase();
-          if (!b.activationCode || b.activationCode.toUpperCase() !== code) throw new Error('كود التفعيل غير صحيح');
+          if (!b.activationCode || b.activationCode.toUpperCase() !== code) throw new Error('كود غير صحيح');
         }
         return { ...b, status: 'active', activatedAt: getLocalDateTimeStr() };
       }
       return b;
     });
     return db.collection('stores').doc(currentStoreData._id).update({ branches });
-  }).then(() => toast('تم تفعيل الفرع بنجاح', 'success'))
+  }).then(() => toast('تم التفعيل', 'success'))
     .catch(e => toast(e.message, 'error'));
 }
 
 function deactivateBranch(id) {
-  confirmDialog('إيقاف هذا الفرع سيمنع الدخول إليه. هل أنت متأكد؟', () => {
+  confirmDialog('إيقاف هذا الفرع؟', () => {
     db.collection('stores').doc(currentStoreData._id).get().then(doc => {
       const branches = doc.data().branches.map(b => b.id === id ? { ...b, status: 'inactive' } : b);
       return db.collection('stores').doc(currentStoreData._id).update({ branches });
-    }).then(() => toast('تم إيقاف الفرع', 'success'));
+    }).then(() => toast('تم الإيقاف', 'success'));
   });
+}
+
+function renderBranchSelect() {
+  const select = document.getElementById('empBranch');
+  const branches = (currentStoreData.branches || []).filter(b => b.status === 'active');
+  select.innerHTML = branches.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
 }
 
 document.getElementById('userForm').addEventListener('submit', async e => {
@@ -1812,6 +1925,7 @@ document.getElementById('userForm').addEventListener('submit', async e => {
   const phone = document.getElementById('empPhone').value.trim();
   const pass = document.getElementById('empPass').value;
   const role = document.getElementById('empRole').value;
+  const branchId = document.getElementById('empBranch').value;
   
   showLoading(true);
   try {
@@ -1820,11 +1934,11 @@ document.getElementById('userForm').addEventListener('submit', async e => {
     await user.updateProfile({ displayName: name });
     await db.collection('employees').doc(user.uid).set({
       authUid: user.uid, storeId: currentStoreData._id, name, phone, email, role,
-      branchId: currentBranchId, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      branchId, createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     await secondary.auth().signOut();
     await secondary.delete();
-    toast('تمت إضافة الموظف بنجاح', 'success');
+    toast('تمت إضافة الموظف', 'success');
     e.target.reset();
     renderUsers();
   } catch (err) { toast(firebaseErrorMsg(err), 'error'); }
@@ -1832,19 +1946,22 @@ document.getElementById('userForm').addEventListener('submit', async e => {
 });
 
 function renderUsers() {
+  renderBranchSelect();
   const tbody = document.getElementById('usersBody'); if (!tbody || !currentStoreData._id) return;
   db.collection('employees').where('storeId', '==', currentStoreData._id).get().then(snap => {
     if (snap.empty) {
-      tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><p>لا يوجد موظفون</p></div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><p>لا يوجد موظفون</p></div></td></tr>';
       return;
     }
     tbody.innerHTML = snap.docs.map(d => {
       const u = d.data();
+      const branch = (currentStoreData.branches || []).find(b => b.id === u.branchId);
       return `<tr>
         <td><b>${escapeHtml(u.name)}</b></td>
         <td>${escapeHtml(u.phone || '—')}</td>
         <td>${escapeHtml(u.email)}</td>
         <td><span class="badge b-blue">${ROLES[u.role]?.label || u.role}</span></td>
+        <td>${escapeHtml(branch?.name || '—')}</td>
         <td><button class="btn-icon danger" onclick="deleteUser('${d.id}')"><i class="fas fa-trash"></i></button></td>
       </tr>`;
     }).join('');
@@ -1852,14 +1969,17 @@ function renderUsers() {
 }
 
 function deleteUser(id) {
-  confirmDialog('حذف هذا الموظف؟ (سيتم منعه من الدخول)', () => {
-    db.collection('employees').doc(id).delete().then(() => { toast('تم حذف الموظف', 'success'); renderUsers(); });
+  confirmDialog('حذف هذا الموظف؟', () => {
+    db.collection('employees').doc(id).delete().then(() => { toast('تم الحذف', 'success'); renderUsers(); });
   });
 }
 
 function exportCSV(type) {
   let rows = [];
-  if (type === 'cash') {
+  if (type === 'products') {
+    rows = [['الاسم', 'القسم', 'السيريال', 'الكمية', 'سعر الشراء', 'سعر البيع']];
+    inventory.forEach(p => rows.push([p.name, p.category || '', p.serial, p.qty, p.cost, p.price]));
+  } else if (type === 'cash') {
     rows = [['التاريخ', 'المنتج', 'السيريال', 'العميل', 'الإجمالي']];
     cashSales.forEach(s => rows.push([s.date ? s.date.split('T')[0] : '—', s.productName, s.serial, s.client, s.price * (s.qty || 1)]));
   } else if (type === 'clients') {
@@ -1868,11 +1988,17 @@ function exportCSV(type) {
       const paid = (c.downPayment || 0) + c.installments.reduce((s, i) => s + (i.paid || 0), 0);
       rows.push([c.name, c.phone, c.product, c.totalPrice, paid, c.totalPrice - paid]);
     });
+  } else if (type === 'expenses') {
+    rows = [['التاريخ', 'البيان', 'التصنيف', 'المبلغ']];
+    expenses.forEach(e => rows.push([e.date, e.desc, e.category || 'general', e.amount]));
   }
   
   const csv = rows.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${type}-${getLocalDateStr()}.csv`; a.click();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${type}-${getLocalDateStr()}.csv`;
+  a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   toast('تم تصدير الملف بنجاح', 'success');
 }
