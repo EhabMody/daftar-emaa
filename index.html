@@ -71,6 +71,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; transition:
 .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
 .btn-outline:hover { background: var(--surface-hover); border-color: var(--text-muted); }
 .btn-danger { background: var(--danger); color: white; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
 
 #appScreen { display: none; min-height: 100vh; }
 header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); background: rgba(255,255,255,0.9); }
@@ -644,6 +645,7 @@ let cart=[], inventory=[], clients=[], cashSales=[], expenses=[], categories=[];
 let inventoryUnsub=null, clientsUnsub=null, salesUnsub=null, expensesUnsub=null, storeUnsub=null, devStoresUnsub=null, devUsersUnsub=null, categoriesUnsub=null;
 let salesChartInstance=null, expensesChartInstance=null, dailySalesChartInstance=null, html5QrcodeScanner=null;
 let installmentRate = 0, selectedCategory = 'all';
+let isSaleProcessing = false;   // قفل عام لمنع تنفيذ عمليتي بيع في نفس الوقت
 
 const ROLES = {
   owner:{label:'مالك',perms:['*']},
@@ -678,26 +680,44 @@ function hasPermission(perm) {
   return r ? (r.perms.includes('*') || r.perms.includes(perm)) : false;
 }
 
-// تم تحسين نافذة التأكيد لتدعم الدوال غير المتزامنة (async) بشكل صحيح
+// ==========================================================
+// نافذة تأكيد محسّنة: تمنع النقر المزدوج وتُغلق فقط بعد انتهاء التنفيذ
+// ==========================================================
 function confirmDialog(msg, onConfirm) {
-  const o = document.createElement('div'); o.className = 'modal-overlay'; o.style.zIndex = '10001';
+  const o = document.createElement('div');
+  o.className = 'modal-overlay';
+  o.style.zIndex = '10001';
+  o.style.display = 'flex';
   o.innerHTML = `<div class="modal-content" style="max-width:400px;text-align:center">
     <h3 style="margin-bottom:12px">تأكيد الإجراء</h3>
     <p style="color:var(--text-muted);margin-bottom:24px">${msg}</p>
     <div style="display:flex;gap:10px">
-      <button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">إلغاء</button>
+      <button class="btn btn-outline" id="confirmCancelBtn">إلغاء</button>
       <button class="btn btn-danger" id="confirmBtn">تأكيد</button>
     </div>
   </div>`;
   document.body.appendChild(o);
-  o.querySelector('#confirmBtn').onclick = async () => { 
-    o.remove(); 
-    try { 
-      await onConfirm(); 
-    } catch(e) { 
+
+  const confirmBtn = o.querySelector('#confirmBtn');
+  const cancelBtn = o.querySelector('#confirmCancelBtn');
+  let busy = false;
+
+  cancelBtn.onclick = () => { if (!busy) o.remove(); };
+
+  confirmBtn.onclick = async () => {
+    if (busy) return;
+    busy = true;
+    confirmBtn.disabled = true;
+    cancelBtn.disabled = true;
+    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التنفيذ...';
+    try {
+      await onConfirm();
+    } catch (e) {
       console.error("Dialog Error:", e);
-      toast('فشل في التنفيذ: ' + (e.message || 'خطأ غير معروف'), 'error'); 
-    } 
+      toast('فشل في التنفيذ: ' + (e.message || 'خطأ غير معروف'), 'error');
+    } finally {
+      if (o.parentNode) o.remove();
+    }
   };
 }
 
@@ -1083,7 +1103,7 @@ function loadTenantData() {
 
   inventoryUnsub = db.collection('stores').doc(sid).collection('products').where('branchId', '==', currentBranchId).onSnapshot(snap => {
     inventory = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderProducts(); renderPosProducts(); updateDashboard();
+    renderProducts(); renderPosProducts(); updateDashboard(); renderCategories();
   }, err => { console.error('Inventory error:', err); toast('خطأ في تحميل المنتجات', 'error'); });
 
   clientsUnsub = db.collection('stores').doc(sid).collection('clients').where('branchId', '==', currentBranchId).onSnapshot(snap => {
@@ -1120,9 +1140,10 @@ function renderBranchSwitcher() {
 }
 
 function switchBranch(id) {
-  currentBranchId = id;
   const c = (currentStoreData.branches || []).find(b => b.id === id);
-  document.getElementById('branchDisplay').innerText = c ? c.name : '';
+  if (!c || c.status !== 'active') { toast('الفرع غير متاح', 'error'); return; }
+  currentBranchId = id;
+  document.getElementById('branchDisplay').innerText = c.name;
   cart = []; renderCart();
   loadTenantData();
 }
@@ -1331,71 +1352,92 @@ function stopBarcodeScanner() {
   }
 }
 
-// ==========================================
-// تم إصلاح دالة البيع النقدي بشكل جذري لضمان العمل
-// ==========================================
+// ==========================================================
+// تأكيد البيع النقدي — نسخة آمنة ضد التكرار والمخزون السالب
+// ==========================================================
 async function confirmCashSale() {
+  if (isSaleProcessing) return toast('عملية بيع أخرى قيد التنفيذ', 'warning');
+  if (!hasPermission('sell')) return toast('لا تملك صلاحية البيع', 'error');
   if (!cart.length) return toast('السلة فارغة', 'warning');
   if (!currentStoreData || !currentStoreData._id) return toast('خطأ: بيانات المتجر غير محملة، يرجى إعادة تحميل الصفحة', 'error');
   if (!currentUser || !currentUser.uid) return toast('خطأ: يجب تسجيل الدخول أولاً', 'error');
-  
+
+  // تحقق مبكر من توفر المخزون
+  for (const item of cart) {
+    const p = inventory.find(x => x.id === item.id);
+    if (!p) return toast(`المنتج "${item.name}" لم يعد موجوداً في المخزون`, 'error');
+    if (p.qty < item.qty) return toast(`الكمية المتاحة من "${item.name}" هي ${p.qty} فقط`, 'error');
+  }
+
   const client = document.getElementById('cashClientName').value.trim() || 'عميل نقدي';
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
   
   confirmDialog(`تأكيد بيع نقدي بإجمالي ${formatCurrency(total)}؟`, async () => {
+    // فتح نافذة الطباعة داخل سياق النقر لتجنب حجب النوافذ المنبثقة
+    let printWindow = null;
+    try { printWindow = window.open('', '', 'width=300,height=600'); } catch (e) { printWindow = null; }
+
+    isSaleProcessing = true;
     showLoading(true);
     try {
-      console.log("بدء عملية البيع...", { cart, storeId: currentStoreData._id, userId: currentUser.uid });
       const batch = db.batch();
       const storeRef = db.collection('stores').doc(currentStoreData._id);
-      
-      for (const item of cart) {
-        const s = storeRef.collection('sales').doc();
-        batch.set(s, {
-          productName: item.name, 
-          serial: item.serial, 
-          price: item.price, 
+      const saleItems = cart.map(i => ({ ...i }));
+
+      for (const item of saleItems) {
+        const p = inventory.find(x => x.id === item.id);
+        if (!p) throw new Error(`المنتج "${item.name}" غير موجود`);
+        if (p.qty < item.qty) throw new Error(`الكمية المتاحة من "${item.name}" لا تكفي (المتاح: ${p.qty})`);
+
+        const sRef = storeRef.collection('sales').doc();
+        batch.set(sRef, {
+          productName: item.name,
+          serial: item.serial,
+          price: item.price,
           cost: item.cost,
-          qty: item.qty, 
-          image: item.image || null, 
-          category: item.category || 'عام', 
-          client: client, 
-          date: getLocalDateTimeStr(), 
+          qty: item.qty,
+          image: item.image || null,
+          category: item.category || 'عام',
+          client: client,
+          date: getLocalDateTimeStr(),
           branchId: currentBranchId,
-          saleType: 'cash', 
+          saleType: 'cash',
           createdBy: currentUser.uid
         });
-        const pRef = storeRef.collection('products').doc(item.id);
-        const p = inventory.find(x => x.id === item.id);
-        if (p) {
-            batch.update(pRef, { qty: p.qty - item.qty });
-        } else {
-            console.warn("المنتج غير موجود في المخزون:", item.id);
-        }
+
+        // increment آمن ضد التزامن بدلاً من القيمة الثابتة
+        batch.update(storeRef.collection('products').doc(item.id), {
+          qty: firebase.firestore.FieldValue.increment(-item.qty)
+        });
       }
-      
-      console.log("جاري حفظ البيانات في Firebase...");
+
       await batch.commit();
-      console.log("تم الحفظ بنجاح!");
-      
-      printThermalReceipt({
-        storeName: currentStoreData.storeName,
-        logo: currentStoreData.logo,
-        phone: currentStoreData.phone,
-        date: new Date().toLocaleString('ar-EG'),
-        items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price })),
-        total: formatCurrency(total)
-      });
-      
-      toast('تم البيع النقدي بنجاح', 'success');
-      cart = []; 
-      renderCart(); 
+
+      // كتابة الإيصال في النافذة المفتوحة مسبقاً
+      if (printWindow) {
+        writeReceiptToWindow(printWindow, {
+          storeName: currentStoreData.storeName,
+          logo: currentStoreData.logo,
+          phone: currentStoreData.phone,
+          date: new Date().toLocaleString('ar-EG'),
+          items: saleItems.map(i => ({ name: i.name, qty: i.qty, price: i.price })),
+          total: formatCurrency(total)
+        });
+      } else {
+        toast('تم البيع لكن تم حجب نافذة الطباعة', 'warning');
+      }
+
+      toast('تم البيع النقدي بنجاح ✅', 'success');
+      cart = [];
+      renderCart();
       document.getElementById('cashClientName').value = '';
-    } catch (e) { 
+    } catch (e) {
+      if (printWindow) { try { printWindow.close(); } catch(_) {} }
       console.error("Sale Error Details:", e);
-      toast('فشل في إتمام البيع: ' + (e.message || 'تحقق من اتصال الإنترنت أو صلاحيات قاعدة البيانات'), 'error'); 
+      toast('فشل في إتمام البيع: ' + (e.message || 'تحقق من اتصال الإنترنت أو صلاحيات قاعدة البيانات'), 'error');
     } finally {
       showLoading(false);
+      isSaleProcessing = false;
     }
   });
 }
@@ -1415,10 +1457,12 @@ function calcInstallment() {
   }
 }
 
-// ==========================================
-// تم إصلاح دالة بيع التقسيط بشكل جذري لضمان العمل
-// ==========================================
+// ==========================================================
+// تأكيد بيع التقسيط — نسخة آمنة ضد التكرار والمخزون السالب
+// ==========================================================
 async function confirmInstallmentSale() {
+  if (isSaleProcessing) return toast('عملية بيع أخرى قيد التنفيذ', 'warning');
+  if (!hasPermission('sell')) return toast('لا تملك صلاحية البيع', 'error');
   if (!cart.length) return toast('السلة فارغة', 'warning');
   if (!currentStoreData || !currentStoreData._id) return toast('خطأ: بيانات المتجر غير محملة', 'error');
   if (!currentUser || !currentUser.uid) return toast('خطأ: يجب تسجيل الدخول أولاً', 'error');
@@ -1439,7 +1483,14 @@ async function confirmInstallmentSale() {
   if (!/^[0-9]{14}$/.test(nid)) return toast('الرقم القومي يجب أن يكون 14 رقماً', 'warning');
   if (!gName || !gPhone || !gNid) return toast('أكمل بيانات الضامن', 'warning');
   if (!startVal) return toast('اختر تاريخ أول قسط', 'warning');
-  
+
+  // تحقق مبكر من توفر المخزون
+  for (const item of cart) {
+    const p = inventory.find(x => x.id === item.id);
+    if (!p) return toast(`المنتج "${item.name}" لم يعد موجوداً في المخزون`, 'error');
+    if (p.qty < item.qty) return toast(`الكمية المتاحة من "${item.name}" هي ${p.qty} فقط`, 'error');
+  }
+
   const baseTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const rateAddition = baseTotal * (installmentRate / 100);
   const finalTotal = baseTotal + rateAddition;
@@ -1455,46 +1506,54 @@ async function confirmInstallmentSale() {
   });
 
   confirmDialog(`تأكيد عقد تقسيط ${count} أقساط؟`, async () => {
+    isSaleProcessing = true;
     showLoading(true);
     try {
-      console.log("بدء حفظ عقد التقسيط...");
       const storeRef = db.collection('stores').doc(currentStoreData._id);
+      const saleItems = cart.map(i => ({ ...i }));
+
+      // حفظ عقد التقسيط أولاً
       await storeRef.collection('clients').add({
         name, phone, nid, address: addr, gName, gPhone, gNid,
-        products: cart.map(i => ({ name: i.name, serial: i.serial, price: i.price, cost: i.cost, image: i.image, qty: i.qty, category: i.category })),
-        product: cart.map(i => i.name).join(', '),
-        serial: cart.map(i => i.serial).join(', '),
-        productImage: cart[0]?.image || null,
+        products: saleItems.map(i => ({
+          name: i.name, serial: i.serial, price: i.price, cost: i.cost,
+          image: i.image, qty: i.qty, category: i.category
+        })),
+        product: saleItems.map(i => i.name).join(', '),
+        serial: saleItems.map(i => i.serial).join(', '),
+        productImage: saleItems[0]?.image || null,
         basePrice: baseTotal,
         installmentRate: installmentRate,
         rateAddition: rateAddition,
         totalPrice: finalTotal,
-        costPrice: cart.reduce((s, i) => s + i.cost * i.qty, 0),
+        costPrice: saleItems.reduce((s, i) => s + i.cost * i.qty, 0),
         downPayment: down,
-        installments, purchaseDate: getLocalDateTimeStr(), branchId: currentBranchId,
+        installments,
+        purchaseDate: getLocalDateTimeStr(),
+        branchId: currentBranchId,
         createdBy: currentUser.uid
       });
-      
+
+      // خصم المخزون باستخدام increment (آمن ضد التزامن)
       const batch = db.batch();
-      for (const item of cart) {
-        const p = inventory.find(x => x.id === item.id);
-        if (p) {
-          batch.update(storeRef.collection('products').doc(item.id), { qty: p.qty - item.qty });
-        }
+      for (const item of saleItems) {
+        batch.update(storeRef.collection('products').doc(item.id), {
+          qty: firebase.firestore.FieldValue.increment(-item.qty)
+        });
       }
       await batch.commit();
-      console.log("تم حفظ عقد التقسيط بنجاح!");
-      
-      toast('تم حفظ عقد التقسيط', 'success');
+
+      toast('تم حفظ عقد التقسيط بنجاح ✅', 'success');
       cart = []; renderCart();
       ['clientName','clientPhone','clientNid','clientAddress','guarantorName','guarantorPhone','guarantorNid','downPayment','installmentsCount','startDate','instValueDisplay'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('paymentMethodSelect').value = 'cash';
       togglePaymentForm();
-    } catch (e) { 
+    } catch (e) {
       console.error("Installment Sale Error Details:", e);
-      toast('فشل في حفظ العقد: ' + (e.message || 'خطأ غير معروف'), 'error'); 
+      toast('فشل في حفظ العقد: ' + (e.message || 'خطأ غير معروف'), 'error');
     } finally {
       showLoading(false);
+      isSaleProcessing = false;
     }
   });
 }
@@ -1648,7 +1707,9 @@ function renderCashSales() {
 
 function reprintSale(id) {
   const s = cashSales.find(x => x.id === id); if (!s) return;
-  printThermalReceipt({
+  const printWindow = window.open('', '', 'width=300,height=600');
+  if (!printWindow) return toast('تم حجب نافذة الطباعة من المتصفح', 'warning');
+  writeReceiptToWindow(printWindow, {
     storeName: currentStoreData.storeName,
     logo: currentStoreData.logo,
     phone: currentStoreData.phone,
@@ -1658,11 +1719,13 @@ function reprintSale(id) {
   });
 }
 
-function printThermalReceipt(data) {
-  const printWindow = window.open('', '', 'width=300,height=600');
+// ==========================================================
+// دالة كتابة الإيصال في نافذة مفتوحة مسبقاً (تجنب حجب المتصفح)
+// ==========================================================
+function writeReceiptToWindow(win, data) {
   const logoHtml = data.logo ? `<img src="${data.logo}" style="max-width:80px;max-height:80px;margin-bottom:10px">` : '';
-  printWindow.document.write(`
-    <html dir="rtl"><head><style>
+  win.document.write(`
+    <html dir="rtl"><head><title>فاتورة</title><style>
       body { font-family: 'Cairo', sans-serif; width: 75mm; margin: 0 auto; font-size: 12px; color: #000; }
       .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
       .item { display: flex; justify-content: space-between; margin: 6px 0; }
@@ -1683,7 +1746,14 @@ function printThermalReceipt(data) {
       <script>window.onload = () => { window.print(); setTimeout(() => window.close(), 500); }<\/script>
     </body></html>
   `);
-  printWindow.document.close();
+  win.document.close();
+}
+
+// احتفظ بالدالة القديمة للتوافق مع أي استدعاء آخر
+function printThermalReceipt(data) {
+  const win = window.open('', '', 'width=300,height=600');
+  if (!win) return toast('تم حجب نافذة الطباعة من المتصفح', 'warning');
+  writeReceiptToWindow(win, data);
 }
 
 document.getElementById('expenseForm').addEventListener('submit', e => {
@@ -1965,6 +2035,7 @@ function deactivateBranch(id) {
 
 function renderBranchSelect() {
   const select = document.getElementById('empBranch');
+  if (!select) return;
   const branches = (currentStoreData.branches || []).filter(b => b.status === 'active');
   select.innerHTML = branches.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
 }
