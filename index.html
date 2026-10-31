@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>EMAA.Tech — نظام إدارة المحلات الاحترافي</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
@@ -34,6 +34,8 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; transition:
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideIn { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulseGlow { 0%,100% { filter: drop-shadow(0 0 20px rgba(59,130,246,0.6)); } 50% { filter: drop-shadow(0 0 40px rgba(59,130,246,1)); } }
+
 #toastContainer { position: fixed; top: 20px; left: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 10px; }
 .toast { background: var(--surface); color: var(--text); padding: 14px 20px; border-radius: var(--radius-sm); font-weight: 600; box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 12px; animation: slideIn 0.3s ease-out; min-width: 280px; border-right: 4px solid var(--accent); }
 .toast.success { border-right-color: var(--success); }
@@ -41,19 +43,107 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; transition:
 .toast.warning { border-right-color: var(--warning); }
 #loadingOverlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 99999; flex-direction: column; }
 .spinner { width: 48px; height: 48px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
-#authScreen, #developerLogin, #pendingScreen, #expiredScreen { position: fixed; inset: 0; background: linear-gradient(135deg, var(--primary) 0%, #1e1b4b 100%); display: flex; justify-content: center; align-items: center; z-index: 9998; padding: 20px; }
-.auth-box { background: var(--surface); padding: 40px; border-radius: 20px; width: 100%; max-width: 440px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); animation: fadeIn 0.5s ease-out; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
-.dev-brand { text-align: center; margin-bottom: 30px; color: white; }
-.dev-brand h2 { font-size: 36px; font-weight: 800; letter-spacing: -1px; }
-.dev-brand h2 span { color: var(--accent); }
-.dev-brand .shield-icon { font-size: 48px; color: var(--accent); margin-bottom: 15px; filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.5)); }
+
+#authScreen, #developerLogin, #pendingScreen, #expiredScreen { 
+  position: fixed; inset: 0; 
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); 
+  display: flex; justify-content: center; align-items: center; z-index: 9998; padding: 20px;
+  overflow-y: auto;
+}
+.auth-box { 
+  background: var(--surface); padding: 40px 32px; border-radius: 24px; 
+  width: 100%; max-width: 460px; box-shadow: 0 25px 60px -12px rgba(0,0,0,0.6); 
+  animation: fadeIn 0.5s ease-out; border: 1px solid var(--border);
+  max-height: 92vh; overflow-y: auto;
+}
+
+/* ============================================
+   لوجو EMAA.Tech الاحترافي
+   ============================================ */
+.ema-logo-wrapper {
+  text-align: center;
+  margin-bottom: 30px;
+  position: relative;
+}
+.ema-logo {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+.ema-logo-icon {
+  width: 90px;
+  height: 90px;
+  margin-bottom: 16px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  animation: pulseGlow 3s ease-in-out infinite;
+  box-shadow: 0 15px 40px -10px rgba(59, 130, 246, 0.7);
+}
+.ema-logo-icon::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 100%);
+}
+.ema-logo-icon i {
+  font-size: 42px;
+  color: white;
+  z-index: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+.ema-logo-text {
+  font-size: 40px;
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  color: #ffffff;
+  line-height: 1;
+  margin-bottom: 4px;
+  text-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+}
+.ema-logo-text span {
+  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.ema-logo-tagline {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+.ema-logo-ribbon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(90deg, rgba(59,130,246,0.15), rgba(16,185,129,0.15));
+  border: 1px solid rgba(59,130,246,0.3);
+  color: #60a5fa;
+  padding: 8px 16px;
+  border-radius: 30px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 16px;
+}
+.ema-logo-ribbon i { font-size: 14px; }
+
 .auth-tabs { display: flex; gap: 8px; background: var(--bg); padding: 5px; border-radius: var(--radius); margin-bottom: 25px; }
 .auth-tabs button { flex: 1; padding: 10px; border: none; background: transparent; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; color: var(--text-muted); transition: all 0.2s; }
 .auth-tabs button.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm); }
+
 .form-group { margin-bottom: 16px; }
 .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-muted); }
 .form-input { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; background: var(--bg); color: var(--text); transition: all 0.2s; outline: none; }
 .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); background: var(--surface); }
+
 .btn { width: 100%; padding: 12px; border: none; border-radius: var(--radius-sm); font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.2s; display: inline-flex; justify-content: center; align-items: center; gap: 8px; }
 .btn-primary { background: var(--primary); color: white; }
 .btn-primary:hover { background: var(--primary-light); transform: translateY(-1px); }
@@ -63,15 +153,51 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; transition:
 .btn-outline:hover { background: var(--surface-hover); border-color: var(--text-muted); }
 .btn-danger { background: var(--danger); color: white; }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+
 #appScreen { display: none; min-height: 100vh; }
 header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); background: rgba(255,255,255,0.9); }
 body.dark-mode header { background: rgba(30, 41, 59, 0.9); }
 .logo { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; color: var(--primary); }
 .logo img { width: 40px; height: 40px; object-fit: contain; border-radius: 8px; }
 .logo i { color: var(--accent); font-size: 24px; }
-.header-info { text-align: left; }
-.header-info h4 { font-size: 15px; font-weight: 700; color: var(--text); }
-.header-info small { font-size: 12px; color: var(--text-muted); display: block; }
+
+/* ============================================
+   هيدر - معلومات المستخدم
+   ============================================ */
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  background: var(--bg);
+  border-radius: 50px;
+  border: 1px solid var(--border);
+}
+.header-user-avatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.header-user-info { text-align: right; line-height: 1.3; }
+.header-user-info .name { font-size: 13px; font-weight: 700; color: var(--text); }
+.header-user-info .role { font-size: 11px; color: var(--accent); font-weight: 700; display: flex; align-items: center; gap: 4px; margin-top: 1px; }
+.header-store-info { text-align: right; margin-left: 8px; padding-left: 8px; border-left: 1px solid var(--border); }
+.header-store-info h4 { font-size: 14px; font-weight: 700; color: var(--text); }
+.header-store-info small { font-size: 11px; color: var(--text-muted); display: block; }
+
+@media (max-width: 768px) {
+  .header-user-info { display: none; }
+  .header-user { padding: 6px; background: transparent; border: none; }
+  .header-store-info { display: none; }
+}
+
 .trial-banner { background: linear-gradient(90deg, var(--warning), #f97316); color: white; padding: 10px 24px; text-align: center; font-weight: 700; font-size: 13px; display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; }
 .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
 .tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 24px; scrollbar-width: none; }
@@ -163,7 +289,6 @@ tr:hover td { background: var(--surface-hover); }
 .category-btn:hover { background: var(--surface-hover); }
 .category-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 .license-key-display { font-family: 'Courier New', monospace; letter-spacing: 2px; font-weight: 800; color: var(--accent); background: var(--bg); padding: 12px; border-radius: 8px; text-align: center; font-size: 16px; word-break: break-all; }
-.lifetime-badge { background: linear-gradient(135deg, #10b981, #3b82f6); color: white; padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
 @media print {
   body * { visibility: hidden; }
   .modal-content, .modal-content * { visibility: visible; }
@@ -180,18 +305,25 @@ tr:hover td { background: var(--surface-hover); }
 <!-- AUTH SCREEN -->
 <div id="authScreen">
   <div class="auth-box">
-    <div class="dev-brand">
-      <i class="fas fa-shield-halved shield-icon"></i>
-      <h2>EMAA<span>.Tech</span></h2>
-      <p style="color:var(--text-muted);font-size:13px;margin-top:8px">نظام إدارة المحلات المتكامل والآمن</p>
-      <div style="margin-top:12px;background:rgba(59,130,246,0.1);padding:8px 12px;border-radius:20px;display:inline-block;font-size:11px;color:var(--accent);font-weight:700">
-        <i class="fas fa-gift"></i> جرب مجاناً لمدة 14 يوم
+    <!-- لوجو EMAA.Tech الاحترافي -->
+    <div class="ema-logo-wrapper">
+      <div class="ema-logo">
+        <div class="ema-logo-icon">
+          <i class="fas fa-shield-halved"></i>
+        </div>
+        <div class="ema-logo-text">EMAA<span>.Tech</span></div>
+        <div class="ema-logo-tagline">نظام إدارة المحلات الاحترافي</div>
+        <div class="ema-logo-ribbon">
+          <i class="fas fa-gift"></i> جرب مجاناً 14 يوم
+        </div>
       </div>
     </div>
+    
     <div class="auth-tabs">
       <button class="active" onclick="switchAuthTab('login')">تسجيل الدخول</button>
       <button onclick="switchAuthTab('signup')">حساب جديد</button>
     </div>
+    
     <div id="loginForm">
       <div class="form-group">
         <label>البريد الإلكتروني</label>
@@ -204,6 +336,7 @@ tr:hover td { background: var(--surface-hover); }
       <button class="btn btn-primary" onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> دخول</button>
       <button class="btn btn-outline" style="margin-top:10px" onclick="signInWithGoogle()"><i class="fab fa-google"></i> الدخول عبر Google</button>
     </div>
+    
     <div id="signupForm" style="display:none">
       <div class="form-group">
         <label>اسم المحل التجاري</label>
@@ -223,18 +356,24 @@ tr:hover td { background: var(--surface-hover); }
       </div>
       <button class="btn btn-accent" onclick="doSignup()"><i class="fas fa-user-plus"></i> إنشاء الحساب</button>
     </div>
-    <button class="btn btn-outline" style="margin-top:20px;font-size:12px;color:var(--text-muted)" onclick="showDevLogin()">
-      <i class="fas fa-code"></i> دخول المطور (Super Admin)
-    </button>
+    
+    <div style="text-align:center;margin-top:20px;font-size:11px;color:var(--text-muted)">
+      © 2025 EMAA.Tech — جميع الحقوق محفوظة
+    </div>
   </div>
 </div>
 
-<!-- DEV LOGIN -->
+<!-- DEV LOGIN (فقط عبر #dev-admin) -->
 <div id="developerLogin" style="display:none">
   <div class="auth-box" style="border-top: 4px solid var(--gold);">
-    <div class="dev-brand">
-      <i class="fas fa-crown shield-icon" style="color:var(--gold)"></i>
-      <h2>EMAA<span style="color:var(--gold)">.Admin</span></h2>
+    <div class="ema-logo-wrapper">
+      <div class="ema-logo">
+        <div class="ema-logo-icon" style="background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); animation: pulseGlow 3s ease-in-out infinite;">
+          <i class="fas fa-crown"></i>
+        </div>
+        <div class="ema-logo-text">EMAA<span style="background:linear-gradient(135deg,#fbbf24,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">.Admin</span></div>
+        <div class="ema-logo-tagline">لوحة تحكم المطور</div>
+      </div>
     </div>
     <div class="form-group">
       <label>بريد المطور</label>
@@ -297,12 +436,24 @@ tr:hover td { background: var(--surface-hover); }
       <i class="fas fa-shield-halved"></i>
       <span>EMAA.Tech</span>
     </div>
-    <div class="header-info">
-      <h4 id="storeNameDisplay">اسم المحل</h4>
-      <small id="branchDisplay">الفرع الرئيسي</small>
-      <small id="userRoleDisplay" style="color:var(--accent);font-weight:700"></small>
+    
+    <!-- معلومات المحل -->
+    <div style="flex:1;display:flex;justify-content:center">
+      <div class="header-store-info" style="text-align:center;border:none;padding:0;margin:0">
+        <h4 id="storeNameDisplay">اسم المحل</h4>
+        <small id="branchDisplay">الفرع الرئيسي</small>
+      </div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
+    
+    <!-- معلومات المستخدم + أدوات -->
+    <div style="display:flex;gap:10px;align-items:center">
+      <div class="header-user" id="headerUser">
+        <div class="header-user-avatar" id="userAvatar">م</div>
+        <div class="header-user-info">
+          <div class="name" id="userNameDisplay">اسم المستخدم</div>
+          <div class="role" id="userRoleDisplay"><i class="fas fa-user-tag"></i> <span>وظيفة</span></div>
+        </div>
+      </div>
       <select id="branchSwitcher" class="form-input" style="width:auto;padding:8px 12px;font-size:12px" onchange="switchBranch(this.value)"></select>
       <button class="btn-icon" onclick="toggleTheme()" title="الوضع الليلي"><i class="fas fa-moon"></i></button>
       <button class="btn-icon danger" onclick="logout()" title="تسجيل الخروج"><i class="fas fa-sign-out-alt"></i></button>
@@ -561,7 +712,8 @@ tr:hover td { background: var(--surface-hover); }
         </form>
       </div>
 
-      <div class="card" style="border-right: 4px solid var(--warning);">
+      <!-- إدارة الفروع - مخفية عن غير المالك -->
+      <div class="card" id="branchManagementCard" style="border-right: 4px solid var(--warning);">
         <div class="section-title"><span><i class="fas fa-code-branch"></i> إدارة الفروع</span></div>
         <form id="branchForm">
           <div class="form-grid">
@@ -573,7 +725,7 @@ tr:hover td { background: var(--surface-hover); }
         <div class="table-wrapper" style="margin-top:20px"><table><thead><tr><th>الفرع</th><th>العنوان</th><th>الحالة</th><th>كود التفعيل</th><th>إجراء</th></tr></thead><tbody id="branchesBody"></tbody></table></div>
       </div>
 
-      <div class="card" style="border-right: 4px solid var(--accent);">
+      <div class="card" id="usersManagementCard" style="border-right: 4px solid var(--accent);">
         <div class="section-title"><span><i class="fas fa-user-tie"></i> إدارة الموظفين</span></div>
         <form id="userForm">
           <div class="form-grid">
@@ -595,7 +747,6 @@ tr:hover td { background: var(--surface-hover); }
     </div>
   </div>
 </div>
-
 <!-- DEV PANEL -->
 <div id="devAdminPanel" style="display:none;padding:20px;min-height:100vh;background:var(--bg)">
   <header style="border-radius:var(--radius);margin-bottom:20px;border-right:4px solid var(--gold)">
@@ -609,427 +760,6 @@ tr:hover td { background: var(--surface-hover); }
       <div class="stat-card"><div class="stat-icon green"><i class="fas fa-infinity"></i></div><div class="stat-info"><h3>تراخيص مدى الحياة</h3><p id="devStatActive">0</p></div></div>
       <div class="stat-card"><div class="stat-icon gold"><i class="fas fa-hourglass-half"></i></div><div class="stat-info"><h3>في التجربة</h3><p id="devStatTrial">0</p></div></div>
       <div class="stat-card"><div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-info"><h3>منتهية / معلقة</h3><p id="devStatExpired">0</p></div></div>
-      <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-money-bill-wave"></i></div><div class="stat-info"><h3>إيرادات التراخيص</h3><p id="devStatRevenue">0 ج.م</p></div></div>
-      <div class="stat-card"><div class="stat-icon green"><i class="fas fa-code-branch"></i></div><div class="stat-info"><h3>إجمالي الفروع</h3><p id="devStatBranches">0</p></div></div>
-    </div>
-
-    <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
-      <div class="card"><div class="section-title" style="font-size:14px"><span>توزيع حالة المحلات</span></div><canvas id="devStatusChart" style="max-height:250px"></canvas></div>
-      <div class="card"><div class="section-title" style="font-size:14px"><span>المحلات الجديدة (آخر 6 أشهر)</span></div><canvas id="devGrowthChart" style="max-height:250px"></canvas></div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">
-        <span><i class="fas fa-building"></i> إدارة المحلات</span>
-        <div class="search-box" style="margin:0;width:250px">
-          <input type="text" id="devStoreSearch" placeholder="بحث بالاسم أو الإيميل..." oninput="renderDevStores()">
-          <i class="fas fa-search"></i>
-        </div>
-      </div>
-      <div class="table-wrapper">
-        <table><thead><tr><th>المحل</th><th>الإيميل</th><th>الحالة</th><th>التجربة</th><th>الفروع</th><th>تفاصيل</th><th>إجراءات</th></tr></thead>
-        <tbody id="devStoresBody"></tbody></table>
-      </div>
-    </div>
-
-    <div class="card" style="border-right:4px solid var(--warning)">
-      <div class="section-title"><span><i class="fas fa-key"></i> طلبات التراخيص المعلقة</span></div>
-      <div class="table-wrapper">
-        <table><thead><tr><th>المحل</th><th>الإيميل</th><th>تاريخ الطلب</th><th>إجراء</th></tr></thead>
-        <tbody id="devLicenseRequestsBody"></tbody></table>
-      </div>
-    </div>
-
-    <div class="card" style="border-right:4px solid var(--warning)">
-      <div class="section-title"><span><i class="fas fa-code-branch"></i> طلبات الفروع المعلقة</span></div>
-      <div class="table-wrapper">
-        <table>
-          <thead><tr>
-            <th>المحل</th><th>اسم الفرع</th><th>العنوان</th><th>تاريخ الطلب</th><th>السعر المحدد</th><th>إجراءات</th>
-          </tr></thead>
-          <tbody id="devBranchesRequestsBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="card" style="border-right:4px solid var(--success)">
-      <div class="section-title"><span><i class="fas fa-key"></i> مفاتيح الترخيص (مدى الحياة)</span></div>
-      <form id="devLicenseForm" style="margin-bottom:16px;padding:16px;background:var(--bg);border-radius:8px">
-        <div class="form-grid" style="grid-template-columns:2fr 1fr">
-          <div class="form-group"><label>المحل (اختياري)</label>
-            <select id="devLicStoreId" class="form-input"><option value="">مفتاح عام</option></select>
-          </div>
-          <div class="form-group"><label>السعر (ج.م)</label><input type="number" id="devLicPrice" class="form-input" value="0" min="0"></div>
-        </div>
-        <div style="background:rgba(16,185,129,0.1);padding:10px;border-radius:8px;margin-top:8px;font-size:12px;color:var(--success);font-weight:600">
-          <i class="fas fa-infinity"></i> جميع المفاتيح الجديدة = ترخيص مدى الحياة (لا ينتهي أبداً)
-        </div>
-        <button type="submit" class="btn btn-accent" style="margin-top:12px"><i class="fas fa-key"></i> توليد مفتاح مدى الحياة</button>
-      </form>
-      <div class="table-wrapper">
-        <table><thead><tr><th>المفتاح</th><th>المحل</th><th>النوع</th><th>السعر</th><th>الحالة</th><th>حذف</th></tr></thead>
-        <tbody id="devLicenseKeysBody"></tbody></table>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="section-title"><span><i class="fas fa-user-shield"></i> مستخدمو المطور</span></div>
-      <form id="devUserForm" style="margin-bottom:20px">
-        <div class="form-grid">
-          <div class="form-group"><label>الاسم</label><input type="text" id="devUserName" class="form-input" required></div>
-          <div class="form-group"><label>البريد</label><input type="email" id="devUserEmail" class="form-input" required></div>
-          <div class="form-group"><label>كلمة المرور</label><input type="password" id="devUserPass" class="form-input" required minlength="6"></div>
-        </div>
-        <button type="submit" class="btn btn-primary" style="background:var(--gold);color:black;margin-top:16px">إضافة مطور</button>
-      </form>
-      <div class="table-wrapper"><table><thead><tr><th>الاسم</th><th>البريد</th><th>الدور</th><th>حذف</th></tr></thead><tbody id="devUsersBody"></tbody></table></div>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="mainModal">
-  <div class="modal-content">
-    <button class="close-modal" onclick="closeModal()"><i class="fas fa-times"></i></button>
-    <div id="modalBody"></div>
-  </div>
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyChgRxNBPBlb41TGSZmdsE03tGkGVFl7GI",
-  authDomain: "emaa-core.firebaseapp.com",
-  projectId: "emaa-core",
-  storageBucket: "emaa-core.firebasestorage.app",
-  messagingSenderId: "737196522441",
-  appId: "1:737196522441:web:6bbcb456017e8484f7c618"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const auth = firebase.auth();
-const provider = new firebase.auth.GoogleAuthProvider();
-
-let currentUser=null, currentStoreData={}, currentBranchId='main', currentUserRole='owner', currentUserName='', isDevMode=false;
-let cart=[], inventory=[], clients=[], cashSales=[], expenses=[], categories=[];
-let inventoryUnsub=null, clientsUnsub=null, salesUnsub=null, expensesUnsub=null, storeUnsub=null, devStoresUnsub=null, devUsersUnsub=null, devLicenseKeysUnsub=null, categoriesUnsub=null;
-let salesChartInstance=null, expensesChartInstance=null, dailySalesChartInstance=null, html5QrcodeScanner=null;
-let devStatusChartInstance=null, devGrowthChartInstance=null;
-let installmentRate = 0, selectedCategory = 'all';
-let isSaleProcessing = false;
-let devStoresCache = [];
-
-const TRIAL_DAYS = 14;
-
-const ROLES = {
-  owner:{label:'مالك',perms:['*']},
-  manager:{label:'مدير',perms:['view_dashboard','manage_inventory','sell','manage_clients','manage_expenses','manage_settings']},
-  cashier:{label:'كاشير',perms:['sell','manage_clients','view_dashboard']},
-  inventory:{label:'مخزون',perms:['manage_inventory','view_dashboard']},
-  developer:{label:'مطور',perms:['*']}
-};
-
-function getLocalDateStr() { return new Date().toLocaleDateString('en-CA'); }
-function getLocalDateTimeStr() { return new Date().toLocaleString('sv-SE').replace(' ', 'T'); }
-function formatCurrency(n) { return (parseFloat(n)||0).toLocaleString('en-EG', {maximumFractionDigits:2}) + ' ج.م'; }
-function escapeHtml(s) { return String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-function toast(msg, type='info', duration=3500) {
-  const c = document.getElementById('toastContainer');
-  const icons = {success:'fa-check-circle', error:'fa-times-circle', info:'fa-info-circle', warning:'fa-exclamation-triangle'};
-  const el = document.createElement('div');
-  el.className = `toast ${type}`;
-  el.innerHTML = `<i class="fas ${icons[type]||'fa-info-circle'}"></i> <span>${msg}</span>`;
-  c.appendChild(el);
-  setTimeout(() => { el.style.opacity='0'; setTimeout(()=>el.remove(), 300); }, duration);
-}
-
-function showLoading(s) { document.getElementById('loadingOverlay').style.display = s ? 'flex' : 'none'; }
-function closeModal() { document.getElementById('mainModal').style.display = 'none'; if(html5QrcodeScanner) stopBarcodeScanner(); }
-function openModal(html) { document.getElementById('modalBody').innerHTML = html; document.getElementById('mainModal').style.display = 'flex'; }
-
-function hasPermission(perm) {
-  if (isDevMode || currentUserRole === 'owner') return true;
-  const r = ROLES[currentUserRole];
-  return r ? (r.perms.includes('*') || r.perms.includes(perm)) : false;
-}
-
-function confirmDialog(msg, onConfirm) {
-  const o = document.createElement('div');
-  o.className = 'modal-overlay';
-  o.style.zIndex = '10001';
-  o.style.display = 'flex';
-  o.innerHTML = `<div class="modal-content" style="max-width:400px;text-align:center">
-    <h3 style="margin-bottom:12px">تأكيد الإجراء</h3>
-    <p style="color:var(--text-muted);margin-bottom:24px">${msg}</p>
-    <div style="display:flex;gap:10px">
-      <button class="btn btn-outline" id="confirmCancelBtn">إلغاء</button>
-      <button class="btn btn-danger" id="confirmBtn">تأكيد</button>
-    </div>
-  </div>`;
-  document.body.appendChild(o);
-  const confirmBtn = o.querySelector('#confirmBtn');
-  const cancelBtn = o.querySelector('#confirmCancelBtn');
-  let busy = false;
-  cancelBtn.onclick = () => { if (!busy) o.remove(); };
-  confirmBtn.onclick = async () => {
-    if (busy) return;
-    busy = true;
-    confirmBtn.disabled = true;
-    cancelBtn.disabled = true;
-    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التنفيذ...';
-    try { await onConfirm(); }
-    catch (e) { console.error("Dialog Error:", e); toast('فشل في التنفيذ: ' + (e.message || 'خطأ غير معروف'), 'error'); }
-    finally { if (o.parentNode) o.remove(); }
-  };
-}
-
-function compressImage(file, max=600, q=0.75) {
-  return new Promise((res, rej) => {
-    const img = new Image(), r = new FileReader();
-    r.onload = e => {
-      img.onload = () => {
-        const c = document.createElement('canvas');
-        const ratio = Math.min(max / img.width, 1);
-        c.width = img.width * ratio; c.height = img.height * ratio;
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        res(c.toDataURL('image/jpeg', q));
-      };
-      img.onerror = rej; img.src = e.target.result;
-    };
-    r.onerror = rej; r.readAsDataURL(file);
-  });
-}
-
-function firebaseErrorMsg(err) {
-  const code = err.code || '';
-  const map = {
-    'auth/invalid-credential': 'البريد أو كلمة المرور غير صحيحة',
-    'auth/invalid-login-credentials': 'البريد أو كلمة المرور غير صحيحة',
-    'auth/user-not-found': 'لا يوجد حساب بهذا البريد',
-    'auth/wrong-password': 'كلمة المرور غير صحيحة',
-    'auth/invalid-email': 'البريد الإلكتروني غير صالح',
-    'auth/email-already-in-use': 'البريد مستخدم بالفعل',
-    'auth/weak-password': 'كلمة المرور ضعيفة (6 أحرف على الأقل)',
-    'auth/network-request-failed': 'خطأ في الاتصال بالشبكة'
-  };
-  return map[code] || ('خطأ: ' + (err.message || 'غير معروف'));
-}
-
-if (localStorage.getItem('emaa_Theme') === 'dark') document.body.classList.add('dark-mode');
-function toggleTheme() {
-  document.body.classList.toggle('dark-mode');
-  localStorage.setItem('emaa_Theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-  if (document.getElementById('tab-dashboard').classList.contains('active')) renderCharts();
-}
-
-function switchAuthTab(tab) {
-  document.querySelectorAll('.auth-tabs button').forEach((b, i) => b.classList.toggle('active', (tab==='login'?i===0:i===1)));
-  document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
-  document.getElementById('signupForm').style.display = tab === 'signup' ? 'block' : 'none';
-}
-function showDevLogin() { document.getElementById('developerLogin').style.display = 'flex'; }
-function closeDevLogin() { document.getElementById('developerLogin').style.display = 'none'; }
-
-window.addEventListener('load', () => {
-  if (window.location.hash === '#dev-admin') {
-    document.getElementById('authScreen').style.display = 'none';
-    document.getElementById('developerLogin').style.display = 'flex';
-    return;
-  }
-  auth.onAuthStateChanged(user => {
-    if (user) { currentUser = user; resolveUserRole(user); }
-    else if (!isDevMode) {
-      document.getElementById('authScreen').style.display = 'flex';
-      document.getElementById('appScreen').style.display = 'none';
-      document.getElementById('devAdminPanel').style.display = 'none';
-      document.getElementById('pendingScreen').style.display = 'none';
-      document.getElementById('expiredScreen').style.display = 'none';
-      showLoading(false);
-    }
-  });
-});
-
-async function resolveUserRole(user) {
-  showLoading(true);
-  try {
-    const pu = await db.collection('platform_users').doc(user.uid).get();
-    if (pu.exists && pu.data().role === 'developer') {
-      isDevMode = true;
-      document.getElementById('authScreen').style.display = 'none';
-      document.getElementById('appScreen').style.display = 'none';
-      document.getElementById('pendingScreen').style.display = 'none';
-      document.getElementById('expiredScreen').style.display = 'none';
-      document.getElementById('devAdminPanel').style.display = 'block';
-      loadDevPanel();
-      showLoading(false); return;
-    }
-    
-    const empSnap = await db.collection('employees').where('authUid', '==', user.uid).limit(1).get();
-    if (!empSnap.empty) {
-      const emp = empSnap.docs[0].data();
-      const storeDoc = await db.collection('stores').doc(emp.storeId).get();
-      if (storeDoc.exists) {
-        const storeData = storeDoc.data();
-        if (storeData.status === 'active') {
-          currentStoreData = { ...storeData, _id: emp.storeId };
-          currentUserRole = emp.role || 'cashier';
-          currentUserName = emp.name || user.email;
-          return loginSuccess(emp.branchId || 'main');
-        } else {
-          toast('المحل غير نشط حالياً. يرجى التواصل مع المالك.', 'error');
-          await auth.signOut();
-          showLoading(false);
-          return;
-        }
-      }
-    }
-    
-    const storeDoc = await db.collection('stores').doc(user.uid).get();
-    if (storeDoc.exists) {
-      const data = storeDoc.data();
-      currentStoreData = { ...data, _id: user.uid };
-      
-      const status = data.status;
-      const now = new Date();
-      const trialEnd = data.trialEndsAt ? new Date(data.trialEndsAt) : null;
-      const licEnd = data.licenseExpiresAt ? new Date(data.licenseExpiresAt) : null;
-      const isLifetime = data.licenseType === 'lifetime' || data.licenseStatus === 'lifetime';
-      
-      // التحقق من انتهاء الترخيص (فقط إذا لم يكن مدى الحياة)
-      if (status === 'active' && licEnd && now > licEnd && !isLifetime) {
-        await db.collection('stores').doc(user.uid).update({ status: 'expired', licenseStatus: 'expired' });
-        currentStoreData.status = 'expired';
-        currentStoreData.licenseStatus = 'expired';
-        showExpiredScreen(currentStoreData);
-        showLoading(false);
-        return;
-      }
-      
-      // التحقق من انتهاء التجربة
-      if (status === 'trial' && trialEnd && now > trialEnd) {
-        await db.collection('stores').doc(user.uid).update({ status: 'expired', licenseStatus: 'expired' });
-        currentStoreData.status = 'expired';
-        currentStoreData.licenseStatus = 'expired';
-        showExpiredScreen(currentStoreData);
-        showLoading(false);
-        return;
-      }
-      
-      if (status === 'pending_license' || data.licenseStatus === 'pending_license') {
-        showExpiredScreen(currentStoreData);
-        showLoading(false);
-        return;
-      }
-      
-      if (status === 'expired') {
-        showExpiredScreen(currentStoreData);
-        showLoading(false);
-        return;
-      }
-      
-      if (status === 'active' || status === 'trial') {
-        currentUserRole = 'owner';
-        currentUserName = user.displayName || user.email;
-        return loginSuccess('main');
-      }
-    }
-    
-    const now = new Date();
-    const trialEnd = new Date(now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
-    await db.collection('stores').doc(user.uid).set({
-      storeName: user.displayName || 'محل جديد',
-      email: user.email,
-      status: 'trial',
-      licenseStatus: 'trial',
-      trialStartedAt: now.toISOString(),
-      trialEndsAt: trialEnd.toISOString(),
-      branches: [{ id: 'main', name: 'الفرع الرئيسي', address: '', status: 'active' }],
-      users: [], installmentRate: 0, categories: ['عام'],
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-    
-    currentStoreData = {
-      storeName: user.displayName || 'محل جديد', email: user.email,
-      status: 'trial', licenseStatus: 'trial',
-      trialStartedAt: now.toISOString(), trialEndsAt: trialEnd.toISOString(),
-      branches: [{ id: 'main', name: 'الفرع الرئيسي', address: '', status: 'active' }],
-      installmentRate: 0, _id: user.uid
-    };
-    currentUserRole = 'owner';
-    currentUserName = user.displayName || user.email;
-    return loginSuccess('main');
-  } catch (e) { 
-    console.error('resolveUserRole error:', e);
-    toast('خطأ في الدخول: ' + firebaseErrorMsg(e), 'error'); 
-  }
-  showLoading(false);
-}
-
-async function doLogin() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const pass = document.getElementById('loginPass').value;
-  if (!email || !pass) return toast('أدخل البريد وكلمة المرور', 'warning');
-  showLoading(true);
-  try { await auth.signInWithEmailAndPassword(email, pass); }
-  catch (e) { toast(firebaseErrorMsg(e), 'error'); }
-  showLoading(false);
-}
-
-async function doSignup() {
-  const name = document.getElementById('signupName').value.trim();
-  const email = document.getElementById('signupEmail').value.trim();
-  const pass = document.getElementById('signupPass').value;
-  if (!name || !email || !pass) return toast('أكمل جميع البيانات', 'warning');
-  showLoading(true);
-  try {
-    const { user } = await auth.createUserWithEmailAndPassword(email, pass);
-    await user.updateProfile({ displayName: name });
-    const now = new Date();
-    const trialEnd = new Date(now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
-    await db.collection('stores').doc(user.uid).set({
-      storeName: name, email,
-      status: 'trial', licenseStatus: 'trial',
-      trialStartedAt: now.toISOString(), trialEndsAt: trialEnd.toISOString(),
-      branches: [{ id: 'main', name: 'الفرع الرئيسي', address: '', status: 'active' }],
-      users: [], installmentRate: 0, categories: ['عام'],
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  } catch (e) { toast(firebaseErrorMsg(e), 'error'); }
-  showLoading(false);
-}
-
-async function signInWithGoogle() {
-  showLoading(true);
-  try { await auth.signInWithPopup(provider); }
-  catch (e) { toast(firebaseErrorMsg(e), 'error'); }
-  showLoading(false);
-}
-
-async function doDevAdminLogin() {
-  const email = document.getElementById('devEmail').value.trim();
-  const pass = document.getElementById('devAdminPass').value;
-  if (!email || !pass) return toast('أكمل البيانات', 'warning');
-  showLoading(true);
-  try {
-    const { user } = await auth.signInWithEmailAndPassword(email, pass);
-    const pu = await db.collection('platform_users').doc(user.uid).get();
-    if (!pu.exists || pu.data().role !== 'developer') {
-      await auth.signOut();
-      throw new Error('هذا الحساب ليس حساب مطور معتمد');
-    }
-    isDevMode = true;
-    document.getElementById('developerLogin').style.display = 'none';
-    document.getElementById('devAdminPanel').style.display = 'block';
-    loadDevPanel();
-  } catch (e) { toast(e.message.includes('مطور') ? e.message : firebaseErrorMsg(e), 'error'); }
-  showLoading(false);
-}
-
-async function logout() { await auth.signOut(); window.location.reload(); }
-async function logoutDevAdmin() { isDevMode = false; window.location.hash = ''; await auth.signOut(); window.location.reload(); }
-
 function showExpiredScreen(storeData) {
   if (auth.currentUser) currentUser = auth.currentUser;
   document.getElementById('authScreen').style.display = 'none';
@@ -1077,9 +807,6 @@ async function requestLicense() {
   showLoading(false);
 }
 
-// ==========================================================
-// تفعيل الترخيص مدى الحياة
-// ==========================================================
 async function activateLicense() {
   const user = auth.currentUser;
   if (!user) return toast('يجب تسجيل الدخول أولاً', 'error');
@@ -1118,8 +845,24 @@ async function activateLicense() {
   showLoading(false);
 }
 
+// ==========================================================
+// loginSuccess - تقييد الموظفين بفرعهم + عرض معلومات المستخدم
+// ==========================================================
 function loginSuccess(startBranch) {
-  currentBranchId = startBranch || 'main';
+  // منطق الفروع حسب الدور
+  if (currentUserRole === 'owner') {
+    currentBranchId = startBranch || 'main';
+  } else {
+    const branches = currentStoreData.branches || [];
+    const myBranch = branches.find(b => b.id === startBranch && b.status === 'active');
+    if (!myBranch) {
+      toast('الفرع المُخصص لك غير نشط. يرجى التواصل مع المالك.', 'error');
+      setTimeout(() => logout(), 2000);
+      return;
+    }
+    currentBranchId = myBranch.id;
+  }
+  
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('pendingScreen').style.display = 'none';
   document.getElementById('expiredScreen').style.display = 'none';
@@ -1127,10 +870,19 @@ function loginSuccess(startBranch) {
   document.getElementById('appScreen').style.display = 'block';
   
   document.getElementById('storeNameDisplay').innerText = currentStoreData.storeName || 'محل';
-  document.getElementById('userRoleDisplay').innerText = ROLES[currentUserRole]?.label || '';
   document.getElementById('settingsStoreName').value = currentStoreData.storeName || '';
   document.getElementById('settingsPhone').value = currentStoreData.phone || '';
   document.getElementById('settingsAddress').value = currentStoreData.address || '';
+  
+  // ← عرض اسم المستخدم ووظيفته
+  const nameToShow = currentUserName || currentUser?.displayName || currentUser?.email || 'مستخدم';
+  const roleLabel = ROLES[currentUserRole]?.label || 'مستخدم';
+  document.getElementById('userNameDisplay').innerText = nameToShow;
+  document.getElementById('userRoleDisplay').innerHTML = `<i class="fas fa-user-tag"></i> <span>${roleLabel}</span>`;
+  
+  // ← حرف أول للـ avatar
+  const avatarEl = document.getElementById('userAvatar');
+  if (avatarEl) avatarEl.innerText = nameToShow.charAt(0).toUpperCase();
   
   installmentRate = parseFloat(currentStoreData.installmentRate) || 0;
   document.getElementById('settingsInstallmentRate').value = installmentRate;
@@ -1247,9 +999,18 @@ async function requestLicenseFromSettings() {
 }
 
 function applyPermissions() {
+  // إخفاء التبويبات حسب الصلاحيات
   document.querySelectorAll('.tab-btn[data-perm]').forEach(b => {
     b.style.display = hasPermission(b.dataset.perm) ? '' : 'none';
   });
+  
+  // ← إخفاء كارد "إدارة الفروع" عن غير المالك
+  const branchCard = document.getElementById('branchManagementCard');
+  if (branchCard) branchCard.style.display = (currentUserRole === 'owner') ? 'block' : 'none';
+  
+  // ← إخفاء كارد "إدارة الموظفين" عن غير المالك
+  const usersCard = document.getElementById('usersManagementCard');
+  if (usersCard) usersCard.style.display = (currentUserRole === 'owner') ? 'block' : 'none';
 }
 
 function attachStoreListener() {
@@ -1336,8 +1097,210 @@ function deleteCategory(id) {
       .catch(err => toast('خطأ: ' + err.message, 'error'));
   });
 }
+
 // ==========================================================
-// لوحة المطور الكاملة
+// مبدّل الفروع - مقيد للمالك فقط
+// ==========================================================
+function renderBranchSwitcher() {
+  const sel = document.getElementById('branchSwitcher');
+  if (!sel) return;
+  
+  const allBranches = currentStoreData.branches || [];
+  const activeBranches = allBranches.filter(b => b.status === 'active');
+  
+  // المالك: يمكنه رؤية والتبديل بين جميع الفروع
+  if (currentUserRole === 'owner') {
+    sel.style.display = '';
+    sel.innerHTML = activeBranches.map(b => 
+      `<option value="${b.id}" ${b.id === currentBranchId ? 'selected' : ''}>${escapeHtml(b.name)}</option>`
+    ).join('');
+    
+    const cur = activeBranches.find(b => b.id === currentBranchId) || activeBranches[0];
+    if (cur) { 
+      currentBranchId = cur.id; 
+      document.getElementById('branchDisplay').innerText = cur.name; 
+    }
+  } else {
+    // الموظفون: قفل الفرع وإخفاء المبدّل
+    sel.style.display = 'none';
+    const myBranch = activeBranches.find(b => b.id === currentBranchId);
+    if (myBranch) {
+      document.getElementById('branchDisplay').innerHTML = 
+        `<i class="fas fa-lock" style="color:var(--warning);font-size:10px"></i> ${escapeHtml(myBranch.name)}`;
+    }
+  }
+}
+
+function switchBranch(id) {
+  if (currentUserRole !== 'owner') {
+    toast('لا تملك صلاحية تغيير الفرع. أنت مقيد بفرعك المُخصص.', 'error');
+    renderBranchSwitcher();
+    return;
+  }
+  
+  const c = (currentStoreData.branches || []).find(b => b.id === id);
+  if (!c || c.status !== 'active') { 
+    toast('الفرع غير متاح', 'error'); 
+    return; 
+  }
+  currentBranchId = id;
+  document.getElementById('branchDisplay').innerText = c.name;
+  cart = []; 
+  renderCart();
+  loadTenantData();
+}
+
+// ==========================================================
+// إدارة الفروع
+// ==========================================================
+document.getElementById('branchForm').addEventListener('submit', e => {
+  e.preventDefault();
+  if (currentUserRole !== 'owner') return toast('صلاحية المالك فقط', 'error');
+  const name = document.getElementById('newBranchName').value.trim();
+  const address = document.getElementById('newBranchAddress').value.trim();
+  if ((currentStoreData.branches || []).some(b => b.name === name)) return toast('اسم الفرع مستخدم', 'warning');
+  
+  db.collection('stores').doc(currentStoreData._id).update({
+    branches: firebase.firestore.FieldValue.arrayUnion({
+      id: 'BR-' + Date.now(), name, address, status: 'pending', activationCode: null, price: 0,
+      requestedAt: new Date().toISOString()
+    })
+  }).then(() => {
+    toast('تم إرسال طلب الفرع للمطور', 'success');
+    e.target.reset();
+  }).catch(err => toast('خطأ: ' + err.message, 'error'));
+});
+
+function renderBranches() {
+  const tbody = document.getElementById('branchesBody'); if (!tbody) return;
+  const branches = currentStoreData.branches || [];
+  if (!branches.length) {
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><p>لا توجد فروع</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = branches.map(b => {
+    let badge = '<span class="badge b-yellow">بانتظار</span>';
+    if (b.status === 'active') badge = '<span class="badge b-green">نشط</span>';
+    else if (b.status === 'inactive') badge = '<span class="badge b-red">موقوف</span>';
+    
+    const code = b.activationCode ? `<b style="font-size:12px;color:var(--warning)">${b.activationCode}</b> <small>(${b.price || 0} ج.م)</small>` : '—';
+    let action = '—';
+    
+    if (b.status === 'pending' && b.activationCode) {
+      action = `<div style="display:flex;gap:5px;justify-content:center">
+        <input type="text" id="code-${b.id}" placeholder="أدخل الكود" style="width:100px;padding:6px;border:1px solid var(--border);border-radius:6px;font-size:12px;text-align:center">
+        <button class="btn-icon success" onclick="activateBranch('${b.id}')"><i class="fas fa-check"></i></button>
+      </div>`;
+    } else if (b.status === 'pending') {
+      action = '<small style="color:var(--warning)">بانتظار المطور</small>';
+    } else if (b.status === 'active' && b.id !== 'main') {
+      action = `<button class="btn-icon danger" onclick="deactivateBranch('${b.id}')"><i class="fas fa-ban"></i></button>`;
+    } else if (b.status === 'inactive') {
+      action = `<button class="btn-icon success" onclick="activateBranch('${b.id}', true)"><i class="fas fa-rotate-right"></i></button>`;
+    }
+    
+    return `<tr><td><b>${escapeHtml(b.name)}</b></td><td>${escapeHtml(b.address || '—')}</td><td>${badge}</td><td>${code}</td><td>${action}</td></tr>`;
+  }).join('');
+}
+
+function activateBranch(id, force) {
+  db.collection('stores').doc(currentStoreData._id).get().then(doc => {
+    const branches = doc.data().branches.map(b => {
+      if (b.id === id) {
+        if (!force) {
+          const code = (document.getElementById(`code-${id}`)?.value || '').trim().toUpperCase();
+          if (!b.activationCode || b.activationCode.toUpperCase() !== code) throw new Error('كود غير صحيح');
+        }
+        return { ...b, status: 'active', activatedAt: getLocalDateTimeStr() };
+      }
+      return b;
+    });
+    return db.collection('stores').doc(currentStoreData._id).update({ branches });
+  }).then(() => toast('تم التفعيل', 'success'))
+    .catch(e => toast(e.message, 'error'));
+}
+
+function deactivateBranch(id) {
+  confirmDialog('إيقاف هذا الفرع؟', () => {
+    db.collection('stores').doc(currentStoreData._id).get().then(doc => {
+      const branches = doc.data().branches.map(b => b.id === id ? { ...b, status: 'inactive' } : b);
+      return db.collection('stores').doc(currentStoreData._id).update({ branches });
+    }).then(() => toast('تم الإيقاف', 'success'));
+  });
+}
+
+function renderBranchSelect() {
+  const select = document.getElementById('empBranch');
+  if (!select) return;
+  const branches = (currentStoreData.branches || []).filter(b => b.status === 'active');
+  if (!branches.length) {
+    select.innerHTML = '<option value="">لا توجد فروع نشطة</option>';
+    return;
+  }
+  select.innerHTML = branches.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+}
+
+// ==========================================================
+// إدارة الموظفين
+// ==========================================================
+document.getElementById('userForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = document.getElementById('empEmail').value.trim().toLowerCase();
+  const name = document.getElementById('empName').value.trim();
+  const phone = document.getElementById('empPhone').value.trim();
+  const pass = document.getElementById('empPass').value;
+  const role = document.getElementById('empRole').value;
+  const branchId = document.getElementById('empBranch').value;
+  
+  showLoading(true);
+  try {
+    const secondary = firebase.initializeApp(firebaseConfig, 'emp-' + Date.now());
+    const { user } = await secondary.auth().createUserWithEmailAndPassword(email, pass);
+    await user.updateProfile({ displayName: name });
+    await db.collection('employees').doc(user.uid).set({
+      authUid: user.uid, storeId: currentStoreData._id, name, phone, email, role, branchId,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await secondary.auth().signOut();
+    await secondary.delete();
+    toast('تمت إضافة الموظف', 'success');
+    e.target.reset();
+    renderUsers();
+  } catch (err) { toast(firebaseErrorMsg(err), 'error'); }
+  showLoading(false);
+});
+
+function renderUsers() {
+  renderBranchSelect();
+  const tbody = document.getElementById('usersBody'); if (!tbody || !currentStoreData._id) return;
+  db.collection('employees').where('storeId', '==', currentStoreData._id).get().then(snap => {
+    if (snap.empty) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><p>لا يوجد موظفون</p></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = snap.docs.map(d => {
+      const u = d.data();
+      const branch = (currentStoreData.branches || []).find(b => b.id === u.branchId);
+      return `<tr>
+        <td><b>${escapeHtml(u.name)}</b></td>
+        <td>${escapeHtml(u.phone || '—')}</td>
+        <td>${escapeHtml(u.email)}</td>
+        <td><span class="badge b-blue">${ROLES[u.role]?.label || u.role}</span></td>
+        <td>${escapeHtml(branch?.name || '—')}</td>
+        <td><button class="btn-icon danger" onclick="deleteUser('${d.id}')"><i class="fas fa-trash"></i></button></td>
+      </tr>`;
+    }).join('');
+  });
+}
+
+function deleteUser(id) {
+  confirmDialog('حذف هذا الموظف؟', () => {
+    db.collection('employees').doc(id).delete().then(() => { toast('تم الحذف', 'success'); renderUsers(); });
+  });
+}
+
+// ==========================================================
+// لوحة المطور
 // ==========================================================
 function loadDevPanel() {
   if (devStoresUnsub) devStoresUnsub();
@@ -1543,9 +1506,6 @@ function renderPendingBranches() {
   }).join('');
 }
 
-// ==========================================================
-// توليد مفتاح ترخيص مدى الحياة
-// ==========================================================
 async function generateKeyForStore(storeId) {
   const price = prompt('سعر الترخيص (ج.م):', '1000');
   if (price === null) return;
@@ -1905,6 +1865,10 @@ document.getElementById('devUserForm').addEventListener('submit', async e => {
   } catch (err) { toast(firebaseErrorMsg(err), 'error'); }
   showLoading(false);
 });
+
+// ==========================================================
+// تحميل بيانات المحل
+// ==========================================================
 function loadTenantData() {
   if (inventoryUnsub) inventoryUnsub(); 
   if (clientsUnsub) clientsUnsub();
@@ -1941,23 +1905,6 @@ function switchTab(tabId, btn) {
   if (tabId === 'dashboard') renderCharts();
   if (tabId === 'daily-cash') renderDailyCash();
   if (tabId === 'settings') renderLicenseInfo();
-}
-
-function renderBranchSwitcher() {
-  const sel = document.getElementById('branchSwitcher');
-  const active = (currentStoreData.branches || []).filter(b => b.status === 'active');
-  sel.innerHTML = active.map(b => `<option value="${b.id}" ${b.id === currentBranchId ? 'selected' : ''}>${escapeHtml(b.name)}</option>`).join('');
-  const cur = active.find(b => b.id === currentBranchId) || active[0];
-  if (cur) { currentBranchId = cur.id; document.getElementById('branchDisplay').innerText = cur.name; }
-}
-
-function switchBranch(id) {
-  const c = (currentStoreData.branches || []).find(b => b.id === id);
-  if (!c || c.status !== 'active') { toast('الفرع غير متاح', 'error'); return; }
-  currentBranchId = id;
-  document.getElementById('branchDisplay').innerText = c.name;
-  cart = []; renderCart();
-  loadTenantData();
 }
 
 // ==========================================================
@@ -2153,10 +2100,6 @@ function stopBarcodeScanner() {
     html5QrcodeScanner.stop().then(() => html5QrcodeScanner.clear()).catch(() => {});
   }
 }
-
-// ==========================================================
-// البيع النقدي
-// ==========================================================
 async function confirmCashSale() {
   if (isSaleProcessing) return toast('عملية بيع أخرى قيد التنفيذ', 'warning');
   if (!hasPermission('sell')) return toast('لا تملك صلاحية البيع', 'error');
@@ -2239,9 +2182,6 @@ function calcInstallment() {
   }
 }
 
-// ==========================================================
-// البيع بالتقسيط
-// ==========================================================
 async function confirmInstallmentSale() {
   if (isSaleProcessing) return toast('عملية بيع أخرى قيد التنفيذ', 'warning');
   if (!hasPermission('sell')) return toast('لا تملك صلاحية البيع', 'error');
@@ -2327,6 +2267,7 @@ async function confirmInstallmentSale() {
     }
   });
 }
+
 function renderClients() {
   const tbody = document.getElementById('clientsTableBody');
   const q = (document.getElementById('clientsSearch')?.value || '').trim().toLowerCase();
@@ -2703,144 +2644,9 @@ document.getElementById('installmentRateForm').addEventListener('submit', e => {
     .catch(err => toast('خطأ: ' + err.message, 'error'));
 });
 
-document.getElementById('branchForm').addEventListener('submit', e => {
-  e.preventDefault();
-  const name = document.getElementById('newBranchName').value.trim();
-  const address = document.getElementById('newBranchAddress').value.trim();
-  if ((currentStoreData.branches || []).some(b => b.name === name)) return toast('اسم الفرع مستخدم', 'warning');
-  
-  db.collection('stores').doc(currentStoreData._id).update({
-    branches: firebase.firestore.FieldValue.arrayUnion({
-      id: 'BR-' + Date.now(), name, address, status: 'pending', activationCode: null, price: 0,
-      requestedAt: new Date().toISOString()
-    })
-  }).then(() => {
-    toast('تم إرسال طلب الفرع للمطور', 'success');
-    e.target.reset();
-  }).catch(err => toast('خطأ: ' + err.message, 'error'));
-});
-
-function renderBranches() {
-  const tbody = document.getElementById('branchesBody'); if (!tbody) return;
-  const branches = currentStoreData.branches || [];
-  if (!branches.length) {
-    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><p>لا توجد فروع</p></div></td></tr>';
-    return;
-  }
-  tbody.innerHTML = branches.map(b => {
-    let badge = '<span class="badge b-yellow">بانتظار</span>';
-    if (b.status === 'active') badge = '<span class="badge b-green">نشط</span>';
-    else if (b.status === 'inactive') badge = '<span class="badge b-red">موقوف</span>';
-    
-    const code = b.activationCode ? `<b style="font-size:12px;color:var(--warning)">${b.activationCode}</b> <small>(${b.price || 0} ج.م)</small>` : '—';
-    let action = '—';
-    
-    if (b.status === 'pending' && b.activationCode) {
-      action = `<div style="display:flex;gap:5px;justify-content:center">
-        <input type="text" id="code-${b.id}" placeholder="أدخل الكود" style="width:100px;padding:6px;border:1px solid var(--border);border-radius:6px;font-size:12px;text-align:center">
-        <button class="btn-icon success" onclick="activateBranch('${b.id}')"><i class="fas fa-check"></i></button>
-      </div>`;
-    } else if (b.status === 'pending') {
-      action = '<small style="color:var(--warning)">بانتظار المطور</small>';
-    } else if (b.status === 'active' && b.id !== 'main') {
-      action = `<button class="btn-icon danger" onclick="deactivateBranch('${b.id}')"><i class="fas fa-ban"></i></button>`;
-    } else if (b.status === 'inactive') {
-      action = `<button class="btn-icon success" onclick="activateBranch('${b.id}', true)"><i class="fas fa-rotate-right"></i></button>`;
-    }
-    
-    return `<tr><td><b>${escapeHtml(b.name)}</b></td><td>${escapeHtml(b.address || '—')}</td><td>${badge}</td><td>${code}</td><td>${action}</td></tr>`;
-  }).join('');
-}
-
-function activateBranch(id, force) {
-  db.collection('stores').doc(currentStoreData._id).get().then(doc => {
-    const branches = doc.data().branches.map(b => {
-      if (b.id === id) {
-        if (!force) {
-          const code = (document.getElementById(`code-${id}`)?.value || '').trim().toUpperCase();
-          if (!b.activationCode || b.activationCode.toUpperCase() !== code) throw new Error('كود غير صحيح');
-        }
-        return { ...b, status: 'active', activatedAt: getLocalDateTimeStr() };
-      }
-      return b;
-    });
-    return db.collection('stores').doc(currentStoreData._id).update({ branches });
-  }).then(() => toast('تم التفعيل', 'success'))
-    .catch(e => toast(e.message, 'error'));
-}
-
-function deactivateBranch(id) {
-  confirmDialog('إيقاف هذا الفرع؟', () => {
-    db.collection('stores').doc(currentStoreData._id).get().then(doc => {
-      const branches = doc.data().branches.map(b => b.id === id ? { ...b, status: 'inactive' } : b);
-      return db.collection('stores').doc(currentStoreData._id).update({ branches });
-    }).then(() => toast('تم الإيقاف', 'success'));
-  });
-}
-
-function renderBranchSelect() {
-  const select = document.getElementById('empBranch');
-  if (!select) return;
-  const branches = (currentStoreData.branches || []).filter(b => b.status === 'active');
-  select.innerHTML = branches.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
-}
-
-document.getElementById('userForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  const email = document.getElementById('empEmail').value.trim().toLowerCase();
-  const name = document.getElementById('empName').value.trim();
-  const phone = document.getElementById('empPhone').value.trim();
-  const pass = document.getElementById('empPass').value;
-  const role = document.getElementById('empRole').value;
-  const branchId = document.getElementById('empBranch').value;
-  
-  showLoading(true);
-  try {
-    const secondary = firebase.initializeApp(firebaseConfig, 'emp-' + Date.now());
-    const { user } = await secondary.auth().createUserWithEmailAndPassword(email, pass);
-    await user.updateProfile({ displayName: name });
-    await db.collection('employees').doc(user.uid).set({
-      authUid: user.uid, storeId: currentStoreData._id, name, phone, email, role, branchId,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    await secondary.auth().signOut();
-    await secondary.delete();
-    toast('تمت إضافة الموظف', 'success');
-    e.target.reset();
-    renderUsers();
-  } catch (err) { toast(firebaseErrorMsg(err), 'error'); }
-  showLoading(false);
-});
-
-function renderUsers() {
-  renderBranchSelect();
-  const tbody = document.getElementById('usersBody'); if (!tbody || !currentStoreData._id) return;
-  db.collection('employees').where('storeId', '==', currentStoreData._id).get().then(snap => {
-    if (snap.empty) {
-      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><p>لا يوجد موظفون</p></div></td></tr>';
-      return;
-    }
-    tbody.innerHTML = snap.docs.map(d => {
-      const u = d.data();
-      const branch = (currentStoreData.branches || []).find(b => b.id === u.branchId);
-      return `<tr>
-        <td><b>${escapeHtml(u.name)}</b></td>
-        <td>${escapeHtml(u.phone || '—')}</td>
-        <td>${escapeHtml(u.email)}</td>
-        <td><span class="badge b-blue">${ROLES[u.role]?.label || u.role}</span></td>
-        <td>${escapeHtml(branch?.name || '—')}</td>
-        <td><button class="btn-icon danger" onclick="deleteUser('${d.id}')"><i class="fas fa-trash"></i></button></td>
-      </tr>`;
-    }).join('');
-  });
-}
-
-function deleteUser(id) {
-  confirmDialog('حذف هذا الموظف؟', () => {
-    db.collection('employees').doc(id).delete().then(() => { toast('تم الحذف', 'success'); renderUsers(); });
-  });
-}
-
+// ==========================================================
+// تصدير CSV
+// ==========================================================
 function exportCSV(type) {
   let rows = [];
   if (type === 'products') {
