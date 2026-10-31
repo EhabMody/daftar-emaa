@@ -1103,6 +1103,9 @@ async function logoutDevAdmin() { isDevMode = false; window.location.hash = ''; 
 // شاشة انتهاء الترخيص
 // ==========================================================
 function showExpiredScreen(storeData) {
+  // ← إصلاح: ضمان تعيين currentUser
+  if (auth.currentUser) currentUser = auth.currentUser;
+  
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('appScreen').style.display = 'none';
   document.getElementById('pendingScreen').style.display = 'none';
@@ -1124,10 +1127,17 @@ function showExpiredScreen(storeData) {
 }
 
 async function requestLicense() {
-  if (!currentUser) return toast('يجب تسجيل الدخول أولاً', 'error');
+  // ← إصلاح: استخدام auth.currentUser مباشرة بدلاً من currentUser
+  const user = auth.currentUser;
+  if (!user) {
+    toast('انتهت الجلسة. يرجى إعادة تسجيل الدخول', 'error');
+    setTimeout(() => logout(), 1500);
+    return;
+  }
+  
   showLoading(true);
   try {
-    await db.collection('stores').doc(currentUser.uid).update({
+    await db.collection('stores').doc(user.uid).update({
       licenseStatus: 'pending_license',
       status: 'pending_license',
       licenseRequestedAt: new Date().toISOString(),
@@ -1137,7 +1147,10 @@ async function requestLicense() {
     document.getElementById('licenseWaiting').style.display = 'block';
     document.getElementById('licenseInputSection').style.display = 'none';
     document.getElementById('licenseTitle').innerText = 'طلبك قيد المراجعة';
-  } catch (e) { toast('خطأ: ' + e.message, 'error'); }
+  } catch (e) { 
+    console.error('requestLicense error:', e);
+    toast('خطأ: ' + e.message, 'error'); 
+  }
   showLoading(false);
 }
 
@@ -1311,6 +1324,10 @@ function renderLicenseInfo() {
 
 async function requestLicenseFromSettings() {
   if (!confirm('إرسال طلب ترخيص للمطور؟')) return;
+  
+  const user = auth.currentUser;
+  if (!user) return toast('انتهت الجلسة', 'error');
+  
   showLoading(true);
   try {
     await db.collection('stores').doc(currentStoreData._id).update({
@@ -1319,6 +1336,11 @@ async function requestLicenseFromSettings() {
       licenseRequestedAt: new Date().toISOString()
     });
     toast('تم إرسال الطلب للمطور', 'success');
+    // تحديث الواجهة فوراً
+    currentStoreData.licenseStatus = 'pending_license';
+    currentStoreData.status = 'pending_license';
+    renderLicenseInfo();
+    renderTrialBanner();
   } catch (e) { toast('خطأ: ' + e.message, 'error'); }
   showLoading(false);
 }
@@ -1521,9 +1543,13 @@ function renderLicenseRequests() {
   const tbody = document.getElementById('devLicenseRequestsBody');
   if (!tbody) return;
   
-  const pending = devStoresCache.filter(s => 
-    s.status === 'pending_license' || s.licenseStatus === 'pending_license'
-  );
+  // ← إصلاح: البحث الشامل عن أي محل بحالة pending
+  const pending = devStoresCache.filter(s => {
+    return s.status === 'pending_license' 
+        || s.licenseStatus === 'pending_license'
+        || s.status === 'pending'
+        || (s.licenseRequestedAt && s.status !== 'active' && s.status !== 'trial');
+  });
   
   if (!pending.length) {
     tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><i class="fas fa-check-circle" style="color:var(--success)"></i><p>لا توجد طلبات معلقة</p></div></td></tr>';
@@ -1531,7 +1557,9 @@ function renderLicenseRequests() {
   }
   
   tbody.innerHTML = pending.map(s => {
-    const reqDate = s.licenseRequestedAt ? new Date(s.licenseRequestedAt).toLocaleDateString('ar-EG') : '—';
+    const reqDate = s.licenseRequestedAt 
+      ? new Date(s.licenseRequestedAt).toLocaleString('ar-EG') 
+      : '—';
     return `<tr>
       <td><b>${escapeHtml(s.storeName)}</b></td>
       <td>${escapeHtml(s.email)}</td>
@@ -1543,9 +1571,23 @@ function renderLicenseRequests() {
         <button class="btn-icon" title="عرض التفاصيل" onclick="viewStoreDetails('${s.id}')">
           <i class="fas fa-eye"></i>
         </button>
+        <button class="btn-icon danger" title="رفض الطلب" onclick="rejectLicenseRequest('${s.id}')">
+          <i class="fas fa-times"></i>
+        </button>
       </td>
     </tr>`;
   }).join('');
+}
+
+// ← دالة جديدة لرفض الطلب
+function rejectLicenseRequest(storeId) {
+  confirmDialog('رفض طلب الترخيص لهذا المحل؟', () => 
+    db.collection('stores').doc(storeId).update({
+      status: 'expired',
+      licenseStatus: 'expired',
+      licenseRejectedAt: new Date().toISOString()
+    }).then(() => toast('تم رفض الطلب', 'success'))
+  );
 }
 
 async function generateKeyForStore(storeId) {
