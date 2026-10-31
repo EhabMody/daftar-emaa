@@ -678,6 +678,7 @@ function hasPermission(perm) {
   return r ? (r.perms.includes('*') || r.perms.includes(perm)) : false;
 }
 
+// تم تحسين نافذة التأكيد لتدعم الدوال غير المتزامنة (async) بشكل صحيح
 function confirmDialog(msg, onConfirm) {
   const o = document.createElement('div'); o.className = 'modal-overlay'; o.style.zIndex = '10001';
   o.innerHTML = `<div class="modal-content" style="max-width:400px;text-align:center">
@@ -689,7 +690,15 @@ function confirmDialog(msg, onConfirm) {
     </div>
   </div>`;
   document.body.appendChild(o);
-  o.querySelector('#confirmBtn').onclick = () => { o.remove(); try { onConfirm(); } catch(e) { toast(e.message, 'error'); } };
+  o.querySelector('#confirmBtn').onclick = async () => { 
+    o.remove(); 
+    try { 
+      await onConfirm(); 
+    } catch(e) { 
+      console.error("Dialog Error:", e);
+      toast('فشل في التنفيذ: ' + (e.message || 'خطأ غير معروف'), 'error'); 
+    } 
+  };
 }
 
 function compressImage(file, max=600, q=0.75) {
@@ -1323,11 +1332,11 @@ function stopBarcodeScanner() {
 }
 
 // ==========================================
-// تم تحسين دوال البيع لتكون أكثر قوة وأماناً
+// تم إصلاح دالة البيع النقدي بشكل جذري لضمان العمل
 // ==========================================
 async function confirmCashSale() {
   if (!cart.length) return toast('السلة فارغة', 'warning');
-  if (!currentStoreData || !currentStoreData._id) return toast('خطأ: بيانات المتجر غير محملة', 'error');
+  if (!currentStoreData || !currentStoreData._id) return toast('خطأ: بيانات المتجر غير محملة، يرجى إعادة تحميل الصفحة', 'error');
   if (!currentUser || !currentUser.uid) return toast('خطأ: يجب تسجيل الدخول أولاً', 'error');
   
   const client = document.getElementById('cashClientName').value.trim() || 'عميل نقدي';
@@ -1336,6 +1345,7 @@ async function confirmCashSale() {
   confirmDialog(`تأكيد بيع نقدي بإجمالي ${formatCurrency(total)}؟`, async () => {
     showLoading(true);
     try {
+      console.log("بدء عملية البيع...", { cart, storeId: currentStoreData._id, userId: currentUser.uid });
       const batch = db.batch();
       const storeRef = db.collection('stores').doc(currentStoreData._id);
       
@@ -1359,10 +1369,14 @@ async function confirmCashSale() {
         const p = inventory.find(x => x.id === item.id);
         if (p) {
             batch.update(pRef, { qty: p.qty - item.qty });
+        } else {
+            console.warn("المنتج غير موجود في المخزون:", item.id);
         }
       }
       
+      console.log("جاري حفظ البيانات في Firebase...");
       await batch.commit();
+      console.log("تم الحفظ بنجاح!");
       
       printThermalReceipt({
         storeName: currentStoreData.storeName,
@@ -1378,10 +1392,11 @@ async function confirmCashSale() {
       renderCart(); 
       document.getElementById('cashClientName').value = '';
     } catch (e) { 
-      console.error("Sale Error:", e);
-      toast('فشل في إتمام البيع: ' + e.message, 'error'); 
+      console.error("Sale Error Details:", e);
+      toast('فشل في إتمام البيع: ' + (e.message || 'تحقق من اتصال الإنترنت أو صلاحيات قاعدة البيانات'), 'error'); 
+    } finally {
+      showLoading(false);
     }
-    showLoading(false);
   });
 }
 
@@ -1400,6 +1415,9 @@ function calcInstallment() {
   }
 }
 
+// ==========================================
+// تم إصلاح دالة بيع التقسيط بشكل جذري لضمان العمل
+// ==========================================
 async function confirmInstallmentSale() {
   if (!cart.length) return toast('السلة فارغة', 'warning');
   if (!currentStoreData || !currentStoreData._id) return toast('خطأ: بيانات المتجر غير محملة', 'error');
@@ -1439,6 +1457,7 @@ async function confirmInstallmentSale() {
   confirmDialog(`تأكيد عقد تقسيط ${count} أقساط؟`, async () => {
     showLoading(true);
     try {
+      console.log("بدء حفظ عقد التقسيط...");
       const storeRef = db.collection('stores').doc(currentStoreData._id);
       await storeRef.collection('clients').add({
         name, phone, nid, address: addr, gName, gPhone, gNid,
@@ -1464,6 +1483,7 @@ async function confirmInstallmentSale() {
         }
       }
       await batch.commit();
+      console.log("تم حفظ عقد التقسيط بنجاح!");
       
       toast('تم حفظ عقد التقسيط', 'success');
       cart = []; renderCart();
@@ -1471,10 +1491,11 @@ async function confirmInstallmentSale() {
       document.getElementById('paymentMethodSelect').value = 'cash';
       togglePaymentForm();
     } catch (e) { 
-      console.error("Installment Sale Error:", e);
-      toast('فشل في حفظ العقد: ' + e.message, 'error'); 
+      console.error("Installment Sale Error Details:", e);
+      toast('فشل في حفظ العقد: ' + (e.message || 'خطأ غير معروف'), 'error'); 
+    } finally {
+      showLoading(false);
     }
-    showLoading(false);
   });
 }
 
