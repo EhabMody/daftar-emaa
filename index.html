@@ -227,7 +227,7 @@ tr:hover td { background: var(--surface-hover); }
   <div class="auth-box" style="border-top: 4px solid var(--gold);">
     <div class="ema-logo-wrapper">
       <div class="ema-logo">
-        <div class="ema-logo-icon" style="background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);"><
+        <div class="ema-logo-icon" style="background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);">
           <i class="fas fa-crown"></i>
         </div>
         <div class="ema-logo-text">EMAA<span style="background:linear-gradient(135deg,#fbbf24,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">.Admin</span></div>
@@ -270,6 +270,7 @@ tr:hover td { background: var(--surface-hover); }
     <button class="btn btn-danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
   </div>
 </div>
+
 <!-- MAIN APP -->
 <div id="appScreen">
   <div id="trialBannerContainer"></div>
@@ -350,7 +351,7 @@ tr:hover td { background: var(--surface-hover); }
                 <i class="fas fa-info-circle"></i>
                 اكتبه يدوياً، أو استخدم الكاميرا لمسح الباركود/QR، أو وصّل ماسح باركود خارجي واضغط زر "ماسح"
               </small>
-            </div>            
+            </div>
             <div class="form-group"><label>الكمية <span style="color:var(--danger)">*</span></label><input type="number" id="invQty" class="form-input" required min="1" value="1"></div>
             <div class="form-group"><label>سعر الشراء <span style="color:var(--danger)">*</span></label><input type="number" id="invCost" class="form-input" required min="0" step="0.01"></div>
             <div class="form-group"><label>سعر البيع <span style="color:var(--danger)">*</span></label><input type="number" id="invPrice" class="form-input" required min="0" step="0.01"></div>
@@ -401,12 +402,13 @@ tr:hover td { background: var(--surface-hover); }
                   <div class="value" id="currentRateDisplay">0%</div>
                 </div>
               </div>
-              <div id="installmentDetailsBox" style="background:rgba(59,130,246,0.08);padding:10px;border-radius:8px;font-size:12px;display:none;line-height:1.8">
-                <div style="display:flex;justify-content:space-between"><span>سعر المنتج:</span><b id="detBasePrice">0</b></div>
+              <div id="installmentDetailsBox" style="background:rgba(59,130,246,0.08);padding:12px;border-radius:8px;font-size:13px;display:none;line-height:1.9">
+                <div style="display:flex;justify-content:space-between"><span>سعر المنتجات:</span><b id="detBasePrice">0</b></div>
                 <div style="display:flex;justify-content:space-between"><span>المقدم:</span><b id="detDown" style="color:var(--success)">0</b></div>
                 <div style="display:flex;justify-content:space-between;border-top:1px dashed var(--border);padding-top:4px;margin-top:4px"><span>المتبقي بعد المقدم:</span><b id="detRemaining">0</b></div>
-                <div style="display:flex;justify-content:space-between"><span>قيمة النسبة (<span id="detRatePercent">0</span>%):</span><b id="detRateAddition" style="color:var(--warning)">0</b></div>
-                <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:6px;margin-top:6px;font-size:13px"><span><b>الإجمالي النهائي:</b></span><b id="detFinalTotal" style="color:var(--accent)">0</b></div>
+                <div style="display:flex;justify-content:space-between"><span>النسبة (<span id="detRatePercent">0</span>%) × المتبقي =</span><b id="detRateAddition" style="color:var(--warning)">0</b></div>
+                <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:6px;margin-top:6px;font-size:14px"><span><b>إجمالي المتبقي (يُقسَّط):</b></span><b id="detFinalTotal" style="color:var(--accent)">0</b></div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted)"><span>عدد الأقساط:</span><b id="detCountDisplay">0</b></div>
               </div>
             </div>
             <div class="section-title" style="font-size:14px;color:var(--accent)"><span>بيانات العميل والضامن</span></div>
@@ -521,7 +523,14 @@ tr:hover td { background: var(--surface-hover); }
       </div>
       <div class="card" style="border-right: 4px solid var(--accent);">
         <div class="section-title"><span><i class="fas fa-percentage"></i> إعدادات التقسيط</span></div>
-        <div style="background:rgba(59,130,246,0.08);padding:14px;border-radius:8px;font-size:13px;margin-bottom:16px;color:var(--text)"><i class="fas fa-info-circle" style="color:var(--accent)"></i> حدد النسبة المئوية التي سيتم إضافتها على سعر المنتج عند البيع بالتقسيط.</div>
+        <div style="background:rgba(59,130,246,0.08);padding:14px;border-radius:8px;font-size:13px;margin-bottom:16px;color:var(--text);line-height:1.8">
+          <i class="fas fa-info-circle" style="color:var(--accent)"></i> <b>طريقة الحساب:</b><br>
+          1) المتبقي = سعر المنتجات − المقدم<br>
+          2) قيمة النسبة = المتبقي × النسبة ÷ 100<br>
+          3) إجمالي المتبقي المُقسَّط = المتبقي + قيمة النسبة<br>
+          4) القسط الشهري = إجمالي المتبقي ÷ عدد الأقساط<br>
+          <span style="color:var(--text-muted);font-size:12px">مثال: منتج 10,000، مقدم 1,000، نسبة 10% → متبقي 9,000 → نسبة 900 → إجمالي 9,900 → القسط (6) = 1,650</span>
+        </div>
         <form id="installmentRateForm">
           <div class="form-grid"><div class="form-group"><label>نسبة التقسيط (%) <span style="color:var(--danger)">*</span></label><input type="number" id="settingsInstallmentRate" class="form-input" min="0" max="100" step="0.1" value="0" placeholder="مثال: 10"></div></div>
           <button type="submit" class="btn btn-accent" style="margin-top:16px"><i class="fas fa-save"></i> حفظ نسبة التقسيط</button>
@@ -556,6 +565,7 @@ tr:hover td { background: var(--surface-hover); }
     </div>
   </div>
 </div>
+
 <!-- DEV PANEL -->
 <div id="devAdminPanel" style="display:none;padding:20px;min-height:100vh;background:var(--bg)">
   <header style="border-radius:var(--radius);margin-bottom:20px;border-right:4px solid var(--gold)">
@@ -645,7 +655,7 @@ const provider = new firebase.auth.GoogleAuthProvider();
 let currentUser=null, currentStoreData={}, currentBranchId='main', currentUserRole='owner', currentUserName='', isDevMode=false;
 let cart=[], inventory=[], clients=[], cashSales=[], expenses=[], categories=[];
 let inventoryUnsub=null, clientsUnsub=null, salesUnsub=null, expensesUnsub=null, storeUnsub=null, devStoresUnsub=null, devUsersUnsub=null, devLicenseKeysUnsub=null, categoriesUnsub=null;
-let salesChartInstance=null, expensesChartInstance=null, dailySalesChartInstance=null, html5QrcodeScanner=null;
+let salesChartInstance=null, expensesChartInstance=null, dailySalesChartInstance=null, html5QrcodeScanner=null, serialScannerInstance=null;
 let devStatusChartInstance=null, devGrowthChartInstance=null;
 let installmentRate = 0, selectedCategory = 'all';
 let isSaleProcessing = false;
@@ -676,13 +686,22 @@ function toast(msg, type='info', duration=3500) {
 }
 
 function showLoading(s) { document.getElementById('loadingOverlay').style.display = s ? 'flex' : 'none'; }
-function closeModal() { document.getElementById('mainModal').style.display = 'none'; if(html5QrcodeScanner) stopBarcodeScanner(); }
-function openModal(html) { document.getElementById('modalBody').innerHTML = html; document.getElementById('mainModal').style.display = 'flex'; if(serialScannerInstance) stopSerialScanner(); }
+function closeModal() { document.getElementById('mainModal').style.display = 'none'; if(html5QrcodeScanner) stopBarcodeScanner(); if(serialScannerInstance) stopSerialScanner(); }
+function openModal(html) { document.getElementById('modalBody').innerHTML = html; document.getElementById('mainModal').style.display = 'flex'; }
 
 function hasPermission(perm) {
   if (isDevMode || currentUserRole === 'owner') return true;
   const r = ROLES[currentUserRole];
   return r ? (r.perms.includes('*') || r.perms.includes(perm)) : false;
+}
+
+function isLicenseValid() {
+  const s = currentStoreData;
+  if (!s) return false;
+  if (s.licenseType === 'lifetime' || s.licenseStatus === 'lifetime') return true;
+  if (s.status === 'active') return true;
+  if (s.status === 'trial' && s.trialEndsAt) return new Date(s.trialEndsAt) > new Date();
+  return false;
 }
 
 function confirmDialog(msg, onConfirm) {
@@ -745,6 +764,27 @@ function firebaseErrorMsg(err) {
     'auth/network-request-failed': 'خطأ في الاتصال بالشبكة'
   };
   return map[code] || ('خطأ: ' + (err.message || 'غير معروف'));
+}
+
+// ==========================================================
+// دوال حساب التقسيط المشتركة
+// ==========================================================
+function computeInstallmentPlan(baseTotal, down, count, rate) {
+  const remainingAfterDown = Math.max(0, baseTotal - down);
+  const rateAddition = remainingAfterDown * ((rate || 0) / 100);
+  const finalTotal = remainingAfterDown + rateAddition;
+  const perInstallment = count > 0 ? finalTotal / count : 0;
+  return { remainingAfterDown, rateAddition, finalTotal, perInstallment };
+}
+
+function clientCollected(c) {
+  return (c.downPayment || 0) + c.installments.reduce((s, i) => s + (i.paid || 0), 0);
+}
+function clientRemaining(c) {
+  return c.installments.reduce((s, i) => s + (i.amount - (i.paid || 0)), 0);
+}
+function clientContractTotal(c) {
+  return c.totalContractValue ?? ((c.downPayment || 0) + (c.totalPrice || 0));
 }
 
 if (localStorage.getItem('emaa_Theme') === 'dark') document.body.classList.add('dark-mode');
@@ -884,9 +924,9 @@ async function resolveUserRole(user) {
     currentUserRole = 'owner';
     currentUserName = user.displayName || user.email;
     return loginSuccess('main');
-  } catch (e) { 
+  } catch (e) {
     console.error('resolveUserRole error:', e);
-    toast('خطأ في الدخول: ' + firebaseErrorMsg(e), 'error'); 
+    toast('خطأ في الدخول: ' + firebaseErrorMsg(e), 'error');
   }
   showLoading(false);
 }
@@ -953,6 +993,7 @@ async function doDevAdminLogin() {
 
 async function logout() { await auth.signOut(); window.location.reload(); }
 async function logoutDevAdmin() { isDevMode = false; window.location.hash = ''; await auth.signOut(); window.location.reload(); }
+
 function showExpiredScreen(storeData) {
   if (auth.currentUser) currentUser = auth.currentUser;
   document.getElementById('authScreen').style.display = 'none';
@@ -1451,7 +1492,7 @@ function renderLicenseRequests() {
 }
 
 function rejectLicenseRequest(storeId) {
-  confirmDialog('رفض طلب الترخيص لهذا المحل؟', () => 
+  confirmDialog('رفض طلب الترخيص لهذا المحل؟', () =>
     db.collection('stores').doc(storeId).update({ status: 'expired', licenseStatus: 'expired', licenseRejectedAt: new Date().toISOString() })
       .then(() => toast('تم رفض الطلب', 'success'))
   );
@@ -1536,7 +1577,7 @@ async function issueBranchCode(storeId, branchId) {
       <button class="btn btn-primary" onclick="navigator.clipboard.writeText('${code}');toast('تم النسخ','success')"><i class="fas fa-copy"></i> نسخ الكود</button>
     `);
     toast('تم توليد الكود بنجاح', 'success');
-  } catch (e) { console.error(e); toast('خطأ: ' + e.message, 'error'); }
+    } catch (e) { console.error(e); toast('خطأ: ' + e.message, 'error'); }
 }
 
 async function regenerateBranchCode(storeId, branchId) {
@@ -1711,7 +1752,7 @@ function loadDevUsers() {
   if (devUsersUnsub) devUsersUnsub();
   devUsersUnsub = db.collection('platform_users').where('role', '==', 'developer').onSnapshot(snap => {
     const tbody = document.getElementById('devUsersBody'); if (!tbody) return;
-    tbody.innerHTML = snap.empty ? '<tr><td colspan="4" class="empty-state">لا يوجد</td></tr>' : '';
+    tbody.innerHTML = snap.empty ? '<tr><td colspan="4"><div class="empty-state"><p>لا يوجد</p></div></td></tr>' : '';
     snap.forEach(doc => {
       const u = doc.data();
       tbody.innerHTML += `<tr><td>${escapeHtml(u.name || '—')}</td><td>${escapeHtml(u.email)}</td><td><span class="badge b-blue">مطور</span></td><td><button class="btn-icon danger" onclick="removeDeveloper('${doc.id}')"><i class="fas fa-trash"></i></button></td></tr>`;
@@ -1810,6 +1851,7 @@ document.getElementById('inventoryForm').addEventListener('submit', async e => {
 
 function renderProducts() {
   const grid = document.getElementById('productsGrid');
+  if (!grid) return;
   const q = (document.getElementById('invSearch')?.value || '').trim().toLowerCase();
   let list = inventory;
   if (selectedCategory !== 'all') list = list.filter(i => i.category === selectedCategory);
@@ -1832,7 +1874,6 @@ function editProduct(id) {
   document.getElementById('invCost').value = p.cost || 0;
   document.getElementById('invPrice').value = p.price || 0;
   document.getElementById('invWarranty').value = p.warranty || 0;
-  // إعادة تعيين حالة حقل الرقم التسلسلي
   const serialInput = document.getElementById('invSerial');
   if (serialInput) {
     serialInput.style.borderColor = '';
@@ -1841,7 +1882,6 @@ function editProduct(id) {
   document.getElementById('invSubmitBtn').innerHTML = '<i class="fas fa-save"></i> حفظ التعديل';
   document.getElementById('inventoryForm').scrollIntoView({ behavior: 'smooth' });
 }
-  
 
 function deleteProduct(id) {
   confirmDialog('حذف هذا المنتج؟', () => db.collection('stores').doc(currentStoreData._id).collection('products').doc(id).delete().then(() => toast('تم الحذف', 'success')));
@@ -1859,6 +1899,7 @@ function togglePaymentForm() {
 
 function renderPosProducts() {
   const grid = document.getElementById('posProducts');
+  if (!grid) return;
   const q = (document.getElementById('posSearch')?.value || '').trim().toLowerCase();
   let avail = inventory.filter(i => i.qty > 0);
   if (selectedCategory !== 'all') avail = avail.filter(i => i.category === selectedCategory);
@@ -1885,6 +1926,7 @@ function addToCart(id) {
 
 function renderCart() {
   const c = document.getElementById('cartContainer');
+  if (!c) return;
   if (!cart.length) {
     c.innerHTML = '<div class="empty-state" style="padding:20px"><i class="fas fa-cart-shopping"></i><p>السلة فارغة</p></div>';
     document.getElementById('cartTotal').innerText = '0.00 ج.م';
@@ -1914,25 +1956,31 @@ function setQty(i, v) {
 function removeFromCart(i) { cart.splice(i, 1); renderCart(); calcInstallment(); }
 
 function startBarcodeScanner() {
-  openModal(`<h3 style="text-align:center;margin-bottom:15px"><i class="fas fa-barcode"></i> مسح باركود</h3><div id="reader" style="width:100%;max-width:400px;margin:0 auto;border-radius:12px;overflow:hidden"></div><button class="btn btn-outline" style="margin-top:15px" onclick="stopBarcodeScanner(); closeModal()">إلغاء</button>`);
-  html5QrcodeScanner = new Html5Qrcode("reader");
-  html5QrcodeScanner.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: { width: 250, height: 250 } },
-    (decodedText) => {
-      const product = inventory.find(p => p.serial === decodedText || p.name.includes(decodedText));
-      if (product) { addToCart(product.id); toast(`تمت إضافة: ${product.name}`, 'success'); stopBarcodeScanner(); closeModal(); }
-      else { toast('المنتج غير موجود', 'error'); }
-    },
-    () => {}
-  ).catch(err => toast('فشل تشغيل الكاميرا', 'error'));
+  openModal(`<h3 style="text-align:center;margin-bottom:15px"><i class="fas fa-barcode"></i> مسح باركود</h3><div id="reader" style="width:100%;max-width:400px;margin:0 auto;border-radius:12px;overflow:hidden;min-height:250px;background:#000"></div><button class="btn btn-outline" style="margin-top:15px" onclick="stopBarcodeScanner(); closeModal()">إلغاء</button>`);
+  setTimeout(() => {
+    html5QrcodeScanner = new Html5Qrcode("reader");
+    html5QrcodeScanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      (decodedText) => {
+        const product = inventory.find(p => p.serial === decodedText || (p.name || '').includes(decodedText));
+        if (product) { addToCart(product.id); toast(`تمت إضافة: ${product.name}`, 'success'); stopBarcodeScanner(); closeModal(); }
+        else { toast('المنتج غير موجود', 'error'); }
+      },
+      () => {}
+    ).catch(err => toast('فشل تشغيل الكاميرا', 'error'));
+  }, 100);
+}
+
+function stopBarcodeScanner() {
+  if (html5QrcodeScanner) {
+    html5QrcodeScanner.stop().then(() => { try { html5QrcodeScanner.clear(); } catch(_) {} html5QrcodeScanner = null; }).catch(() => { html5QrcodeScanner = null; });
+  }
 }
 
 // ==========================================================
-// مسح الباركود بالكاميرا لتعبئة حقل الرقم التسلسلي
+// مسح باركود لتعبئة حقل الرقم التسلسلي
 // ==========================================================
-let serialScannerInstance = null;
-
 function openCameraScanner() {
   openModal(`
     <h3 style="text-align:center;margin-bottom:15px"><i class="fas fa-camera" style="color:var(--accent)"></i> مسح باركود المنتج</h3>
@@ -1945,7 +1993,7 @@ function openCameraScanner() {
       <i class="fas fa-times"></i> إلغاء
     </button>
   `);
-  
+
   setTimeout(() => {
     try {
       serialScannerInstance = new Html5Qrcode("serial-reader");
@@ -1953,18 +2001,13 @@ function openCameraScanner() {
         { facingMode: "environment" },
         { fps: 10, qrbox: { width: 280, height: 200 } },
         (decodedText) => {
-          // عرض النتيجة
           const resultEl = document.getElementById('serialScanResult');
           if (resultEl) {
             resultEl.innerHTML = `<span style="color:var(--success);font-weight:700"><i class="fas fa-check-circle"></i> تم المسح: ${escapeHtml(decodedText)}</span>`;
           }
-          
-          // تعبئة الحقل
           const serialInput = document.getElementById('invSerial');
           if (serialInput) serialInput.value = decodedText;
-          
-          // صوت تأكيد (اختياري)
-          try { 
+          try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
@@ -1975,21 +2018,19 @@ function openCameraScanner() {
             gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
             osc.start();
             osc.stop(ctx.currentTime + 0.15);
-          } catch(_) {}
-          
+          } catch (_) {}
           toast('تم مسح الرقم بنجاح ✅', 'success');
-          
-          // إغلاق بعد 800ms
           setTimeout(() => {
             stopSerialScanner();
             closeModal();
           }, 800);
         },
-        () => {} // تجاهل أخطاء الإطارات
+        () => {}
       ).catch(err => {
         console.error('Camera error:', err);
         toast('فشل تشغيل الكاميرا. تحقق من صلاحيات المتصفح', 'error');
-        document.getElementById('serialScanResult').innerHTML = '<span style="color:var(--danger)">تعذر فتح الكاميرا — تأكد من منح الصلاحية</span>';
+        const r = document.getElementById('serialScanResult');
+        if (r) r.innerHTML = '<span style="color:var(--danger)">تعذر فتح الكاميرا — تأكد من منح الصلاحية</span>';
       });
     } catch (e) {
       console.error(e);
@@ -1998,29 +2039,30 @@ function openCameraScanner() {
   }, 100);
 }
 
-// ==========================================================
-// تجهيز حقل الرقم التسلسلي للماسح الخارجي (USB/BT)
-// ==========================================================
+function stopSerialScanner() {
+  if (serialScannerInstance) {
+    serialScannerInstance.stop().then(() => {
+      try { serialScannerInstance.clear(); } catch(_) {}
+      serialScannerInstance = null;
+    }).catch(() => { serialScannerInstance = null; });
+  }
+}
+
 function focusSerialForScanner() {
   const serialInput = document.getElementById('invSerial');
   if (!serialInput) return;
-  
-  // تفريغ الحقل والتركيز عليه
+
   serialInput.value = '';
   serialInput.focus();
   serialInput.style.borderColor = 'var(--success)';
   serialInput.style.boxShadow = '0 0 0 3px rgba(16,185,129,0.25)';
-  
-  // عرض إشعار
   toast('✅ جاهز للمسح — وجّه الماسح الآن على الباركود', 'info', 3000);
-  
-  // إزالة التمييز بعد 5 ثوانٍ
-  setTimeout(() => {
-    serialInput.style.borderColor = '';
-    serialInput.style.boxShadow = '';
-  }, 5000);
-  
-  // الاستماع لزر Enter (الماسحات ترسل Enter بعد الرقم)
+
+  if (serialInput._scannerHandler) {
+    serialInput.removeEventListener('keydown', serialInput._scannerHandler);
+    serialInput._scannerHandler = null;
+  }
+
   const handleEnter = (e) => {
     if (e.key === 'Enter' && serialInput.value.trim()) {
       e.preventDefault();
@@ -2030,82 +2072,84 @@ function focusSerialForScanner() {
         serialInput.style.borderColor = '';
         serialInput.style.boxShadow = '';
       }, 1500);
-      serialInput.removeEventListener('keydown', handleEnter);
     }
   };
-  serialInput.addEventListener('keydown', handleEnter, { once: false });
-  
-  // إزالة المستمع القديم إذا كان موجوداً (باستخدام خاصية مخصصة)
-  if (serialInput._scannerHandler) {
-    serialInput.removeEventListener('keydown', serialInput._scannerHandler);
-  }
   serialInput._scannerHandler = handleEnter;
   serialInput.addEventListener('keydown', handleEnter);
-}  
-function stopSerialScanner() {
-  if (serialScannerInstance) {
-    serialScannerInstance.stop().then(() => {
-      try { serialScannerInstance.clear(); } catch(_) {}
-      serialScannerInstance = null;
-    }).catch(() => { serialScannerInstance = null; });
-  }
-}  
-function stopBarcodeScanner() {
-  if (html5QrcodeScanner) {
-    html5QrcodeScanner.stop().then(() => html5QrcodeScanner.clear()).catch(() => {});
-  }
+
+  setTimeout(() => {
+    serialInput.style.borderColor = '';
+    serialInput.style.boxShadow = '';
+  }, 5000);
 }
 
+// ==========================================================
+// البيع النقدي (Transaction)
+// ==========================================================
 async function confirmCashSale() {
   if (isSaleProcessing) return toast('عملية بيع أخرى قيد التنفيذ', 'warning');
   if (!hasPermission('sell')) return toast('لا تملك صلاحية البيع', 'error');
+  if (!isLicenseValid()) return toast('انتهى الترخيص. يرجى التجديد للمتابعة.', 'error');
   if (!cart.length) return toast('السلة فارغة', 'warning');
   if (!currentStoreData || !currentStoreData._id) return toast('خطأ: بيانات المتجر غير محملة', 'error');
   if (!currentUser || !currentUser.uid) return toast('خطأ: يجب تسجيل الدخول أولاً', 'error');
-  for (const item of cart) {
-    const p = inventory.find(x => x.id === item.id);
-    if (!p) return toast(`المنتج "${item.name}" لم يعد موجوداً`, 'error');
-    if (p.qty < item.qty) return toast(`الكمية المتاحة من "${item.name}" هي ${p.qty} فقط`, 'error');
-  }
+
   const client = document.getElementById('cashClientName').value.trim() || 'عميل نقدي';
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+
   confirmDialog(`تأكيد بيع نقدي بإجمالي ${formatCurrency(total)}؟`, async () => {
-    let printWindow = null;
-    try { printWindow = window.open('', '', 'width=300,height=600'); } catch (e) { printWindow = null; }
     isSaleProcessing = true;
     showLoading(true);
     try {
-      const batch = db.batch();
       const storeRef = db.collection('stores').doc(currentStoreData._id);
       const saleItems = cart.map(i => ({ ...i }));
-      for (const item of saleItems) {
-        const p = inventory.find(x => x.id === item.id);
-        if (!p) throw new Error(`المنتج "${item.name}" غير موجود`);
-        if (p.qty < item.qty) throw new Error(`الكمية المتاحة من "${item.name}" لا تكفي`);
-        const sRef = storeRef.collection('sales').doc();
-        batch.set(sRef, {
-          productName: item.name, serial: item.serial, price: item.price, cost: item.cost,
-          qty: item.qty, image: item.image || null, category: item.category || 'عام',
-          client: client, date: getLocalDateTimeStr(), branchId: currentBranchId,
-          saleType: 'cash', createdBy: currentUser.uid
+
+      await db.runTransaction(async (tx) => {
+        const prodRefs = saleItems.map(i => storeRef.collection('products').doc(i.id));
+        const prodDocs = await Promise.all(prodRefs.map(r => tx.get(r)));
+        prodDocs.forEach((doc, idx) => {
+          if (!doc.exists) throw new Error(`المنتج "${saleItems[idx].name}" غير موجود`);
+          const curQty = doc.data().qty || 0;
+          if (curQty < saleItems[idx].qty) {
+            throw new Error(`الكمية المتاحة من "${saleItems[idx].name}" هي ${curQty} فقط`);
+          }
         });
-        batch.update(storeRef.collection('products').doc(item.id), { qty: firebase.firestore.FieldValue.increment(-item.qty) });
-      }
-      await batch.commit();
-      if (printWindow) {
-        writeReceiptToWindow(printWindow, {
-          storeName: currentStoreData.storeName, logo: currentStoreData.logo,
-          phone: currentStoreData.phone, date: new Date().toLocaleString('ar-EG'),
-          items: saleItems.map(i => ({ name: i.name, qty: i.qty, price: i.price })),
-          total: formatCurrency(total)
+        prodDocs.forEach((doc, idx) => {
+          tx.update(prodRefs[idx], {
+            qty: firebase.firestore.FieldValue.increment(-saleItems[idx].qty)
+          });
         });
-      } else { toast('تم البيع لكن تم حجب نافذة الطباعة', 'warning'); }
+        saleItems.forEach(item => {
+          const sRef = storeRef.collection('sales').doc();
+          tx.set(sRef, {
+            productName: item.name, serial: item.serial, price: item.price,
+            cost: item.cost, qty: item.qty, image: item.image || null,
+            category: item.category || 'عام', client,
+            date: getLocalDateTimeStr(), branchId: currentBranchId,
+            saleType: 'cash', createdBy: currentUser.uid
+          });
+        });
+      });
+
+      try {
+        const printWindow = window.open('', '', 'width=300,height=600');
+        if (printWindow) {
+          writeReceiptToWindow(printWindow, {
+            storeName: currentStoreData.storeName, logo: currentStoreData.logo,
+            phone: currentStoreData.phone, date: new Date().toLocaleString('ar-EG'),
+            items: saleItems.map(i => ({ name: i.name, qty: i.qty, price: i.price })),
+            total: formatCurrency(total)
+          });
+        } else {
+          toast('تم البيع لكن تم حجب نافذة الطباعة', 'warning');
+        }
+      } catch (_) {}
+
       toast('تم البيع النقدي بنجاح ✅', 'success');
       cart = []; renderCart();
       document.getElementById('cashClientName').value = '';
     } catch (e) {
-      if (printWindow) { try { printWindow.close(); } catch(_) {} }
-      console.error("Sale Error:", e);
+      console.error('Sale Error:', e);
       toast('فشل في إتمام البيع: ' + (e.message || 'خطأ غير معروف'), 'error');
     } finally {
       showLoading(false);
@@ -2114,45 +2158,48 @@ async function confirmCashSale() {
   });
 }
 
+// ==========================================================
+// حساب التقسيط (النسبة على المتبقي)
+// ==========================================================
 function calcInstallment() {
   const baseTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const d = parseFloat(document.getElementById('downPayment').value) || 0;
   const c = parseInt(document.getElementById('installmentsCount').value) || 1;
-  
-  // ← النسبة تُحسب على المتبقي بعد المقدم فقط
+
+  // ← الحساب الصحيح: النسبة على المتبقي بعد المقدم
   const remainingAfterDown = Math.max(0, baseTotal - d);
   const rateAddition = remainingAfterDown * (installmentRate / 100);
-  const finalTotal = baseTotal + rateAddition;
-  
-  if (finalTotal > d && c > 0) {
-    document.getElementById('instValueDisplay').value = formatCurrency((finalTotal - d) / c);
-  } else {
-    document.getElementById('instValueDisplay').value = '';
-  }
-  
-  // عرض التفاصيل
-  const detailsBox = document.getElementById('installmentDetailsBox');
-  if (detailsBox) {
-    if (baseTotal > 0) {
-      detailsBox.style.display = 'block';
-      document.getElementById('detBasePrice').innerText = formatCurrency(baseTotal);
-      document.getElementById('detDown').innerText = formatCurrency(d);
-      document.getElementById('detRemaining').innerText = formatCurrency(remainingAfterDown);
-      document.getElementById('detRatePercent').innerText = installmentRate;
-      document.getElementById('detRateAddition').innerText = formatCurrency(rateAddition);
-      document.getElementById('detFinalTotal').innerText = formatCurrency(finalTotal);
-    } else {
-      detailsBox.style.display = 'none';
-    }
-  }
+  const finalTotal = remainingAfterDown + rateAddition;   // إجمالي المتبقي المُقسَّط
+  const perInstallment = c > 0 ? finalTotal / c : 0;
+
+  document.getElementById('instValueDisplay').value =
+    (finalTotal > 0 && c > 0) ? formatCurrency(perInstallment) : '';
+
+  const box = document.getElementById('installmentDetailsBox');
+  if (!box) return;
+  if (baseTotal <= 0) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  document.getElementById('detBasePrice').innerText    = formatCurrency(baseTotal);
+  document.getElementById('detDown').innerText         = formatCurrency(d);
+  document.getElementById('detRemaining').innerText    = formatCurrency(remainingAfterDown);
+  document.getElementById('detRatePercent').innerText  = installmentRate;
+  document.getElementById('detRateAddition').innerText = formatCurrency(rateAddition);
+  document.getElementById('detFinalTotal').innerText   = formatCurrency(finalTotal);
+  const cntEl = document.getElementById('detCountDisplay');
+  if (cntEl) cntEl.innerText = `${c} قسط × ${formatCurrency(perInstallment)}`;
 }
 
+// ==========================================================
+// حفظ عقد التقسيط (Transaction)
+// ==========================================================
 async function confirmInstallmentSale() {
   if (isSaleProcessing) return toast('عملية بيع أخرى قيد التنفيذ', 'warning');
   if (!hasPermission('sell')) return toast('لا تملك صلاحية البيع', 'error');
+  if (!isLicenseValid()) return toast('انتهى الترخيص. يرجى التجديد للمتابعة.', 'error');
   if (!cart.length) return toast('السلة فارغة', 'warning');
   if (!currentStoreData || !currentStoreData._id) return toast('خطأ: بيانات المتجر غير محملة', 'error');
   if (!currentUser || !currentUser.uid) return toast('خطأ: يجب تسجيل الدخول أولاً', 'error');
+
   const name = document.getElementById('clientName').value.trim();
   const phone = document.getElementById('clientPhone').value.trim();
   const nid = document.getElementById('clientNid').value.trim();
@@ -2163,59 +2210,105 @@ async function confirmInstallmentSale() {
   const down = parseFloat(document.getElementById('downPayment').value) || 0;
   const count = parseInt(document.getElementById('installmentsCount').value);
   const startVal = document.getElementById('startDate').value;
+
   if (!name || !phone || !nid || !addr) return toast('أكمل بيانات العميل', 'warning');
   if (!/^01[0125][0-9]{8}$/.test(phone)) return toast('رقم موبايل غير صحيح', 'warning');
   if (!/^[0-9]{14}$/.test(nid)) return toast('الرقم القومي يجب أن يكون 14 رقماً', 'warning');
   if (!gName || !gPhone || !gNid) return toast('أكمل بيانات الضامن', 'warning');
+  if (!/^01[0125][0-9]{8}$/.test(gPhone)) return toast('رقم موبايل الضامن غير صحيح', 'warning');
+  if (!/^[0-9]{14}$/.test(gNid)) return toast('الرقم القومي للضامن يجب أن يكون 14 رقماً', 'warning');
   if (!startVal) return toast('اختر تاريخ أول قسط', 'warning');
+
   for (const item of cart) {
     const p = inventory.find(x => x.id === item.id);
     if (!p) return toast(`المنتج "${item.name}" لم يعد موجوداً`, 'error');
     if (p.qty < item.qty) return toast(`الكمية المتاحة من "${item.name}" هي ${p.qty} فقط`, 'error');
   }
+
   const baseTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  // ← النسبة تُحسب على المتبقي بعد المقدم فقط
+
+  // ← الحساب الصحيح: النسبة على المتبقي بعد المقدم
   const remainingAfterDown = Math.max(0, baseTotal - down);
   const rateAddition = remainingAfterDown * (installmentRate / 100);
-  const finalTotal = baseTotal + rateAddition;
-  if (down >= finalTotal) return toast('المقدم يجب أن يكون أقل من الإجمالي', 'warning');
+  const finalTotal = remainingAfterDown + rateAddition;    // إجمالي المتبقي المُقسَّط
+  const totalContractValue = down + finalTotal;            // القيمة الكاملة للعقد
+
+  if (down >= baseTotal) return toast('المقدم يجب أن يكون أقل من سعر المنتج', 'warning');
   if (count < 1) return toast('عدد الأقساط غير صحيح', 'warning');
+
   const start = new Date(startVal);
-  const perInst = (finalTotal - down) / count;
+  const perInst = finalTotal / count;
   const installments = Array.from({ length: count }, (_, i) => {
-    const d = new Date(start); d.setMonth(d.getMonth() + i);
-    return { id: i + 1, dueDate: d.toLocaleDateString('en-CA'), amount: perInst, paid: 0, isPaid: false, payments: [] };
+    const d = new Date(start);
+    d.setMonth(d.getMonth() + i);
+    return {
+      id: i + 1,
+      dueDate: d.toLocaleDateString('en-CA'),
+      amount: perInst,
+      paid: 0,
+      isPaid: false,
+      payments: []
+    };
   });
-  confirmDialog(`تأكيد عقد تقسيط ${count} أقساط؟`, async () => {
+
+  confirmDialog(`تأكيد عقد تقسيط ${count} أقساط بقيمة ${formatCurrency(perInst)} شهرياً؟`, async () => {
     isSaleProcessing = true;
     showLoading(true);
     try {
       const storeRef = db.collection('stores').doc(currentStoreData._id);
       const saleItems = cart.map(i => ({ ...i }));
-      await storeRef.collection('clients').add({
-        name, phone, nid, address: addr, gName, gPhone, gNid,
-        products: saleItems.map(i => ({ name: i.name, serial: i.serial, price: i.price, cost: i.cost, image: i.image, qty: i.qty, category: i.category })),
-        product: saleItems.map(i => i.name).join(', '),
-        serial: saleItems.map(i => i.serial).join(', '),
-        productImage: saleItems[0]?.image || null,
-        basePrice: baseTotal, installmentRate: installmentRate, rateAddition: rateAddition,
-        totalPrice: finalTotal,
-        costPrice: saleItems.reduce((s, i) => s + i.cost * i.qty, 0),
-        downPayment: down, installments,
-        purchaseDate: getLocalDateTimeStr(), branchId: currentBranchId, createdBy: currentUser.uid
+
+      await db.runTransaction(async (tx) => {
+        const prodRefs = saleItems.map(i => storeRef.collection('products').doc(i.id));
+        const prodDocs = await Promise.all(prodRefs.map(r => tx.get(r)));
+        prodDocs.forEach((doc, idx) => {
+          if (!doc.exists) throw new Error(`المنتج "${saleItems[idx].name}" غير موجود`);
+          const curQty = doc.data().qty || 0;
+          if (curQty < saleItems[idx].qty) {
+            throw new Error(`الكمية المتاحة من "${saleItems[idx].name}" هي ${curQty} فقط`);
+          }
+        });
+
+        const clientRef = storeRef.collection('clients').doc();
+        tx.set(clientRef, {
+          name, phone, nid, address: addr, gName, gPhone, gNid,
+          products: saleItems.map(i => ({
+            name: i.name, serial: i.serial, price: i.price,
+            cost: i.cost, image: i.image, qty: i.qty, category: i.category
+          })),
+          product: saleItems.map(i => i.name).join(', '),
+          serial: saleItems.map(i => i.serial).join(', '),
+          productImage: saleItems[0]?.image || null,
+          basePrice: baseTotal,
+          downPayment: down,
+          remainingAfterDown: remainingAfterDown,
+          installmentRate: installmentRate,
+          rateAddition: rateAddition,
+          totalPrice: finalTotal,
+          totalContractValue: totalContractValue,
+          costPrice: saleItems.reduce((s, i) => s + i.cost * i.qty, 0),
+          installments,
+          purchaseDate: getLocalDateTimeStr(),
+          branchId: currentBranchId,
+          createdBy: currentUser.uid
+        });
+
+        prodRefs.forEach((r, idx) => {
+          tx.update(r, { qty: firebase.firestore.FieldValue.increment(-saleItems[idx].qty) });
+        });
       });
-      const batch = db.batch();
-      for (const item of saleItems) {
-        batch.update(storeRef.collection('products').doc(item.id), { qty: firebase.firestore.FieldValue.increment(-item.qty) });
-      }
-      await batch.commit();
+
       toast('تم حفظ عقد التقسيط بنجاح ✅', 'success');
       cart = []; renderCart();
-      ['clientName','clientPhone','clientNid','clientAddress','guarantorName','guarantorPhone','guarantorNid','downPayment','installmentsCount','startDate','instValueDisplay'].forEach(id => document.getElementById(id).value = '');
+      ['clientName','clientPhone','clientNid','clientAddress','guarantorName','guarantorPhone','guarantorNid','downPayment','installmentsCount','startDate','instValueDisplay'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+      });
+      document.getElementById('downPayment').value = '0';
+      document.getElementById('installmentsCount').value = '6';
       document.getElementById('paymentMethodSelect').value = 'cash';
       togglePaymentForm();
     } catch (e) {
-      console.error("Installment Sale Error:", e);
+      console.error('Installment Sale Error:', e);
       toast('فشل في حفظ العقد: ' + (e.message || 'خطأ غير معروف'), 'error');
     } finally {
       showLoading(false);
@@ -2224,36 +2317,73 @@ async function confirmInstallmentSale() {
   });
 }
 
+// ==========================================================
+// العملاء
+// ==========================================================
 function renderClients() {
   const tbody = document.getElementById('clientsTableBody');
+  if (!tbody) return;
   const q = (document.getElementById('clientsSearch')?.value || '').trim().toLowerCase();
   const list = q ? clients.filter(c => (c.name || '').toLowerCase().includes(q) || (c.phone || '').includes(q)) : clients;
   if (!list.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-users"></i><p>لا يوجد عملاء</p></div></td></tr>'; return; }
   tbody.innerHTML = list.map(c => {
-    const paid = (c.downPayment || 0) + c.installments.reduce((s, i) => s + (i.paid || 0), 0);
-    const rem = c.totalPrice - paid;
-    const pc = c.installments.filter(i => i.isPaid).length;
-    return `<tr><td><b>${escapeHtml(c.name)}</b></td><td>${escapeHtml(c.phone)}</td><td>${escapeHtml(c.product)}</td><td style="color:var(--danger);font-weight:700">${formatCurrency(rem)}</td><td>${pc}/${c.installments.length}</td><td><button class="btn-icon" onclick="viewClient('${c.id}')"><i class="fas fa-eye"></i></button><button class="btn-icon success" onclick="openPayModal('${c.id}')"><i class="fas fa-money-bill-wave"></i></button></td></tr>`;
+    const remaining = clientRemaining(c);
+    const paidCount = c.installments.filter(i => i.isPaid).length;
+    return `<tr>
+      <td><b>${escapeHtml(c.name)}</b></td>
+      <td>${escapeHtml(c.phone)}</td>
+      <td>${escapeHtml(c.product)}</td>
+      <td style="color:var(--danger);font-weight:700">${formatCurrency(remaining)}</td>
+      <td>${paidCount}/${c.installments.length}</td>
+      <td>
+        <button class="btn-icon" onclick="viewClient('${c.id}')"><i class="fas fa-eye"></i></button>
+        <button class="btn-icon success" onclick="openPayModal('${c.id}')"><i class="fas fa-money-bill-wave"></i></button>
+      </td>
+    </tr>`;
   }).join('');
 }
 
 function viewClient(id) {
   const c = clients.find(x => x.id === id); if (!c) return;
-  const paid = (c.downPayment || 0) + c.installments.reduce((s, i) => s + (i.paid || 0), 0);
-  const rem = c.totalPrice - paid;
+  const paidInstallments = c.installments.reduce((s, i) => s + (i.paid || 0), 0);
+  const totalPaid = clientCollected(c);
+  const totalContract = clientContractTotal(c);
+  const remaining = clientRemaining(c);
   const img = c.productImage ? `<img src="${c.productImage}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;margin-bottom:10px">` : '';
-  const rateInfo = c.installmentRate ? `<div style="grid-column:span 2;background:rgba(59,130,246,0.08);padding:12px;border-radius:8px;margin-bottom:10px;border:1px solid rgba(59,130,246,0.2)"><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px"><i class="fas fa-percentage"></i> تفاصيل التقسيط</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:13px"><div><span style="color:var(--text-muted)">السعر الأساسي:</span><br><b>${formatCurrency(c.basePrice || c.totalPrice)}</b></div><div><span style="color:var(--text-muted)">نسبة التقسيط:</span><br><b style="color:var(--accent)">${c.installmentRate || 0}%</b></div><div><span style="color:var(--text-muted)">قيمة الإضافة:</span><br><b style="color:var(--warning)">${formatCurrency(c.rateAddition || 0)}</b></div></div></div>` : '';
+
+  const rateInfo = c.installmentRate ? `
+    <div style="grid-column:span 2;background:rgba(59,130,246,0.08);padding:12px;border-radius:8px;margin-bottom:10px;border:1px solid rgba(59,130,246,0.2)">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px"><i class="fas fa-percentage"></i> تفاصيل حساب التقسيط</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
+        <div><span style="color:var(--text-muted)">سعر المنتجات:</span><br><b>${formatCurrency(c.basePrice || c.totalPrice)}</b></div>
+        <div><span style="color:var(--text-muted)">المقدم:</span><br><b style="color:var(--success)">${formatCurrency(c.downPayment || 0)}</b></div>
+        <div><span style="color:var(--text-muted)">المتبقي بعد المقدم:</span><br><b>${formatCurrency(c.remainingAfterDown || ((c.basePrice || 0) - (c.downPayment || 0)))}</b></div>
+        <div><span style="color:var(--text-muted)">النسبة (${c.installmentRate || 0}%) × المتبقي:</span><br><b style="color:var(--warning)">${formatCurrency(c.rateAddition || 0)}</b></div>
+        <div style="grid-column:span 2;border-top:1px dashed var(--border);padding-top:8px;margin-top:4px">
+          <span style="color:var(--text-muted)"><b>إجمالي المتبقي المُقسَّط:</b></span>
+          <b style="color:var(--accent);font-size:15px"> ${formatCurrency(c.totalPrice)}</b>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${c.installments.length} قسط × ${formatCurrency(c.installments[0]?.amount || 0)}</div>
+        </div>
+      </div>
+    </div>` : '';
+
   openModal(`
-    <div style="text-align:center;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:15px">${img}<h2 style="font-size:20px;margin-bottom:5px"><i class="fas fa-user" style="color:var(--accent)"></i> ${escapeHtml(c.name)}</h2><p style="color:var(--text-muted);font-size:13px">${escapeHtml(c.phone)} — ${escapeHtml(c.address || '')}</p></div>
+    <div style="text-align:center;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:15px">
+      ${img}
+      <h2 style="font-size:20px;margin-bottom:5px"><i class="fas fa-user" style="color:var(--accent)"></i> ${escapeHtml(c.name)}</h2>
+      <p style="color:var(--text-muted);font-size:13px">${escapeHtml(c.phone)} — ${escapeHtml(c.address || '')}</p>
+    </div>
     ${rateInfo}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;font-size:13px">
       <div><span style="color:var(--text-muted)">المنتج:</span><br><b>${escapeHtml(c.product)}</b></div>
       <div><span style="color:var(--text-muted)">السيريال:</span><br><b>${escapeHtml(c.serial)}</b></div>
-      <div><span style="color:var(--text-muted)">الإجمالي النهائي:</span><br><b>${formatCurrency(c.totalPrice)}</b></div>
-      <div><span style="color:var(--text-muted)">المقدم:</span><br><b>${formatCurrency(c.downPayment)}</b></div>
-      <div><span style="color:var(--text-muted)">المحصل:</span><br><b style="color:var(--success)">${formatCurrency(paid)}</b></div>
-      <div><span style="color:var(--text-muted)">المتبقي:</span><br><b style="color:var(--danger)">${formatCurrency(rem)}</b></div>
-      <div style="grid-column:span 2"><span style="color:var(--text-muted)">الضامن:</span><br><b>${escapeHtml(c.gName || '—')} — ${escapeHtml(c.gPhone || '')}</b></div>
+      <div><span style="color:var(--text-muted)">المقدم:</span><br><b style="color:var(--success)">${formatCurrency(c.downPayment)}</b></div>
+      <div><span style="color:var(--text-muted)">إجمالي الأقساط:</span><br><b>${formatCurrency(c.totalPrice)}</b></div>
+      <div><span style="color:var(--text-muted)">إجمالي العقد:</span><br><b style="color:var(--accent)">${formatCurrency(totalContract)}</b></div>
+      <div><span style="color:var(--text-muted)">المحصل:</span><br><b style="color:var(--success)">${formatCurrency(totalPaid)}</b></div>
+      <div><span style="color:var(--text-muted)">المتبقي:</span><br><b style="color:var(--danger);font-size:15px">${formatCurrency(remaining)}</b></div>
+      <div><span style="color:var(--text-muted)">الضامن:</span><br><b>${escapeHtml(c.gName || '—')}</b></div>
+      <div style="grid-column:span 2"><span style="color:var(--text-muted)">موبايل الضامن:</span><br><b>${escapeHtml(c.gPhone || '—')}</b></div>
     </div>
     <h3 style="margin-bottom:10px;font-size:15px">جدول الأقساط</h3>
     <div class="table-wrapper"><table><thead><tr><th>#</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>الحالة</th></tr></thead><tbody>
@@ -2300,6 +2430,7 @@ function doPay(clientId, idx) {
 
 function renderLatePayments() {
   const tbody = document.getElementById('lateTableBody');
+  if (!tbody) return;
   const today = new Date(); today.setHours(0, 0, 0, 0);
   let lateCount = 0; const rows = [];
   clients.forEach(c => c.installments.forEach((inst) => {
@@ -2318,6 +2449,7 @@ function renderLatePayments() {
 
 function renderCashSales() {
   const tbody = document.getElementById('cashSalesBody');
+  if (!tbody) return;
   if (!cashSales.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-receipt"></i><p>لا توجد مبيعات</p></div></td></tr>'; return; }
   const sorted = [...cashSales].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   tbody.innerHTML = sorted.map(s => `<tr><td>${s.date ? s.date.split('T')[0] : '—'}</td><td>${escapeHtml(s.productName)}</td><td>${escapeHtml(s.serial)}</td><td>${escapeHtml(s.client)}</td><td><b>${formatCurrency(s.price * (s.qty || 1))}</b></td><td><button class="btn-icon" onclick="reprintSale('${s.id}')"><i class="fas fa-print"></i></button></td></tr>`).join('');
@@ -2338,14 +2470,14 @@ function reprintSale(id) {
 function writeReceiptToWindow(win, data) {
   const logoHtml = data.logo ? `<img src="${data.logo}" style="max-width:80px;max-height:80px;margin-bottom:10px">` : '';
   win.document.write(`
-    <html dir="rtl"><head><title>فاتورة</title><style>
+    <html dir="rtl"><head><meta charset="UTF-8"><title>فاتورة</title><style>
       body { font-family: 'Cairo', sans-serif; width: 75mm; margin: 0 auto; font-size: 12px; color: #000; }
       .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
       .item { display: flex; justify-content: space-between; margin: 6px 0; }
       .total { border-top: 1px dashed #000; margin-top: 10px; padding-top: 10px; font-weight: bold; font-size: 14px; text-align: center; }
       .footer { text-align: center; margin-top: 15px; font-size: 10px; }
     </style></head><body>
-      <div class="header">${logoHtml}<h3 style="margin:0 0 5px 0">${escapeHtml(data.storeName || 'EMAA.Tech')}</h3><p style="margin:0">${escapeHtml(data.phone || '')}</p><p style="margin:5px 0 0 0;font-size:11px">${data.date}</p></div>
+      <div class="header">${logoHtml}<h3 style="margin:0 0 5px 0">${escapeHtml(data.storeName || 'EMAA.Tech')}</h3><p style="margin:0">${escapeHtml(data.phone || '')}</p><p style="margin:5px 0 0 0;font-size:11px">${escapeHtml(data.date)}</p></div>
       <div class="items">${data.items.map(i => `<div class="item"><span>${escapeHtml(i.name)} (x${i.qty})</span><span>${(i.price * i.qty).toFixed(2)}</span></div>`).join('')}</div>
       <div class="total">الإجمالي: ${data.total}</div>
       <div class="footer">شكراً لتسوقكم معنا<br>نظام EMAA.Tech</div>
@@ -2355,6 +2487,9 @@ function writeReceiptToWindow(win, data) {
   win.document.close();
 }
 
+// ==========================================================
+// المصروفات
+// ==========================================================
 document.getElementById('expenseForm').addEventListener('submit', e => {
   e.preventDefault();
   if (!hasPermission('manage_expenses')) return toast('لا تملك صلاحية', 'error');
@@ -2373,6 +2508,7 @@ document.getElementById('expenseForm').addEventListener('submit', e => {
 
 function renderExpenses() {
   const tbody = document.getElementById('expensesBody');
+  if (!tbody) return;
   if (!expenses.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-wallet"></i><p>لا توجد مصروفات</p></div></td></tr>'; return; }
   const cats = { general: 'عام', rent: 'إيجار', salaries: 'رواتب', utilities: 'كهرباء ومياه', purchases: 'مشتريات', other: 'أخرى' };
   const sorted = [...expenses].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
@@ -2383,8 +2519,13 @@ function deleteExpense(id) {
   confirmDialog('حذف هذا المصروف؟', () => db.collection('stores').doc(currentStoreData._id).collection('expenses').doc(id).delete().then(() => toast('تم الحذف', 'success')));
 }
 
+// ==========================================================
+// يومية الكاشير
+// ==========================================================
 function renderDailyCash() {
-  const date = document.getElementById('cashDate').value || getLocalDateStr();
+  const dateEl = document.getElementById('cashDate');
+  if (!dateEl) return;
+  const date = dateEl.value || getLocalDateStr();
   const inst = clients.reduce((s, c) => s + c.installments.reduce((a, i) => {
     if (!i.payments) return a;
     return a + i.payments.filter(p => (p.date || '').startsWith(date)).reduce((x, p) => x + p.amount, 0);
@@ -2397,11 +2538,15 @@ function renderDailyCash() {
   document.getElementById('dailyNet').innerText = formatCurrency(inst + cash - exp);
 }
 
+// ==========================================================
+// الداشبورد والإحصائيات
+// ==========================================================
 function updateDashboard() {
-  let tSales = 0, tCollected = 0, tCost = 0, tExp = 0;
+  let tSales = 0, tCollected = 0, tCost = 0, tExp = 0, tRemaining = 0;
   clients.forEach(c => {
-    tSales += c.totalPrice || 0;
-    tCollected += (c.downPayment || 0) + c.installments.reduce((s, i) => s + (i.paid || 0), 0);
+    tSales += clientContractTotal(c);
+    tCollected += clientCollected(c);
+    tRemaining += clientRemaining(c);
     tCost += c.costPrice || 0;
   });
   cashSales.forEach(s => {
@@ -2410,13 +2555,17 @@ function updateDashboard() {
     tCost += s.cost * (s.qty || 1);
   });
   expenses.forEach(e => tExp += e.amount || 0);
-  const rem = clients.reduce((a, c) => a + (c.totalPrice - (c.downPayment || 0) - c.installments.reduce((s, i) => s + (i.paid || 0), 0)), 0);
-  document.getElementById('statSales').innerText = formatCurrency(tSales);
-  document.getElementById('statCollected').innerText = formatCurrency(tCollected);
-  document.getElementById('statRemaining').innerText = formatCurrency(rem);
-  document.getElementById('statProfit').innerText = formatCurrency(tCollected - tCost - tExp);
-  document.getElementById('statProducts').innerText = inventory.length;
-  document.getElementById('statClients').innerText = clients.length;
+
+  const elSales = document.getElementById('statSales');
+  if (elSales) {
+    elSales.innerText = formatCurrency(tSales);
+    document.getElementById('statCollected').innerText = formatCurrency(tCollected);
+    document.getElementById('statRemaining').innerText = formatCurrency(tRemaining);
+    document.getElementById('statProfit').innerText = formatCurrency(tCollected - tCost - tExp);
+    document.getElementById('statProducts').innerText = inventory.length;
+    document.getElementById('statClients').innerText = clients.length;
+  }
+
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const soon = new Date(today); soon.setDate(soon.getDate() + 5);
   const up = [];
@@ -2427,9 +2576,14 @@ function updateDashboard() {
     }
   }));
   const ul = document.getElementById('upcomingList');
-  ul.innerHTML = up.length ? up.map(u => `<li style="padding:12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span><i class="fas fa-user" style="color:var(--accent);margin-left:5px"></i> ${escapeHtml(u.client)} <small style="color:var(--text-muted)">(${escapeHtml(u.phone)})</small></span><div style="text-align:left"><b style="color:var(--danger)">${formatCurrency(u.amount)}</b><br><small style="color:var(--text-muted)">${u.date}</small></div></li>`).join('') : '<li style="color:var(--text-muted);padding:15px;text-align:center">لا توجد أقساط قادمة خلال 5 أيام</li>';
+  if (ul) {
+    ul.innerHTML = up.length ? up.map(u => `<li style="padding:12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span><i class="fas fa-user" style="color:var(--accent);margin-left:5px"></i> ${escapeHtml(u.client)} <small style="color:var(--text-muted)">(${escapeHtml(u.phone)})</small></span><div style="text-align:left"><b style="color:var(--danger)">${formatCurrency(u.amount)}</b><br><small style="color:var(--text-muted)">${u.date}</small></div></li>`).join('') : '<li style="color:var(--text-muted);padding:15px;text-align:center">لا توجد أقساط قادمة خلال 5 أيام</li>';
+  }
 }
 
+// ==========================================================
+// الرسوم البيانية
+// ==========================================================
 function renderCharts() {
   const sc = document.getElementById('salesChart'), ec = document.getElementById('expensesChart'), dsc = document.getElementById('dailySalesChart');
   if (!sc || !ec) return;
@@ -2470,6 +2624,9 @@ function renderCharts() {
   }
 }
 
+// ==========================================================
+// الإعدادات
+// ==========================================================
 document.getElementById('settingsForm').addEventListener('submit', async e => {
   e.preventDefault();
   showLoading(true);
@@ -2506,6 +2663,9 @@ document.getElementById('installmentRateForm').addEventListener('submit', e => {
     .catch(err => toast('خطأ: ' + err.message, 'error'));
 });
 
+// ==========================================================
+// تصدير CSV
+// ==========================================================
 function exportCSV(type) {
   let rows = [];
   if (type === 'products') {
@@ -2515,10 +2675,12 @@ function exportCSV(type) {
     rows = [['التاريخ', 'المنتج', 'السيريال', 'العميل', 'الإجمالي']];
     cashSales.forEach(s => rows.push([s.date ? s.date.split('T')[0] : '—', s.productName, s.serial, s.client, s.price * (s.qty || 1)]));
   } else if (type === 'clients') {
-    rows = [['العميل', 'الموبايل', 'المنتج', 'الإجمالي', 'المحصل', 'المتبقي']];
+    rows = [['العميل', 'الموبايل', 'المنتج', 'إجمالي العقد', 'المحصل', 'المتبقي']];
     clients.forEach(c => {
-      const paid = (c.downPayment || 0) + c.installments.reduce((s, i) => s + (i.paid || 0), 0);
-      rows.push([c.name, c.phone, c.product, c.totalPrice, paid, c.totalPrice - paid]);
+      const paid = clientCollected(c);
+      const remaining = clientRemaining(c);
+      const contractTotal = clientContractTotal(c);
+      rows.push([c.name, c.phone, c.product, contractTotal, paid, remaining]);
     });
   } else if (type === 'expenses') {
     rows = [['التاريخ', 'البيان', 'التصنيف', 'المبلغ']];
@@ -2533,6 +2695,24 @@ function exportCSV(type) {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   toast('تم تصدير الملف بنجاح', 'success');
 }
+
+// ==========================================================
+// تنظيف عند إغلاق الصفحة
+// ==========================================================
+window.addEventListener('beforeunload', () => {
+  try {
+    if (inventoryUnsub) inventoryUnsub();
+    if (clientsUnsub) clientsUnsub();
+    if (salesUnsub) salesUnsub();
+    if (expensesUnsub) expensesUnsub();
+    if (storeUnsub) storeUnsub();
+    if (categoriesUnsub) categoriesUnsub();
+    if (devStoresUnsub) devStoresUnsub();
+    if (devUsersUnsub) devUsersUnsub();
+    if (devLicenseKeysUnsub) devLicenseKeysUnsub();
+  } catch (_) {}
+});
+
 </script>
 </body>
 </html>
