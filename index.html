@@ -335,7 +335,22 @@ tr:hover td { background: var(--surface-hover); }
           <div class="form-grid">
             <div class="form-group"><label>اسم المنتج <span style="color:var(--danger)">*</span></label><input type="text" id="invName" class="form-input" required></div>
             <div class="form-group"><label>القسم <span style="color:var(--danger)">*</span></label><select id="invCategory" class="form-input" required><option value="">اختر القسم</option></select></div>
-            <div class="form-group"><label>الرقم التسلسلي / الباركود <span style="color:var(--danger)">*</span></label><input type="text" id="invSerial" class="form-input" required></div>
+            <div class="form-group span-2">
+              <label>الرقم التسلسلي / الباركود <span style="color:var(--danger)">*</span></label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <input type="text" id="invSerial" class="form-input" required style="flex:1;min-width:150px" placeholder="أدخل الرقم التسلسلي أو امسحه">
+                <button type="button" class="btn btn-accent" style="width:auto;padding:10px 16px;white-space:nowrap" onclick="openCameraScanner()" title="مسح بالكاميرا">
+                  <i class="fas fa-camera"></i> كاميرا
+                </button>
+                <button type="button" class="btn btn-outline" style="width:auto;padding:10px 16px;white-space:nowrap" onclick="focusSerialForScanner()" title="ماسح باركود خارجي">
+                  <i class="fas fa-barcode"></i> ماسح
+                </button>
+              </div>
+              <small style="color:var(--text-muted);font-size:11px;display:block;margin-top:4px">
+                <i class="fas fa-info-circle"></i>
+                اكتبه يدوياً، أو استخدم الكاميرا لمسح الباركود/QR، أو وصّل ماسح باركود خارجي واضغط زر "ماسح"
+              </small>
+            </div>            
             <div class="form-group"><label>الكمية <span style="color:var(--danger)">*</span></label><input type="number" id="invQty" class="form-input" required min="1" value="1"></div>
             <div class="form-group"><label>سعر الشراء <span style="color:var(--danger)">*</span></label><input type="number" id="invCost" class="form-input" required min="0" step="0.01"></div>
             <div class="form-group"><label>سعر البيع <span style="color:var(--danger)">*</span></label><input type="number" id="invPrice" class="form-input" required min="0" step="0.01"></div>
@@ -662,7 +677,7 @@ function toast(msg, type='info', duration=3500) {
 
 function showLoading(s) { document.getElementById('loadingOverlay').style.display = s ? 'flex' : 'none'; }
 function closeModal() { document.getElementById('mainModal').style.display = 'none'; if(html5QrcodeScanner) stopBarcodeScanner(); }
-function openModal(html) { document.getElementById('modalBody').innerHTML = html; document.getElementById('mainModal').style.display = 'flex'; }
+function openModal(html) { document.getElementById('modalBody').innerHTML = html; document.getElementById('mainModal').style.display = 'flex'; if(serialScannerInstance) stopSerialScanner(); }
 
 function hasPermission(perm) {
   if (isDevMode || currentUserRole === 'owner') return true;
@@ -1817,9 +1832,16 @@ function editProduct(id) {
   document.getElementById('invCost').value = p.cost || 0;
   document.getElementById('invPrice').value = p.price || 0;
   document.getElementById('invWarranty').value = p.warranty || 0;
+  // إعادة تعيين حالة حقل الرقم التسلسلي
+  const serialInput = document.getElementById('invSerial');
+  if (serialInput) {
+    serialInput.style.borderColor = '';
+    serialInput.style.boxShadow = '';
+  }
   document.getElementById('invSubmitBtn').innerHTML = '<i class="fas fa-save"></i> حفظ التعديل';
   document.getElementById('inventoryForm').scrollIntoView({ behavior: 'smooth' });
 }
+  
 
 function deleteProduct(id) {
   confirmDialog('حذف هذا المنتج؟', () => db.collection('stores').doc(currentStoreData._id).collection('products').doc(id).delete().then(() => toast('تم الحذف', 'success')));
@@ -1906,6 +1928,128 @@ function startBarcodeScanner() {
   ).catch(err => toast('فشل تشغيل الكاميرا', 'error'));
 }
 
+// ==========================================================
+// مسح الباركود بالكاميرا لتعبئة حقل الرقم التسلسلي
+// ==========================================================
+let serialScannerInstance = null;
+
+function openCameraScanner() {
+  openModal(`
+    <h3 style="text-align:center;margin-bottom:15px"><i class="fas fa-camera" style="color:var(--accent)"></i> مسح باركود المنتج</h3>
+    <div style="background:rgba(59,130,246,0.08);padding:10px;border-radius:8px;margin-bottom:15px;font-size:12px;text-align:center">
+      <i class="fas fa-info-circle"></i> وجّه الكاميرا نحو الباركود أو QR Code
+    </div>
+    <div id="serial-reader" style="width:100%;max-width:400px;margin:0 auto;border-radius:12px;overflow:hidden;background:#000;min-height:250px"></div>
+    <div id="serialScanResult" style="margin-top:12px;text-align:center;font-size:13px;color:var(--text-muted)"></div>
+    <button class="btn btn-outline" style="margin-top:15px" onclick="stopSerialScanner(); closeModal()">
+      <i class="fas fa-times"></i> إلغاء
+    </button>
+  `);
+  
+  setTimeout(() => {
+    try {
+      serialScannerInstance = new Html5Qrcode("serial-reader");
+      serialScannerInstance.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 280, height: 200 } },
+        (decodedText) => {
+          // عرض النتيجة
+          const resultEl = document.getElementById('serialScanResult');
+          if (resultEl) {
+            resultEl.innerHTML = `<span style="color:var(--success);font-weight:700"><i class="fas fa-check-circle"></i> تم المسح: ${escapeHtml(decodedText)}</span>`;
+          }
+          
+          // تعبئة الحقل
+          const serialInput = document.getElementById('invSerial');
+          if (serialInput) serialInput.value = decodedText;
+          
+          // صوت تأكيد (اختياري)
+          try { 
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.value = 800;
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.15);
+          } catch(_) {}
+          
+          toast('تم مسح الرقم بنجاح ✅', 'success');
+          
+          // إغلاق بعد 800ms
+          setTimeout(() => {
+            stopSerialScanner();
+            closeModal();
+          }, 800);
+        },
+        () => {} // تجاهل أخطاء الإطارات
+      ).catch(err => {
+        console.error('Camera error:', err);
+        toast('فشل تشغيل الكاميرا. تحقق من صلاحيات المتصفح', 'error');
+        document.getElementById('serialScanResult').innerHTML = '<span style="color:var(--danger)">تعذر فتح الكاميرا — تأكد من منح الصلاحية</span>';
+      });
+    } catch (e) {
+      console.error(e);
+      toast('خطأ في تشغيل الماسح: ' + e.message, 'error');
+    }
+  }, 100);
+}
+
+// ==========================================================
+// تجهيز حقل الرقم التسلسلي للماسح الخارجي (USB/BT)
+// ==========================================================
+function focusSerialForScanner() {
+  const serialInput = document.getElementById('invSerial');
+  if (!serialInput) return;
+  
+  // تفريغ الحقل والتركيز عليه
+  serialInput.value = '';
+  serialInput.focus();
+  serialInput.style.borderColor = 'var(--success)';
+  serialInput.style.boxShadow = '0 0 0 3px rgba(16,185,129,0.25)';
+  
+  // عرض إشعار
+  toast('✅ جاهز للمسح — وجّه الماسح الآن على الباركود', 'info', 3000);
+  
+  // إزالة التمييز بعد 5 ثوانٍ
+  setTimeout(() => {
+    serialInput.style.borderColor = '';
+    serialInput.style.boxShadow = '';
+  }, 5000);
+  
+  // الاستماع لزر Enter (الماسحات ترسل Enter بعد الرقم)
+  const handleEnter = (e) => {
+    if (e.key === 'Enter' && serialInput.value.trim()) {
+      e.preventDefault();
+      toast('تم تسجيل الرقم: ' + serialInput.value.trim(), 'success');
+      serialInput.style.borderColor = 'var(--success)';
+      setTimeout(() => {
+        serialInput.style.borderColor = '';
+        serialInput.style.boxShadow = '';
+      }, 1500);
+      serialInput.removeEventListener('keydown', handleEnter);
+    }
+  };
+  serialInput.addEventListener('keydown', handleEnter, { once: false });
+  
+  // إزالة المستمع القديم إذا كان موجوداً (باستخدام خاصية مخصصة)
+  if (serialInput._scannerHandler) {
+    serialInput.removeEventListener('keydown', serialInput._scannerHandler);
+  }
+  serialInput._scannerHandler = handleEnter;
+  serialInput.addEventListener('keydown', handleEnter);
+}  
+function stopSerialScanner() {
+  if (serialScannerInstance) {
+    serialScannerInstance.stop().then(() => {
+      try { serialScannerInstance.clear(); } catch(_) {}
+      serialScannerInstance = null;
+    }).catch(() => { serialScannerInstance = null; });
+  }
+}  
 function stopBarcodeScanner() {
   if (html5QrcodeScanner) {
     html5QrcodeScanner.stop().then(() => html5QrcodeScanner.clear()).catch(() => {});
