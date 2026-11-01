@@ -378,7 +378,22 @@ tr:hover td { background: var(--surface-hover); }
             <button class="btn btn-primary" style="background:var(--success);color:white" onclick="confirmCashSale()"><i class="fas fa-check-circle"></i> تأكيد البيع النقدي</button>
           </div>
           <div id="installmentFormSection" class="card" style="display:none;margin-top:20px">
-            <div class="rate-info-box" id="rateInfoBox"><i class="fas fa-percentage"></i><div class="rate-text"><div class="label">نسبة التقسيط المطبقة على هذا العقد</div><div class="value" id="currentRateDisplay">0%</div></div></div>
+            <div class="rate-info-box" id="rateInfoBox" style="flex-direction:column;align-items:stretch;gap:10px">
+              <div style="display:flex;align-items:center;gap:12px">
+                <i class="fas fa-percentage"></i>
+                <div class="rate-text" style="flex:1">
+                  <div class="label">نسبة التقسيط المطبقة على هذا العقد</div>
+                  <div class="value" id="currentRateDisplay">0%</div>
+                </div>
+              </div>
+              <div id="installmentDetailsBox" style="background:rgba(59,130,246,0.08);padding:10px;border-radius:8px;font-size:12px;display:none;line-height:1.8">
+                <div style="display:flex;justify-content:space-between"><span>سعر المنتج:</span><b id="detBasePrice">0</b></div>
+                <div style="display:flex;justify-content:space-between"><span>المقدم:</span><b id="detDown" style="color:var(--success)">0</b></div>
+                <div style="display:flex;justify-content:space-between;border-top:1px dashed var(--border);padding-top:4px;margin-top:4px"><span>المتبقي بعد المقدم:</span><b id="detRemaining">0</b></div>
+                <div style="display:flex;justify-content:space-between"><span>قيمة النسبة (<span id="detRatePercent">0</span>%):</span><b id="detRateAddition" style="color:var(--warning)">0</b></div>
+                <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:6px;margin-top:6px;font-size:13px"><span><b>الإجمالي النهائي:</b></span><b id="detFinalTotal" style="color:var(--accent)">0</b></div>
+              </div>
+            </div>
             <div class="section-title" style="font-size:14px;color:var(--accent)"><span>بيانات العميل والضامن</span></div>
             <div class="form-grid">
               <div class="form-group"><label>اسم العميل <span style="color:var(--danger)">*</span></label><input type="text" id="clientName" class="form-input" minlength="3"></div>
@@ -1959,11 +1974,33 @@ function calcInstallment() {
   const baseTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const d = parseFloat(document.getElementById('downPayment').value) || 0;
   const c = parseInt(document.getElementById('installmentsCount').value) || 1;
-  const rateAddition = baseTotal * (installmentRate / 100);
+  
+  // ← النسبة تُحسب على المتبقي بعد المقدم فقط
+  const remainingAfterDown = Math.max(0, baseTotal - d);
+  const rateAddition = remainingAfterDown * (installmentRate / 100);
   const finalTotal = baseTotal + rateAddition;
+  
   if (finalTotal > d && c > 0) {
     document.getElementById('instValueDisplay').value = formatCurrency((finalTotal - d) / c);
-  } else { document.getElementById('instValueDisplay').value = ''; }
+  } else {
+    document.getElementById('instValueDisplay').value = '';
+  }
+  
+  // عرض التفاصيل
+  const detailsBox = document.getElementById('installmentDetailsBox');
+  if (detailsBox) {
+    if (baseTotal > 0) {
+      detailsBox.style.display = 'block';
+      document.getElementById('detBasePrice').innerText = formatCurrency(baseTotal);
+      document.getElementById('detDown').innerText = formatCurrency(d);
+      document.getElementById('detRemaining').innerText = formatCurrency(remainingAfterDown);
+      document.getElementById('detRatePercent').innerText = installmentRate;
+      document.getElementById('detRateAddition').innerText = formatCurrency(rateAddition);
+      document.getElementById('detFinalTotal').innerText = formatCurrency(finalTotal);
+    } else {
+      detailsBox.style.display = 'none';
+    }
+  }
 }
 
 async function confirmInstallmentSale() {
@@ -1993,7 +2030,9 @@ async function confirmInstallmentSale() {
     if (p.qty < item.qty) return toast(`الكمية المتاحة من "${item.name}" هي ${p.qty} فقط`, 'error');
   }
   const baseTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const rateAddition = baseTotal * (installmentRate / 100);
+  // ← النسبة تُحسب على المتبقي بعد المقدم فقط
+  const remainingAfterDown = Math.max(0, baseTotal - down);
+  const rateAddition = remainingAfterDown * (installmentRate / 100);
   const finalTotal = baseTotal + rateAddition;
   if (down >= finalTotal) return toast('المقدم يجب أن يكون أقل من الإجمالي', 'warning');
   if (count < 1) return toast('عدد الأقساط غير صحيح', 'warning');
